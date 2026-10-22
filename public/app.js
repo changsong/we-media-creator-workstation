@@ -2296,6 +2296,7 @@
         if(t.status === 'failed' || t.status === 'canceled') html += '<button class="px-2.5 py-1 rounded-full bg-secondary-fixed text-[10px] font-semibold text-on-secondary-fixed-variant hover:brightness-95" data-act="pubRetry" data-id="' + id + '" type="button">重试</button>';
         if(t.status === 'needs_confirm' || t.status === 'submitted') html += '<button class="px-2.5 py-1 rounded-full bg-secondary-fixed text-[10px] font-semibold text-on-secondary-fixed-variant hover:brightness-95" data-act="pubDetail" data-id="' + id + '" type="button">去确认</button>';
         html += '<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface hover:bg-surface-container-high" data-act="pubDetail" data-id="' + id + '" type="button">详情</button>';
+        if(t.status !== 'running') html += '<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-[#8e3b26] hover:bg-[#fce3dd]" data-act="pubDelete" data-id="' + id + '" type="button">删除</button>';
         html += '</div></td></tr>';
       });
       html += '</tbody></table></div>';
