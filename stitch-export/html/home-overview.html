@@ -1,0 +1,749 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="../assets/fonts-icons.css" rel="stylesheet"><link href="../assets/fonts-text.css" rel="stylesheet">
+<link href="../assets/fonts-icons2.css" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="../assets/tailwind.js"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container":"#785d00","on-tertiary-fixed-variant":"#444465","primary-fixed-dim":"#c6c6c9","surface-container-low":"#f2f3f6","primary-container":"#202224","secondary-fixed-dim":"#e7c361","secondary-container":"#ffd975","on-error":"#ffffff","outline-variant":"#c5c6ca","surface":"#f8f9fc","surface-tint":"#5d5e61","inverse-surface":"#2e3133","on-background":"#191c1e","surface-container-high":"#e7e8eb","on-secondary-fixed":"#241a00","background":"#f8f9fc","secondary":"#755b00","secondary-fixed":"#ffdf91","surface-bright":"#f8f9fc","surface-container-highest":"#e1e2e5","surface-container-lowest":"#ffffff","on-primary-container":"#88898b","tertiary":"#070725","primary-fixed":"#e2e2e5","outline":"#75777a","surface-container":"#edeef1","tertiary-fixed-dim":"#c5c3eb","primary":"#090c0d","on-error-container":"#93000a","tertiary-fixed":"#e2dfff","on-surface-variant":"#44474a","inverse-on-surface":"#f0f1f4","on-surface":"#191c1e","inverse-primary":"#c6c6c9","surface-dim":"#d9dadd","on-primary-fixed":"#1a1c1e","on-secondary-fixed-variant":"#594400","tertiary-container":"#1e1e3d","on-primary":"#ffffff","on-tertiary":"#ffffff","on-primary-fixed-variant":"#454749","surface-variant":"#e1e2e5","error-container":"#ffdad6","on-tertiary-container":"#8785aa","error":"#ba1a1a","on-secondary":"#ffffff","on-tertiary-fixed":"#181837"},borderRadius:{DEFAULT:"1rem",lg:"2rem",xl:"3rem",full:"9999px"},spacing:{"space-xs":"0.25rem","space-xl":"2.25rem",margin:"1.5rem","space-md":"1rem",gutter:"1.25rem","space-lg":"1.5rem","space-sm":"0.5rem"},fontFamily:{"label-md":["Be Vietnam Pro"],"headline-sm":["Plus Jakarta Sans"],"body-lg":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"],"body-sm":["Be Vietnam Pro"],"headline-md":["Plus Jakarta Sans"],"display-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-sm":["Be Vietnam Pro"]},fontSize:{"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"18px",fontWeight:"400"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"display-lg":["36px",{lineHeight:"44px",fontWeight:"700"}],"headline-lg":["26px",{lineHeight:"34px",fontWeight:"600"}],"label-sm":["11px",{lineHeight:"16px",fontWeight:"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-20 bg-primary-container z-50 flex flex-col items-center py-space-md justify-between shadow-[0_12px_36px_rgba(32,34,36,0.08)]"><div class="flex flex-col items-center gap-space-lg w-full"><div class="w-12 h-12 rounded-2xl bg-surface-container-highest/10 flex items-center justify-center p-2"><img alt="Creator Studio Logo" class="h-8 w-auto object-contain" src="../assets/img-1.png"></div><nav class="flex flex-col items-center gap-space-sm w-full px-space-xs" data-active-classes="bg-secondary-container text-on-secondary-container shadow-sm"><a aria-current="page" class="relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all bg-secondary-container text-on-secondary-container shadow-sm" data-path="home" href="#"><span class="material-symbols-outlined text-xl">dashboard</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">首页总览</div></a><a class="relative group flex items-center justify-center w-12 h-12 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" data-path="topic" href="#"><span class="material-symbols-outlined text-xl">lightbulb</span><span class="absolute top-2 right-2 w-4 h-4 bg-error text-on-error text-[10px] font-bold rounded-full flex items-center justify-center">12</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">选题池</div></a><a class="relative group flex items-center justify-center w-12 h-12 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" data-path="calendar" href="#"><span class="material-symbols-outlined text-xl">calendar_month</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">内容日历</div></a><a class="relative group flex items-center justify-center w-12 h-12 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" data-path="review" href="#"><span class="material-symbols-outlined text-xl">trending_up</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">数据复盘</div></a><a class="relative group flex items-center justify-center w-12 h-12 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" data-path="asset" href="#"><span class="material-symbols-outlined text-xl">grid_view</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">素材库</div></a></nav></div><div class="flex flex-col items-center gap-space-xs w-full px-space-xs"><button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" type="button"><span class="material-symbols-outlined text-lg">settings</span></button><button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" type="button"><span class="material-symbols-outlined text-lg">help</span></button><button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-error/20 hover:text-error transition-all" type="button"><span class="material-symbols-outlined text-lg">logout</span></button></div></aside><div class="pl-20"><header class="fixed top-0 left-20 right-0 h-20 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex flex-col justify-center min-w-0 pr-space-md"><h1 class="text-headline-sm font-headline-sm text-on-surface tracking-tight truncate">自媒体内容运营工作台</h1><p class="text-label-sm font-label-sm text-on-surface-variant truncate">选题 → 排期 → 发布 → 复盘 → 沉淀，一个页面管好你的内容全流程</p></div><div class="hidden xl:flex items-center max-w-xs w-full"><div class="flex items-center w-full bg-surface-container-lowest rounded-full px-space-md py-space-xs shadow-sm"><span class="material-symbols-outlined text-on-surface-variant text-lg mr-space-xs">search</span><input class="w-full bg-transparent text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant focus:outline-none" placeholder="搜索全库选题、内容或排期..." type="text"><span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">⌘K</span></div></div><div class="flex items-center gap-space-md flex-shrink-0"><div class="hidden lg:flex items-center gap-space-xs bg-surface-container-lowest px-space-md py-1.5 rounded-full shadow-sm"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-label-sm font-label-sm text-on-surface-variant">已同步 · 48 条记录</span></div><div class="relative"><select class="appearance-none bg-surface-container-lowest text-label-md font-label-md text-on-surface pl-space-md pr-8 py-1.5 rounded-full shadow-sm focus:outline-none cursor-pointer"><option value="all">全部平台</option><option value="wechat">公众号</option><option value="xhs">小红书</option><option value="sph">视频号</option><option value="douyin">抖音</option><option value="bilibili">B站</option><option value="zhihu">知乎</option><option value="weibo">微博</option></select><span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-base">expand_more</span></div><div class="flex items-center gap-space-xs"><button class="flex items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface text-label-md font-label-md px-space-md py-1.5 rounded-full shadow-sm transition-colors" type="button"><span class="material-symbols-outlined text-base">download</span><span class="hidden sm:inline">导出 CSV</span></button><button class="w-8 h-8 rounded-full bg-surface-container-lowest hover:bg-surface-container-high flex items-center justify-center text-on-surface shadow-sm transition-colors" type="button"><span class="material-symbols-outlined text-base">refresh</span></button></div><button class="relative w-8 h-8 rounded-full bg-surface-container-lowest hover:bg-surface-container-high flex items-center justify-center text-on-surface shadow-sm transition-colors" type="button"><span class="material-symbols-outlined text-lg">notifications</span><span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span></button><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="../assets/img-4.png"><div class="hidden md:flex flex-col"><span class="text-label-md font-label-md text-on-surface leading-tight">Alexandra</span><span class="text-label-sm font-label-sm text-on-surface-variant leading-tight">主理人</span></div></div></div></header><main class="w-full pt-20 px-space-lg pb-space-lg bg-surface-container-low min-h-screen"><div class="w-full"><div class="flex flex-col w-full">
+<!-- Top Welcome & System Status Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+<div>
+<div class="flex items-center gap-space-sm mb-1">
+<h2 class="text-headline-lg font-headline-lg text-on-surface tracking-tight">早安，Alexandra</h2>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container-lowest text-on-surface-variant shadow-sm">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          运行正常 · 周二发布窗口期
+        </span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant">今天是 2026年3月18日。本周内容规划已推进 57%，3篇内容待最终确认发布。</p>
+</div>
+<!-- Quick Action Cluster -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-primary text-on-primary rounded-full text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" onclick="openDrawer('quick-new-modal')" type="button">
+<span class="material-symbols-outlined text-base">add_circle</span>
+<span>新建排期</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-surface-container-lowest text-on-surface rounded-full text-label-md font-label-md shadow-sm hover:bg-surface-container-high transition-all" type="button">
+<span class="material-symbols-outlined text-base">auto_awesome</span>
+<span>AI选题灵感</span>
+</button>
+<div class="h-6 w-px bg-outline-variant/40 mx-1 hidden sm:block"></div>
+<button class="w-9 h-9 rounded-full bg-surface-container-lowest text-on-surface flex items-center justify-center shadow-sm hover:bg-surface-container-high transition-all" type="button">
+<span class="material-symbols-outlined text-base">tune</span>
+</button>
+</div>
+</div>
+<!-- KPI Cards (4 Pastel Macaron Cards matching reference visual identity) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-lg">
+<!-- Card 1: Soft Lavender Violet (待写选题) -->
+<div class="relative overflow-hidden rounded-xl bg-tertiary-fixed p-space-lg flex flex-col justify-between shadow-sm transition-transform hover:-translate-y-0.5">
+<div class="flex items-center justify-between gap-space-sm">
+<span class="text-label-md font-label-md text-on-tertiary-fixed-variant tracking-wide uppercase">待写选题</span>
+<button class="px-3 py-1 rounded-full bg-surface-container-lowest text-on-surface text-label-sm font-label-sm shadow-sm hover:bg-surface-container-high transition-all" type="button">
+          查看
+        </button>
+</div>
+<div class="mt-space-md">
+<div class="text-display-lg font-display-lg text-tertiary leading-none tracking-tight">14</div>
+<p class="mt-2 text-label-sm font-label-sm text-on-tertiary-fixed-variant/80">选题池里状态为「待写」</p>
+</div>
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-surface-container-lowest/25 rounded-full pointer-events-none blur-xl"></div>
+</div>
+<!-- Card 2: Soft Sky Cyan (本周待发布) -->
+<div class="relative overflow-hidden rounded-xl bg-[#D5EAF7] p-space-lg flex flex-col justify-between shadow-sm transition-transform hover:-translate-y-0.5">
+<div class="flex items-center justify-between gap-space-sm">
+<span class="text-label-md font-label-md text-[#2C495E] tracking-wide uppercase">本周待发布</span>
+<button class="px-3 py-1 rounded-full bg-surface-container-lowest text-on-surface text-label-sm font-label-sm shadow-sm hover:bg-surface-container-high transition-all" type="button">
+          排期
+        </button>
+</div>
+<div class="mt-space-md">
+<div class="text-display-lg font-display-lg text-[#0F283C] leading-none tracking-tight">6</div>
+<p class="mt-2 text-label-sm font-label-sm text-[#2C495E]/80">本周区间 03.18 ~ 03.24</p>
+</div>
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-surface-container-lowest/25 rounded-full pointer-events-none blur-xl"></div>
+</div>
+<!-- Card 3: Soft Butter Golden Yellow (本周已发布) -->
+<div class="relative overflow-hidden rounded-xl bg-secondary-fixed p-space-lg flex flex-col justify-between shadow-sm transition-transform hover:-translate-y-0.5">
+<div class="flex items-center justify-between gap-space-sm">
+<span class="text-label-md font-label-md text-on-secondary-fixed-variant tracking-wide uppercase">本周已发布</span>
+<button class="px-3 py-1 rounded-full bg-surface-container-lowest text-on-surface text-label-sm font-label-sm shadow-sm hover:bg-surface-container-high transition-all" type="button">
+          明细
+        </button>
+</div>
+<div class="mt-space-md">
+<div class="text-display-lg font-display-lg text-secondary leading-none tracking-tight">8</div>
+<p class="mt-2 text-label-sm font-label-sm text-on-secondary-fixed-variant/80">含二次分发与已复盘</p>
+</div>
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-surface-container-lowest/25 rounded-full pointer-events-none blur-xl"></div>
+</div>
+<!-- Card 4: Soft Pale Mint/Sage (近7天净增粉) -->
+<div class="relative overflow-hidden rounded-xl bg-[#DCF3E5] p-space-lg flex flex-col justify-between shadow-sm transition-transform hover:-translate-y-0.5">
+<div class="flex items-center justify-between gap-space-sm">
+<span class="text-label-md font-label-md text-[#23583A] tracking-wide uppercase">近 7 天净增粉</span>
+<span class="flex items-center gap-0.5 text-label-sm font-label-sm text-[#1B6F43] bg-surface-container-lowest px-2 py-0.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-xs">north</span> +18.4%
+        </span>
+</div>
+<div class="mt-space-md">
+<div class="text-display-lg font-display-lg text-[#0F3B23] leading-none tracking-tight">+1,280</div>
+<p class="mt-2 text-label-sm font-label-sm text-[#23583A]/80">同期总阅读 14.2W · 互动率 8.4%</p>
+</div>
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-surface-container-lowest/25 rounded-full pointer-events-none blur-xl"></div>
+</div>
+</div>
+<!-- Main Asymmetric Workspace Layout (7:3 ratio on large screens) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT CORE COLUMN (Span 8) -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg min-w-0">
+<!-- Flow Wave Data Visualization Card (Recreating Reference Layout Flow Graph & Scatter) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md pb-space-md">
+<div>
+<div class="flex items-center gap-space-sm">
+<h3 class="text-headline-md font-headline-md text-on-surface">全网表现走势</h3>
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-secondary-fixed text-on-secondary-fixed">
+                +127 今日净增
+              </span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-0.5">跨全渠道数据流向分析 · 阅读播放流 vs 互动转化点阵</p>
+</div>
+<div class="flex items-center gap-space-xs">
+<div class="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-full text-label-sm font-label-sm text-on-surface">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">filter_list</span>
+<span>全部平台</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-full text-label-sm font-label-sm text-on-surface">
+<span>本月走势</span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded-full">×10 倍率</span>
+</div>
+</div>
+<!-- Metric Stream SVG Art & Flow Simulation (Exact Reference Stream Wave Feel) -->
+<div class="relative w-full h-64 my-2 overflow-hidden rounded-xl bg-surface-container-low/40 p-4">
+<!-- Sparkline Mini HUD overlay -->
+<div class="absolute left-6 top-6 flex flex-col gap-2 z-10">
+<div class="flex items-baseline gap-2">
+<span class="text-body-sm font-body-sm text-on-surface-variant">阅读 / 播放</span>
+<span class="text-headline-sm font-headline-sm text-on-surface">142,500</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-body-sm font-body-sm text-on-surface-variant">点赞收藏</span>
+<span class="text-headline-sm font-headline-sm text-on-surface">11,840</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-body-sm font-body-sm text-on-surface-variant">主页访问</span>
+<span class="text-headline-sm font-headline-sm text-on-surface">3,490</span>
+</div>
+</div>
+<!-- Mid Right Micro Indicators -->
+<div class="absolute right-6 top-6 flex flex-col gap-1.5 z-10 text-right">
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">公众号推文</span>
+<span class="text-label-md font-label-md text-on-surface ml-2">27.9k</span>
+</div>
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">小红书图文</span>
+<span class="text-label-md font-label-md text-on-surface ml-2">64.2k</span>
+</div>
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">视频号/B站</span>
+<span class="text-label-md font-label-md text-on-surface ml-2">50.4k</span>
+</div>
+</div>
+<!-- Inline Smooth Flow Waves with Scatter Dot Galaxy -->
+<svg class="w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 740 240">
+<defs>
+<linearGradient id="warmYellowFlow" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#FFD975" stop-opacity="0.9"></stop>
+<stop offset="60%" stop-color="#FCD672" stop-opacity="0.75"></stop>
+<stop offset="100%" stop-color="#E7C361" stop-opacity="0.2"></stop>
+</linearGradient>
+<linearGradient id="coolPeriwinkleFlow" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#C5C3EB" stop-opacity="0.8"></stop>
+<stop offset="50%" stop-color="#D5EAF7" stop-opacity="0.6"></stop>
+<stop offset="100%" stop-color="#DCF3E5" stop-opacity="0.15"></stop>
+</linearGradient>
+<linearGradient id="coralAccentFlow" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#FF8A65" stop-opacity="0.75"></stop>
+<stop offset="100%" stop-color="#FFB74D" stop-opacity="0.1"></stop>
+</linearGradient>
+</defs>
+<!-- Guide Axis Markers -->
+<line stroke="#E1E2E5" stroke-dasharray="2 3" stroke-width="1.5" x1="80" x2="80" y1="50" y2="200"></line>
+<line stroke="#E1E2E5" stroke-dasharray="2 3" stroke-width="1.5" x1="430" x2="430" y1="50" y2="200"></line>
+<!-- Smooth Bezier Flow Ribbons matching inspiration -->
+<path d="M 80,140 C 220,135 280,70 430,75 L 430,95 C 280,90 220,155 80,160 Z" fill="url(#warmYellowFlow)"></path>
+<path d="M 80,150 C 220,150 280,115 430,118 L 430,132 C 280,128 220,163 80,163 Z" fill="url(#coolPeriwinkleFlow)"></path>
+<path d="M 80,162 C 220,162 280,150 430,152 L 430,158 C 280,156 220,168 80,168 Z" fill="url(#coralAccentFlow)"></path>
+<!-- Scatter Dot Field (Visualizing interactions & conversions) -->
+<!-- Yellow Dots -->
+<circle cx="460" cy="70" fill="#E7C361" opacity="0.85" r="4.5"></circle>
+<circle cx="490" cy="58" fill="#E7C361" opacity="0.65" r="3"></circle>
+<circle cx="530" cy="74" fill="#E7C361" opacity="0.9" r="5"></circle>
+<circle cx="560" cy="62" fill="#E7C361" opacity="0.5" r="3"></circle>
+<circle cx="600" cy="68" fill="#E7C361" opacity="0.8" r="4"></circle>
+<circle cx="640" cy="80" fill="#E7C361" opacity="0.4" r="3"></circle>
+<circle cx="680" cy="64" fill="#E7C361" opacity="0.75" r="4.5"></circle>
+<circle cx="510" cy="90" fill="#E7C361" opacity="0.7" r="3.5"></circle>
+<circle cx="580" cy="86" fill="#E7C361" opacity="0.6" r="4"></circle>
+<circle cx="650" cy="94" fill="#E7C361" opacity="0.5" r="2.5"></circle>
+<!-- Periwinkle Dots -->
+<circle cx="455" cy="115" fill="#8785AA" opacity="0.8" r="4"></circle>
+<circle cx="485" cy="128" fill="#8785AA" opacity="0.6" r="3"></circle>
+<circle cx="525" cy="110" fill="#8785AA" opacity="0.85" r="4.5"></circle>
+<circle cx="550" cy="125" fill="#8785AA" opacity="0.5" r="3"></circle>
+<circle cx="590" cy="118" fill="#8785AA" opacity="0.75" r="5"></circle>
+<circle cx="620" cy="132" fill="#8785AA" opacity="0.4" r="2.5"></circle>
+<circle cx="660" cy="120" fill="#8785AA" opacity="0.85" r="4"></circle>
+<circle cx="700" cy="126" fill="#8785AA" opacity="0.6" r="3"></circle>
+<!-- Coral / Rose Accent Dots -->
+<circle cx="470" cy="162" fill="#BA1A1A" opacity="0.4" r="3.5"></circle>
+<circle cx="505" cy="155" fill="#FF8A65" opacity="0.7" r="4"></circle>
+<circle cx="545" cy="168" fill="#FF8A65" opacity="0.6" r="3"></circle>
+<circle cx="610" cy="156" fill="#FF8A65" opacity="0.8" r="4"></circle>
+<circle cx="675" cy="162" fill="#FF8A65" opacity="0.5" r="3"></circle>
+</svg>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pt-space-sm text-label-sm font-label-sm text-on-surface-variant">
+<div class="flex items-center gap-space-md">
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span>阅读流向</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim"></span>互动扩散</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#FF8A65]"></span>转化触达</span>
+</div>
+<span class="mt-2 sm:mt-0 font-medium text-on-surface">7日平均互动率 8.31% · 转化合计 420 留资</span>
+</div>
+</div>
+<!-- This Week Schedule Table (本周待发布清单) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<h3 class="text-headline-md font-headline-md text-on-surface">本周待发布清单</h3>
+<span class="px-2.5 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container-high text-on-surface-variant">
+              本周 6 篇待发
+            </span>
+</div>
+<div class="flex items-center gap-space-xs text-label-sm font-label-sm">
+<button class="px-3 py-1.5 rounded-full bg-primary text-on-primary font-medium" type="button">全选批量操作</button>
+<button class="w-8 h-8 rounded-full bg-surface-container text-on-surface flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-base">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto -mx-space-lg px-space-lg">
+<div class="min-w-[660px] flex flex-col gap-2">
+<!-- Row 1 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-container-low transition-all">
+<div class="flex items-center gap-3 min-w-0 flex-1">
+<input class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer" type="checkbox">
+<!-- Channel Badge -->
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFECE9] text-[#C93B2B] text-label-sm font-label-sm flex-shrink-0">
+<span class="material-symbols-outlined text-sm">photo_library</span>
+<span>小红书</span>
+</div>
+<!-- Content Title & Metadata -->
+<div class="min-w-0 flex-1">
+<p class="text-body-md font-headline-sm text-on-surface truncate">《2026 AI工具全景拆解：普通人靠3款神器提升效率》</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant truncate">SC2603-01 · 负责人：晨曦 · 计划 03.18 19:30</p>
+</div>
+</div>
+<!-- Stage & Action Pill -->
+<div class="flex items-center gap-space-sm flex-shrink-0 pl-space-md">
+<select class="appearance-none bg-surface-container-lowest text-label-sm font-label-sm text-amber-700 px-3 py-1 rounded-full shadow-sm focus:outline-none cursor-pointer">
+<option>待审核</option>
+<option selected="">待发布</option>
+<option>已发布</option>
+</select>
+<button class="px-3 py-1 bg-primary text-on-primary rounded-full text-label-sm font-label-sm shadow-sm hover:opacity-85 transition-all" onclick="markPublished(this)" type="button">
+                  标记已发布
+                </button>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-container-low transition-all">
+<div class="flex items-center gap-3 min-w-0 flex-1">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer" type="checkbox">
+<!-- Channel Badge -->
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E5F6EB] text-[#1D7446] text-label-sm font-label-sm flex-shrink-0">
+<span class="material-symbols-outlined text-sm">article</span>
+<span>公众号</span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="text-body-md font-headline-sm text-on-surface truncate">《从零到一：做个人知识IP如何找到首批种子读者？》</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant truncate">SC2603-02 · 负责人：Alexandra · 计划 03.19 12:00</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0 pl-space-md">
+<select class="appearance-none bg-surface-container-lowest text-label-sm font-label-sm text-amber-700 px-3 py-1 rounded-full shadow-sm focus:outline-none cursor-pointer">
+<option selected="">待发布</option>
+<option>已发布</option>
+<option>待审核</option>
+</select>
+<button class="px-3 py-1 bg-primary text-on-primary rounded-full text-label-sm font-label-sm shadow-sm hover:opacity-85 transition-all" onclick="markPublished(this)" type="button">
+                  标记已发布
+                </button>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-container-low transition-all">
+<div class="flex items-center gap-3 min-w-0 flex-1">
+<input class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer" type="checkbox">
+<!-- Channel Badge -->
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E8F0FE] text-[#1967D2] text-label-sm font-label-sm flex-shrink-0">
+<span class="material-symbols-outlined text-sm">smart_display</span>
+<span>B站视频</span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="text-body-md font-headline-sm text-on-surface truncate">《【实操录屏】手把手带你搭建自己的自媒体选题飞轮》</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant truncate">SC2603-05 · 负责人：凯文 · 计划 03.20 20:00</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0 pl-space-md">
+<select class="appearance-none bg-surface-container-lowest text-label-sm font-label-sm text-slate-700 px-3 py-1 rounded-full shadow-sm focus:outline-none cursor-pointer">
+<option selected="">待审核</option>
+<option>待发布</option>
+<option>已发布</option>
+</select>
+<button class="px-3 py-1 bg-primary text-on-primary rounded-full text-label-sm font-label-sm shadow-sm hover:opacity-85 transition-all" onclick="markPublished(this)" type="button">
+                  标记已发布
+                </button>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-container-low transition-all">
+<div class="flex items-center gap-3 min-w-0 flex-1">
+<input class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer" type="checkbox">
+<!-- Channel Badge -->
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-label-sm font-label-sm flex-shrink-0">
+<span class="material-symbols-outlined text-sm">videocam</span>
+<span>视频号</span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="text-body-md font-headline-sm text-on-surface truncate">《60秒晨间认知觉醒：别让伪努力消耗你的创作者精力》</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant truncate">SC2603-08 · 负责人：晨曦 · 计划 03.21 08:30</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0 pl-space-md">
+<select class="appearance-none bg-surface-container-lowest text-label-sm font-label-sm text-amber-700 px-3 py-1 rounded-full shadow-sm focus:outline-none cursor-pointer">
+<option selected="">待发布</option>
+<option>待审核</option>
+<option>已发布</option>
+</select>
+<button class="px-3 py-1 bg-primary text-on-primary rounded-full text-label-sm font-label-sm shadow-sm hover:opacity-85 transition-all" onclick="markPublished(this)" type="button">
+                  标记已发布
+                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Weekly Frequency Cadence Bar Chart (每周更新频率柱状图) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs mb-space-md">
+<div>
+<h3 class="text-headline-md font-headline-md text-on-surface">近 8 周更新频率节奏</h3>
+<p class="text-label-sm font-label-sm text-on-surface-variant">保持稳定输出节奏（目标 5 篇/周）</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-label-sm font-label-sm text-on-surface-variant">合计 38 篇已发布</span>
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-[#E5F6EB] text-[#1D7446]">达标率 95%</span>
+</div>
+</div>
+<!-- Rounded Bars visualization -->
+<div class="grid grid-cols-8 gap-3 sm:gap-6 items-end h-40 pt-6 pb-2 px-2">
+<!-- Week 1 -->
+<div class="flex flex-col items-center gap-2 h-full justify-end group">
+<div class="text-label-sm font-label-sm text-on-surface-variant group-hover:text-primary">4篇</div>
+<div class="w-full max-w-[28px] bg-surface-container-high rounded-full transition-all group-hover:bg-secondary-container" style="height: 55%;"></div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">W04</span>
+</div>
+<!-- Week 2 -->
+<div class="flex flex-col items-center gap-2 h-full justify-end group">
+<div class="text-label-sm font-label-sm text-on-surface-variant group-hover:text-primary">5篇</div>
+<div class="w-full max-w-[28px] bg-surface-container-high rounded-full transition-all group-hover:bg-secondary-container" style="height: 70%;"></div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">W05</span>
+</div>
+<!-- Week 3 -->
+<div class="flex flex-col items-center gap-2 h-full justify-end group">
+<div class="text-label-sm font-label-sm text-on-surface-variant group-hover:text-primary">6篇</div>
+<div class="w-full max-w-[28px] bg-secondary-container rounded-full transition-all" style="height: 85%;"></div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">W06</span>
+</div>
+<!-- Week 4 -->
+<div class="flex flex-col items-center gap-2 h-full justify-end group">
+<div class="text-label-sm font-label-sm text-on-surface-variant group-hover:text-primary">4篇</div>
+<div class="w-full max-w-[28px] bg-surface-container-high rounded-full transition-all group-hover:bg-secondary-container" style="height: 55%;"></div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">W07</span>
+</div>
+<!-- Week 5 -->
+<div class="flex flex-col items-center gap-2 h-full justify-end group">
+<div class="text-label-sm font-label-sm text-on-surface-variant group-hover:text-primary">5篇</div>
+<div class="w-full max-w-[28px] bg-secondary-container rounded-full transition-all" style="height: 70%;"></div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">W08</span>
+</div>
+<!-- Week 6 -->
+<div class="flex flex-col items-center gap-2 h-full justify-end group">
+<div class="text-label-sm font-label-sm text-on-surface-variant group-hover:text-primary">5篇</div>
+<div class="w-full max-w-[28px] bg-secondary-container rounded-full transition-all" style="height: 70%;"></div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">W09</span>
+</div>
+<!-- Week 7 -->
+<div class="flex flex-col items-center gap-2 h-full justify-end group">
+<div class="text-label-sm font-label-sm text-on-surface-variant group-hover:text-primary">6篇</div>
+<div class="w-full max-w-[28px] bg-secondary-container rounded-full transition-all" style="height: 85%;"></div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">W10</span>
+</div>
+<!-- Week 8 (Current) -->
+<div class="flex flex-col items-center gap-2 h-full justify-end group">
+<div class="text-label-sm font-label-sm text-primary font-bold">3/5</div>
+<div class="w-full max-w-[28px] bg-primary rounded-full transition-all" style="height: 48%;"></div>
+<span class="text-label-sm font-label-sm text-primary font-bold">本周</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT FOCUS PANEL (Span 4 - Matches right dock in reference) -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Profile Card Quick Summary (Top right widget from reference) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col items-center text-center">
+<div class="relative">
+<img alt="Alexandra Rose" class="w-16 h-16 rounded-full object-cover" src="../assets/img-4.png">
+<span class="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-surface-container-lowest"></span>
+</div>
+<h4 class="mt-space-sm text-headline-sm font-headline-sm text-on-surface">Alexandra Rose</h4>
+<span class="text-label-sm font-label-sm text-on-surface-variant">全域主理人 · 矩阵账号管家</span>
+<!-- Three Soft Icon Pods -->
+<div class="flex items-center gap-space-sm mt-space-md">
+<button class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shadow-sm hover:opacity-90" type="button">
+<span class="material-symbols-outlined text-lg">star</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed shadow-sm hover:opacity-90" type="button">
+<span class="material-symbols-outlined text-lg">campaign</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-[#D5EAF7] flex items-center justify-center text-[#0F283C] shadow-sm hover:opacity-90" type="button">
+<span class="material-symbols-outlined text-lg">chat_bubble</span>
+</button>
+</div>
+</div>
+<!-- PAIN POINT 4: Overdue Alert Box (逾期排期警示) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm border-l-4 border-l-error">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-error text-xl">warning</span>
+<h4 class="text-headline-sm font-headline-sm text-on-surface">逾期排期警示</h4>
+</div>
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-error-container text-on-error-container font-semibold">
+            2 篇已延期
+          </span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-space-md">排期时间已过但未录入发布状态，需紧急协调发布或顺延。</p>
+<!-- Overdue Items List -->
+<div class="flex flex-col gap-space-sm">
+<!-- Overdue 1 -->
+<div class="p-space-sm rounded-xl bg-error-container/20 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-error font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> 逾期 3 天前
+              </span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">小红书图文</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface font-medium truncate">《搞定自媒体变现的 5 种底层商业模式》</p>
+<div class="flex items-center justify-between pt-1">
+<span class="text-label-sm font-label-sm text-on-surface-variant">负责人：凯文</span>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-0.5 rounded-full bg-surface-container-lowest text-label-sm font-label-sm text-on-surface hover:bg-surface-container-high shadow-sm" type="button">
+                  一键顺延
+                </button>
+<button class="px-2.5 py-0.5 rounded-full bg-primary text-label-sm font-label-sm text-on-primary hover:opacity-90 shadow-sm" type="button">
+                  补录发布
+                </button>
+</div>
+</div>
+</div>
+<!-- Overdue 2 -->
+<div class="p-space-sm rounded-xl bg-error-container/20 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-error font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> 逾期 1 天前
+              </span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">微信公众号</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface font-medium truncate">《每周认知早报：AI时代个人IP的护城河是什么？》</p>
+<div class="flex items-center justify-between pt-1">
+<span class="text-label-sm font-label-sm text-on-surface-variant">负责人：晨曦</span>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-0.5 rounded-full bg-surface-container-lowest text-label-sm font-label-sm text-on-surface hover:bg-surface-container-high shadow-sm" type="button">
+                  一键顺延
+                </button>
+<button class="px-2.5 py-0.5 rounded-full bg-primary text-label-sm font-label-sm text-on-primary hover:opacity-90 shadow-sm" type="button">
+                  补录发布
+                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- PAIN POINT 5: Today's Pending Review Log (今日待录数据清单) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-xl">dataset</span>
+<h4 class="text-headline-sm font-headline-sm text-on-surface">今日待录数据清单</h4>
+</div>
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-secondary-fixed text-on-secondary-fixed-variant">
+            3 篇待快照
+          </span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-space-md">已发布但今日未录入 24h / 72h 数据快照的内容，点击「记一条」补齐。</p>
+<!-- Snapshot To-Do Stream -->
+<div class="flex flex-col gap-2">
+<!-- Item 1 -->
+<div class="p-2.5 rounded-xl bg-surface flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-all">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5 mb-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1D7446]"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">小红书 · 发布后第 1 天</span>
+</div>
+<p class="text-body-sm font-headline-sm text-on-surface truncate">《 Notion 搭建团队内容知识库实操教程》</p>
+</div>
+<button class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-label-sm font-label-sm font-medium shadow-sm hover:opacity-90 flex-shrink-0" onclick="openDrawer('quick-review-drawer')" type="button">
+              记一条
+            </button>
+</div>
+<!-- Item 2 -->
+<div class="p-2.5 rounded-xl bg-surface flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-all">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5 mb-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1967D2]"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">B站 · 发布后第 3 天</span>
+</div>
+<p class="text-body-sm font-headline-sm text-on-surface truncate">《2026 做个人IP，千万不要犯的5个认知错误》</p>
+</div>
+<button class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-label-sm font-label-sm font-medium shadow-sm hover:opacity-90 flex-shrink-0" onclick="openDrawer('quick-review-drawer')" type="button">
+              记一条
+            </button>
+</div>
+<!-- Item 3 -->
+<div class="p-2.5 rounded-xl bg-surface flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-all">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5 mb-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#070725]"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">视频号 · 发布后第 7 天 (终审)</span>
+</div>
+<p class="text-body-sm font-headline-sm text-on-surface truncate">《为什么说小而美是一人公司的终极形态》</p>
+</div>
+<button class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-label-sm font-label-sm font-medium shadow-sm hover:opacity-90 flex-shrink-0" onclick="openDrawer('quick-review-drawer')" type="button">
+              记一条
+            </button>
+</div>
+</div>
+</div>
+<!-- Audio & Multimedia Waveform Snippet (Direct match with bottom right audio player from reference) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<h4 class="text-headline-sm font-headline-sm text-on-surface">口播录音试听审校</h4>
+<span class="text-label-sm font-label-sm text-on-surface-variant">下一条</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-space-md">《从零到一做IP》播客配音切片 · 01:42</p>
+<!-- Simulated Frequency Waveform -->
+<div class="relative w-full h-12 flex items-center justify-between gap-0.5 px-2 bg-surface-container-low/60 rounded-xl overflow-hidden">
+<div class="w-1 bg-on-surface-variant/40 rounded-full h-3"></div>
+<div class="w-1 bg-on-surface-variant/50 rounded-full h-5"></div>
+<div class="w-1 bg-on-surface-variant/70 rounded-full h-8"></div>
+<div class="w-1 bg-on-surface-variant/60 rounded-full h-4"></div>
+<div class="w-1 bg-secondary rounded-full h-9"></div>
+<div class="w-1 bg-secondary rounded-full h-11"></div>
+<div class="w-1 bg-secondary rounded-full h-7"></div>
+<div class="w-1 bg-secondary rounded-full h-10"></div>
+<div class="w-1 bg-secondary rounded-full h-6"></div>
+<div class="w-1 bg-on-surface-variant/40 rounded-full h-4"></div>
+<div class="w-1 bg-on-surface-variant/40 rounded-full h-7"></div>
+<div class="w-1 bg-on-surface-variant/50 rounded-full h-9"></div>
+<div class="w-1 bg-on-surface-variant/60 rounded-full h-5"></div>
+<div class="w-1 bg-on-surface-variant/30 rounded-full h-3"></div>
+<div class="w-1 bg-on-surface-variant/40 rounded-full h-6"></div>
+<div class="w-1 bg-on-surface-variant/50 rounded-full h-8"></div>
+<div class="w-1 bg-on-surface-variant/40 rounded-full h-4"></div>
+<div class="w-1 bg-on-surface-variant/30 rounded-full h-2"></div>
+<div class="w-1 bg-on-surface-variant/40 rounded-full h-6"></div>
+<div class="w-1 bg-on-surface-variant/50 rounded-full h-7"></div>
+<!-- Playhead Marker -->
+<div class="absolute left-1/3 top-0 bottom-0 w-0.5 bg-error"></div>
+<span class="absolute right-2 bottom-1 text-[10px] text-on-surface-variant font-mono">00:32</span>
+</div>
+<!-- Audio Micro Controls -->
+<div class="flex items-center justify-between mt-space-md pt-space-xs text-on-surface">
+<span class="text-label-sm font-label-sm bg-surface-container px-2 py-0.5 rounded-full cursor-pointer hover:bg-surface-container-high">1.0x</span>
+<div class="flex items-center gap-space-sm">
+<button class="text-on-surface-variant hover:text-on-surface" type="button"><span class="material-symbols-outlined text-lg">replay_10</span></button>
+<button class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center hover:opacity-90" type="button">
+<span class="material-symbols-outlined text-base">pause</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface" type="button"><span class="material-symbols-outlined text-lg">forward_10</span></button>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-lg">volume_up</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Slide-Over Drawer for "记一条" (Quick Data Snapshot Modal) -->
+<div class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300 flex justify-end" id="quick-review-drawer">
+<div class="absolute inset-0 bg-primary-container/40 backdrop-blur-sm pointer-events-auto" onclick="closeDrawer('quick-review-drawer')"></div>
+<div class="relative w-full max-w-md bg-surface-container-lowest h-full shadow-2xl p-space-lg flex flex-col justify-between pointer-events-auto transform translate-x-full transition-transform duration-300 overflow-y-auto">
+<div>
+<div class="flex items-center justify-between pb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">dataset</span>
+<h3 class="text-headline-md font-headline-md text-on-surface">录入内容数据快照</h3>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface" onclick="closeDrawer('quick-review-drawer')" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-space-lg">
+          正在为《Notion 搭建团队内容知识库实操教程》录入阶段数据（发布后 24h 快照）。
+        </p>
+<form class="flex flex-col gap-space-md" onsubmit="event.preventDefault(); submitSnapshot();">
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">快照节点</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-label-sm font-label-sm font-semibold" type="button">24小时</button>
+<button class="py-1.5 rounded-full bg-surface-container text-on-surface text-label-sm font-label-sm" type="button">72小时</button>
+<button class="py-1.5 rounded-full bg-surface-container text-on-surface text-label-sm font-label-sm" type="button">7天终审</button>
+</div>
+</div>
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">播放 / 阅读量</label>
+<input class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none" placeholder="例如：28500" type="number">
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">点赞量</label>
+<input class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none" placeholder="例如：1420" type="number">
+</div>
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">收藏量</label>
+<input class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none" placeholder="例如：890" type="number">
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">评论数</label>
+<input class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none" placeholder="例如：156" type="number">
+</div>
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">净涨粉数</label>
+<input class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none" placeholder="例如：128" type="number">
+</div>
+</div>
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">核心复盘心得 / 爆款归因</label>
+<textarea class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none" placeholder="首图对比度高、前3秒痛点切入精准，评论区置顶了领取模板引导..." rows="3"></textarea>
+</div>
+</form>
+</div>
+<div class="pt-space-md flex items-center gap-space-sm">
+<button class="flex-1 py-2.5 rounded-full bg-surface-container text-on-surface text-label-md font-label-md" onclick="closeDrawer('quick-review-drawer')" type="button">取消</button>
+<button class="flex-1 py-2.5 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-md" onclick="submitSnapshot()" type="button">保存快照数据</button>
+</div>
+</div>
+</div>
+<!-- Interactive Modal for "新建排期" -->
+<div class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300 flex items-center justify-center p-4" id="quick-new-modal">
+<div class="absolute inset-0 bg-primary-container/40 backdrop-blur-sm pointer-events-auto" onclick="closeDrawer('quick-new-modal')"></div>
+<div class="relative w-full max-w-lg bg-surface-container-lowest rounded-2xl shadow-2xl p-space-lg flex flex-col pointer-events-auto transform scale-95 transition-transform duration-300">
+<div class="flex items-center justify-between pb-space-sm">
+<h3 class="text-headline-md font-headline-md text-on-surface">新建发布排期任务</h3>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface" onclick="closeDrawer('quick-new-modal')" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-space-md">将选题快速分配发布渠道与排期责任人。</p>
+<div class="flex flex-col gap-space-md">
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">选择选题库</label>
+<select class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none">
+<option>《2026 最新AI工具全景拆解指南》（待写）</option>
+<option>《如何用小红书搭建高客单成交闭环》（草稿中）</option>
+<option>《一人自媒体团队的高效周工作流配置》（待审）</option>
+</select>
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">主发布平台</label>
+<select class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none">
+<option>小红书 (图文/视频)</option>
+<option>微信公众号 (长图文)</option>
+<option>Bilibili (视频)</option>
+<option>微信视频号</option>
+<option>抖音</option>
+</select>
+</div>
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">负责人</label>
+<select class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none">
+<option>Alexandra (主理人)</option>
+<option>晨曦 (内容运营)</option>
+<option>凯文 (视频剪辑)</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">计划发布日期</label>
+<input class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none" type="date" value="2026-03-22">
+</div>
+<div>
+<label class="text-label-sm font-label-sm text-on-surface block mb-1">黄金发布时段</label>
+<input class="w-full bg-surface-container-low px-space-md py-2 rounded-xl text-body-md font-body-md text-on-surface focus:outline-none" type="time" value="19:30">
+</div>
+</div>
+</div>
+<div class="pt-space-lg flex items-center justify-end gap-space-sm">
+<button class="px-space-md py-2 rounded-full bg-surface-container text-on-surface text-label-md font-label-md" onclick="closeDrawer('quick-new-modal')" type="button">取消</button>
+<button class="px-space-md py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-md" onclick="closeDrawer('quick-new-modal')" type="button">创建并加入排期</button>
+</div>
+</div>
+</div>
+<!-- Inline Client-side Micro-interactions -->
+<script>
+    function openDrawer(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('pointer-events-none', 'opacity-0');
+      const inner = el.querySelector('div:last-child');
+      if (inner) {
+        inner.classList.remove('translate-x-full', 'scale-95');
+      }
+    }
+
+    function closeDrawer(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('opacity-0');
+      const inner = el.querySelector('div:last-child');
+      if (inner) {
+        if (id.includes('drawer')) inner.classList.add('translate-x-full');
+        if (id.includes('modal')) inner.classList.add('scale-95');
+      }
+      setTimeout(() => el.classList.add('pointer-events-none'), 300);
+    }
+
+    function markPublished(btn) {
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span class="material-symbols-outlined text-xs">check</span> 已标记';
+      btn.classList.remove('bg-primary', 'text-on-primary');
+      btn.classList.add('bg-emerald-600', 'text-white');
+      setTimeout(() => {
+        const row = btn.closest('.flex.items-center.justify-between');
+        if (row) {
+          row.style.opacity = '0.5';
+          row.style.transform = 'scale(0.99)';
+        }
+      }, 400);
+    }
+
+    function submitSnapshot() {
+      closeDrawer('quick-review-drawer');
+    }
+  </script>
+</div></div></main></div></body></html>

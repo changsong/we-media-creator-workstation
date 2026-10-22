@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf .chrome-verify tmp-verify/*)",
+      "Bash(mkdir -p tmp-verify)",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --no-first-run --user-data-dir=\"D:/workspace/we-media-creator-workstation/.chrome-verify\" --window-size=1440,2200 --virtual-time-budget=7000 --screenshot=\"D:/workspace/we-media-creator-workstation/tmp-verify/home.png\" \"http://127.0.0.1:5180/#home\")"
+    ]
+  }
+}

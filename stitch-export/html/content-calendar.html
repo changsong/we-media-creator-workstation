@@ -1,0 +1,1201 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="../assets/fonts-icons.css" rel="stylesheet"><link href="../assets/fonts-text.css" rel="stylesheet">
+<link href="../assets/fonts-icons2.css" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="../assets/tailwind.js"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container":"#785d00","on-tertiary-fixed-variant":"#444465","primary-fixed-dim":"#c6c6c9","surface-container-low":"#f2f3f6","primary-container":"#202224","secondary-fixed-dim":"#e7c361","secondary-container":"#ffd975","on-error":"#ffffff","outline-variant":"#c5c6ca","surface":"#f8f9fc","surface-tint":"#5d5e61","inverse-surface":"#2e3133","on-background":"#191c1e","surface-container-high":"#e7e8eb","on-secondary-fixed":"#241a00","background":"#f8f9fc","secondary":"#755b00","secondary-fixed":"#ffdf91","surface-bright":"#f8f9fc","surface-container-highest":"#e1e2e5","surface-container-lowest":"#ffffff","on-primary-container":"#88898b","tertiary":"#070725","primary-fixed":"#e2e2e5","outline":"#75777a","surface-container":"#edeef1","tertiary-fixed-dim":"#c5c3eb","primary":"#090c0d","on-error-container":"#93000a","tertiary-fixed":"#e2dfff","on-surface-variant":"#44474a","inverse-on-surface":"#f0f1f4","on-surface":"#191c1e","inverse-primary":"#c6c6c9","surface-dim":"#d9dadd","on-primary-fixed":"#1a1c1e","on-secondary-fixed-variant":"#594400","tertiary-container":"#1e1e3d","on-primary":"#ffffff","on-tertiary":"#ffffff","on-primary-fixed-variant":"#454749","surface-variant":"#e1e2e5","error-container":"#ffdad6","on-tertiary-container":"#8785aa","error":"#ba1a1a","on-secondary":"#ffffff","on-tertiary-fixed":"#181837"},borderRadius:{DEFAULT:"1rem",lg:"2rem",xl:"3rem",full:"9999px"},spacing:{"space-xs":"0.25rem","space-xl":"2.25rem",margin:"1.5rem","space-md":"1rem",gutter:"1.25rem","space-lg":"1.5rem","space-sm":"0.5rem"},fontFamily:{"label-md":["Be Vietnam Pro"],"headline-sm":["Plus Jakarta Sans"],"body-lg":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"],"body-sm":["Be Vietnam Pro"],"headline-md":["Plus Jakarta Sans"],"display-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-sm":["Be Vietnam Pro"]},fontSize:{"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"18px",fontWeight:"400"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"display-lg":["36px",{lineHeight:"44px",fontWeight:"700"}],"headline-lg":["26px",{lineHeight:"34px",fontWeight:"600"}],"label-sm":["11px",{lineHeight:"16px",fontWeight:"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-20 bg-primary-container z-50 flex flex-col items-center py-space-md justify-between shadow-[0_12px_36px_rgba(32,34,36,0.08)]"><div class="flex flex-col items-center gap-space-lg w-full"><div class="w-12 h-12 rounded-2xl bg-surface-container-highest/10 flex items-center justify-center p-2"><img alt="Creator Studio Logo" class="h-8 w-auto object-contain" src="../assets/img-1.png"></div><nav class="flex flex-col items-center gap-space-sm w-full px-space-xs" data-active-classes="bg-secondary-container text-on-secondary-container shadow-sm"><a class="relative group flex items-center justify-center w-12 h-12 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" data-path="home" href="#"><span class="material-symbols-outlined text-xl">dashboard</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">首页总览</div></a><a class="relative group flex items-center justify-center w-12 h-12 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" data-path="topic" href="#"><span class="material-symbols-outlined text-xl">lightbulb</span><span class="absolute top-2 right-2 w-4 h-4 bg-error text-on-error text-[10px] font-bold rounded-full flex items-center justify-center">12</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">选题池</div></a><a aria-current="page" class="relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all bg-secondary-container text-on-secondary-container shadow-sm" data-path="calendar" href="#"><span class="material-symbols-outlined text-xl">calendar_month</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">内容日历</div></a><a class="relative group flex items-center justify-center w-12 h-12 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" data-path="review" href="#"><span class="material-symbols-outlined text-xl">trending_up</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">数据复盘</div></a><a class="relative group flex items-center justify-center w-12 h-12 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" data-path="asset" href="#"><span class="material-symbols-outlined text-xl">grid_view</span><div class="absolute left-16 px-space-sm py-1 bg-inverse-surface text-inverse-on-surface text-label-sm font-label-sm rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-md z-50">素材库</div></a></nav></div><div class="flex flex-col items-center gap-space-xs w-full px-space-xs"><button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" type="button"><span class="material-symbols-outlined text-lg">settings</span></button><button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" type="button"><span class="material-symbols-outlined text-lg">help</span></button><button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-error/20 hover:text-error transition-all" type="button"><span class="material-symbols-outlined text-lg">logout</span></button></div></aside><div class="pl-20"><header class="fixed top-0 left-20 right-0 h-20 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex flex-col justify-center min-w-0 pr-space-md"><h1 class="text-headline-sm font-headline-sm text-on-surface tracking-tight truncate">自媒体内容运营工作台</h1><p class="text-label-sm font-label-sm text-on-surface-variant truncate">选题 → 排期 → 发布 → 复盘 → 沉淀，一个页面管好你的内容全流程</p></div><div class="hidden xl:flex items-center max-w-xs w-full"><div class="flex items-center w-full bg-surface-container-lowest rounded-full px-space-md py-space-xs shadow-sm"><span class="material-symbols-outlined text-on-surface-variant text-lg mr-space-xs">search</span><input class="w-full bg-transparent text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant focus:outline-none" placeholder="搜索全库选题、内容或排期..." type="text"><span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">⌘K</span></div></div><div class="flex items-center gap-space-md flex-shrink-0"><div class="hidden lg:flex items-center gap-space-xs bg-surface-container-lowest px-space-md py-1.5 rounded-full shadow-sm"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-label-sm font-label-sm text-on-surface-variant">已同步 · 48 条记录</span></div><div class="relative"><select class="appearance-none bg-surface-container-lowest text-label-md font-label-md text-on-surface pl-space-md pr-8 py-1.5 rounded-full shadow-sm focus:outline-none cursor-pointer"><option value="all">全部平台</option><option value="wechat">公众号</option><option value="xhs">小红书</option><option value="sph">视频号</option><option value="douyin">抖音</option><option value="bilibili">B站</option><option value="zhihu">知乎</option><option value="weibo">微博</option></select><span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-base">expand_more</span></div><div class="flex items-center gap-space-xs"><button class="flex items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface text-label-md font-label-md px-space-md py-1.5 rounded-full shadow-sm transition-colors" type="button"><span class="material-symbols-outlined text-base">download</span><span class="hidden sm:inline">导出 CSV</span></button><button class="w-8 h-8 rounded-full bg-surface-container-lowest hover:bg-surface-container-high flex items-center justify-center text-on-surface shadow-sm transition-colors" type="button"><span class="material-symbols-outlined text-base">refresh</span></button></div><button class="relative w-8 h-8 rounded-full bg-surface-container-lowest hover:bg-surface-container-high flex items-center justify-center text-on-surface shadow-sm transition-colors" type="button"><span class="material-symbols-outlined text-lg">notifications</span><span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span></button><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="../assets/img-4.png"><div class="hidden md:flex flex-col"><span class="text-label-md font-label-md text-on-surface leading-tight">Alexandra</span><span class="text-label-sm font-label-sm text-on-surface-variant leading-tight">主理人</span></div></div></div></header><main class="w-full pt-20 px-space-lg pb-space-lg bg-surface-container-low min-h-screen"><div class="w-full"><div class="flex flex-col w-full">
+<!-- Top Stats Banners (Reference-styled pastel cards with subtle drop shadows) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md mb-space-lg">
+<div class="bg-tertiary-fixed rounded-2xl p-space-md shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-on-tertiary-fixed-variant">当月待发布计划 / Scheduled</span>
+<div class="flex items-baseline gap-space-xs mt-0.5">
+<span class="text-display-lg font-display-lg text-tertiary tracking-tight">18</span>
+<span class="text-label-sm font-label-sm text-on-tertiary-fixed-variant">篇待审核上线</span>
+</div>
+</div>
+<button class="bg-surface-container-lowest text-on-surface hover:bg-surface-container-high transition-colors px-4 py-1.5 rounded-full text-label-md font-label-md shadow-sm" onclick="filterByStage('待发布')" type="button">
+        查看待发
+      </button>
+</div>
+<div class="bg-surface-container-highest rounded-2xl p-space-md shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-on-surface-variant">进行中创作流 / In Production</span>
+<div class="flex items-baseline gap-space-xs mt-0.5">
+<span class="text-display-lg font-display-lg text-on-surface tracking-tight">24</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">篇脚本/素材</span>
+</div>
+</div>
+<button class="bg-surface-container-lowest text-on-surface hover:bg-surface-container-high transition-colors px-4 py-1.5 rounded-full text-label-md font-label-md shadow-sm" onclick="filterByStage('制作中')" type="button">
+        追踪流向
+      </button>
+</div>
+<div class="bg-secondary-fixed rounded-2xl p-space-md shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-on-secondary-fixed-variant">已完成复盘率 / Completed Rate</span>
+<div class="flex items-baseline gap-space-xs mt-0.5">
+<span class="text-display-lg font-display-lg text-on-secondary-fixed tracking-tight">92.4%</span>
+<span class="text-label-sm font-label-sm text-on-secondary-fixed-variant">已录入数据快照</span>
+</div>
+</div>
+<button class="bg-surface-container-lowest text-on-surface hover:bg-surface-container-high transition-colors px-4 py-1.5 rounded-full text-label-md font-label-md shadow-sm" onclick="filterByStage('已复盘')" type="button">
+        复盘台账
+      </button>
+</div>
+</div>
+<!-- Main Asymmetric Workspace Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- Left Calendar Section (8 of 12 cols on desktop) -->
+<div class="xl:col-span-8 flex flex-col gap-space-lg">
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm">
+<!-- Control Bar Header -->
+<div class="flex flex-wrap items-center justify-between gap-space-md pb-space-md mb-space-md border-b border-surface-container">
+<div class="flex items-center gap-space-md">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Schedule Cockpit</span>
+</div>
+<h2 class="text-headline-md font-headline-md text-on-surface tracking-tight mt-0.5">内容排期与发布日历</h2>
+</div>
+<!-- Month Navigator Pills -->
+<div class="flex items-center bg-surface-container-low p-1 rounded-full shadow-inner ml-space-sm">
+<button class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-container-lowest text-on-surface-variant transition-colors" onclick="navigateMonth(-1)" title="上一月" type="button">
+<span class="material-symbols-outlined text-base">chevron_left</span>
+</button>
+<div class="px-space-md flex items-center gap-1">
+<span class="text-label-md font-headline-sm text-on-surface font-semibold" id="currentMonthLabel">2026年 3月</span>
+</div>
+<button class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-container-lowest text-on-surface-variant transition-colors" onclick="navigateMonth(1)" title="下一月" type="button">
+<span class="material-symbols-outlined text-base">chevron_right</span>
+</button>
+<button class="px-2.5 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container-lowest text-on-surface hover:bg-surface-container-high transition-colors ml-1 shadow-sm" onclick="goToToday()" type="button">
+                今天
+              </button>
+</div>
+</div>
+<!-- Stage Filter Selector & Create CTA -->
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<select class="appearance-none bg-surface-container-low hover:bg-surface-container text-on-surface text-label-md font-label-md pl-3 pr-8 py-2 rounded-full cursor-pointer focus:outline-none transition-colors" id="stageFilter" onchange="handleStageFilter(this.value)">
+<option value="全部">全部阶段 (9)</option>
+<option value="选题确认">1. 选题确认</option>
+<option value="脚本撰写">2. 脚本撰写</option>
+<option value="待补素材">3. 待补素材</option>
+<option value="制作中">4. 制作中</option>
+<option value="待审核">5. 待审核</option>
+<option value="待发布">6. 待发布</option>
+<option value="已发布">7. 已发布</option>
+<option value="二次分发">8. 二次分发</option>
+<option value="已复盘">9. 已复盘</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-base">arrow_drop_down</span>
+</div>
+<button class="flex items-center gap-1.5 bg-primary-container text-on-primary hover:bg-surface-tint text-label-md font-label-md px-4 py-2 rounded-full shadow-sm transition-all" onclick="openScheduleModal('2026-03-18', '20:00')" type="button">
+<span class="material-symbols-outlined text-base">add</span>
+<span>新建排期计划</span>
+</button>
+</div>
+</div>
+<!-- 7 Days Grid Header (Monday Start) -->
+<div class="grid grid-cols-7 gap-1.5 mb-1.5 text-center">
+<div class="py-1 text-label-sm font-label-sm text-on-surface-variant font-medium">周一 Mon</div>
+<div class="py-1 text-label-sm font-label-sm text-on-surface-variant font-medium">周二 Tue</div>
+<div class="py-1 text-label-sm font-label-sm text-on-surface-variant font-medium">周三 Wed</div>
+<div class="py-1 text-label-sm font-label-sm text-on-surface-variant font-medium">周四 Thu</div>
+<div class="py-1 text-label-sm font-label-sm text-on-surface-variant font-medium">周五 Fri</div>
+<div class="py-1 text-label-sm font-label-sm text-secondary font-medium">周六 Sat</div>
+<div class="py-1 text-label-sm font-label-sm text-secondary font-medium">周日 Sun</div>
+</div>
+<!-- 42 Cells Calendar Matrix (6 weeks x 7 days) -->
+<div class="grid grid-cols-7 gap-1.5" id="calendarGrid">
+<!-- Week 1: Feb 23 - Mar 1 -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">23</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">24</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">25</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">26</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">27</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">28</span>
+</div>
+<!-- Mar 1 -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">1</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-01', '20:00')" title="快速添加 20:00">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="20:00 2026小红书算法风向深度拆解">
+<span class="w-1 h-3 rounded-full bg-red-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">20:00 算法风向拆解</span>
+</div>
+</div>
+</div>
+<!-- Week 2: Mar 2 - Mar 8 -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">2</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-02', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">3</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-03', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="18:30 B站年度长视频复盘">
+<span class="w-1 h-3 rounded-full bg-pink-400 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">18:30 B站年度复盘</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">4</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-04', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">5</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-05', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="21:00 公众号夜读：独立开发者的第一年">
+<span class="w-1 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">21:00 独立开发第一年</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">6</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-06', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-secondary font-semibold">7</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-07', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-secondary font-semibold">8</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-08', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="20:00 妇女节品牌女性专题">
+<span class="w-1 h-3 rounded-full bg-red-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">20:00 女性故事专题</span>
+</div>
+</div>
+</div>
+<!-- Week 3: Mar 9 - Mar 15 -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">9</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-09', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="12:00 抖音热点：AI工具测评">
+<span class="w-1 h-3 rounded-full bg-primary-container shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">12:00 AI工具测评爆款</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">10</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-10', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">11</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-11', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="20:00 知乎长问答：个人IP商业模式">
+<span class="w-1 h-3 rounded-full bg-blue-600 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">20:00 知乎精选问答</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">12</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-12', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">13</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-13', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="19:30 小红书：极简办公好物推荐">
+<span class="w-1 h-3 rounded-full bg-red-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">19:30 极简办公好物</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-secondary font-semibold">14</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-14', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-secondary font-semibold">15</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-15', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="21:00 公众号头条：周报深度复盘">
+<span class="w-1 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">21:00 周报深度复盘</span>
+</div>
+</div>
+</div>
+<!-- Week 4: Mar 16 - Mar 22 (Contains TODAY: Mar 18) -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">16</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-16', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="20:00 B站教程：从零搭建工作台">
+<span class="w-1 h-3 rounded-full bg-pink-400 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">20:00 搭建工作台教程</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">17</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-17', '20:00')">＋</button>
+</div>
+</div>
+<!-- TODAY: Mar 18 (Special Highlighting Glow) -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-secondary-container/25 shadow-[0_0_16px_rgba(255,217,117,0.35)] flex flex-col justify-between relative group ring-2 ring-secondary-container">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1">
+<span class="w-5 h-5 rounded-full bg-primary-container text-on-primary text-[11px] font-label-sm flex items-center justify-center shadow-sm">18</span>
+<span class="text-[10px] font-label-sm text-on-secondary-container font-semibold">今天</span>
+</div>
+<button class="w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px] hover:scale-105 transition-transform" onclick="openScheduleModal('2026-03-18', '20:00')" title="快速排期今日 20:00">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden cursor-pointer hover:bg-surface-container-high transition-colors" onclick="highlightProgressRow('SC2603-08')" title="20:00 小红书：自媒体爆款日历拆解">
+<span class="w-1 h-3 rounded-full bg-red-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate font-medium">20:00 爆款日历拆解</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden cursor-pointer hover:bg-surface-container-high transition-colors" onclick="highlightProgressRow('SC2603-09')" title="20:30 公众号：效率工具年度精选">
+<span class="w-1 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate font-medium">20:30 工具年度精选</span>
+</div>
+<!-- Overflow indicator for > 2 items -->
+<span class="text-[10px] font-label-sm text-on-surface-variant pl-1 cursor-pointer hover:text-on-surface" onclick="openMultiEventsDialog('3月18日')">＋ 还有 2 条</span>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">19</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-19', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="19:00 抖音短视频：工作区桌搭沉浸式">
+<span class="w-1 h-3 rounded-full bg-primary-container shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">19:00 工作区桌搭沉浸</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">20</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-20', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="20:00 知乎专栏：创作者经济的未来">
+<span class="w-1 h-3 rounded-full bg-blue-600 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">20:00 创作者经济观察</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-secondary font-semibold">21</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-21', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-secondary font-semibold">22</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-22', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="21:30 公众号：周日读者问答精选">
+<span class="w-1 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">21:30 读者问答精选</span>
+</div>
+</div>
+</div>
+<!-- Week 5: Mar 23 - Mar 29 -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">23</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-23', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">24</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-24', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="20:00 B站视频：单人团队的工作流复盘">
+<span class="w-1 h-3 rounded-full bg-pink-400 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">20:00 单人团队工作流</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">25</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-25', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">26</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-26', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="19:00 小红书：摄影调色预设免费领">
+<span class="w-1 h-3 rounded-full bg-red-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">19:00 摄影调色预设</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">27</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-27', '20:00')">＋</button>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-secondary font-semibold">28</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-28', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="15:00 视频号慢直播：周六阅读创作">
+<span class="w-1 h-3 rounded-full bg-orange-400 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">15:00 慢直播阅读创作</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-secondary font-semibold">29</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-29', '20:00')">＋</button>
+</div>
+</div>
+<!-- Week 6: Mar 30 - Apr 5 -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">30</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-30', '20:00')">＋</button>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center gap-1 bg-surface-container-lowest px-1.5 py-0.5 rounded shadow-sm overflow-hidden" title="20:00 公众号：月度创作总结">
+<span class="w-1 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+<span class="text-[11px] font-label-sm text-on-surface truncate">20:00 月度创作总结</span>
+</div>
+</div>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex flex-col justify-between relative group">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface font-semibold">31</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" onclick="openScheduleModal('2026-03-31', '20:00')">＋</button>
+</div>
+</div>
+<!-- Next month days (April) -->
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">1</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">2</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">3</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">4</span>
+</div>
+<div class="min-h-[96px] p-1.5 rounded-xl bg-surface-container-low/40 opacity-50 flex flex-col justify-between group">
+<span class="text-label-sm font-label-sm text-on-surface-variant">5</span>
+</div>
+</div>
+<!-- Platform Color Legend Footer -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-md mt-space-md border-t border-surface-container text-label-sm font-label-sm text-on-surface-variant">
+<div class="flex items-center gap-space-md">
+<span class="font-medium text-on-surface">平台识别色：</span>
+<div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span><span>小红书</span></div>
+<div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span>微信公众号</span></div>
+<div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-pink-400"></span><span>哔哩哔哩</span></div>
+<div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span><span>抖音短视频</span></div>
+<div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span><span>知乎专栏</span></div>
+</div>
+<span class="text-label-sm font-label-sm opacity-70">提示：鼠标悬停日期格子点击「＋」即可预填 20:00 发行</span>
+</div>
+</div>
+</div>
+<!-- Right Side Panel: Content Release Flow & Audio / Inspiration Inspector (4 of 12 cols) -->
+<div class="xl:col-span-4 flex flex-col gap-space-lg">
+<!-- Flow Overview Card (Like the Campaign Overview in the inspiration layout) -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col">
+<div class="flex items-center justify-between pb-space-sm">
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">全域分发总流量走向</span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface mt-0.5">3月分发趋势流向</h3>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-low px-2.5 py-1 rounded-full text-label-sm font-label-sm text-on-surface">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span>+127% 环比增长</span>
+</div>
+</div>
+<!-- Inline SVG Flow Wave visualization -->
+<div class="w-full h-36 relative my-space-xs flex items-center justify-center">
+<svg class="w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 340 120">
+<!-- Smooth Bezier flow curves reminiscent of reference image -->
+<path d="M 10 70 C 90 70, 110 20, 200 20 L 290 20" fill="none" opacity="0.9" stroke="#FFD975" stroke-linecap="round" stroke-width="7"></path>
+<path d="M 10 75 C 90 75, 120 48, 200 48 L 290 48" fill="none" opacity="0.85" stroke="#C5C3EB" stroke-linecap="round" stroke-width="5"></path>
+<path d="M 10 80 C 100 80, 130 85, 200 85 L 290 85" fill="none" stroke="#E1E2E5" stroke-linecap="round" stroke-width="3"></path>
+<!-- Scatter density dots representing platform engagement dispersion -->
+<circle cx="295" cy="18" fill="#FFD975" r="3"></circle>
+<circle cx="310" cy="24" fill="#FFD975" r="4"></circle>
+<circle cx="325" cy="16" fill="#FFD975" r="2.5"></circle>
+<circle cx="305" cy="10" fill="#FFD975" r="3.5"></circle>
+<circle cx="298" cy="48" fill="#C5C3EB" r="3"></circle>
+<circle cx="312" cy="52" fill="#C5C3EB" r="4"></circle>
+<circle cx="328" cy="44" fill="#C5C3EB" r="3.5"></circle>
+<circle cx="296" cy="85" fill="#88898B" r="2.5"></circle>
+<circle cx="314" cy="88" fill="#88898B" r="3.5"></circle>
+<circle cx="326" cy="82" fill="#88898B" r="3"></circle>
+</svg>
+</div>
+<!-- Stream Breakdowns -->
+<div class="grid grid-cols-3 gap-space-xs text-center pt-space-xs border-t border-surface-container">
+<div class="p-2 bg-surface-container-low rounded-xl">
+<span class="text-label-sm font-label-sm text-on-surface-variant block">图文资讯</span>
+<span class="text-headline-sm font-headline-sm text-on-surface">549</span>
+<span class="text-[10px] text-emerald-600 block">阅读量达标</span>
+</div>
+<div class="p-2 bg-surface-container-low rounded-xl">
+<span class="text-label-sm font-label-sm text-on-surface-variant block">短视频流</span>
+<span class="text-headline-sm font-headline-sm text-on-surface">279</span>
+<span class="text-[10px] text-emerald-600 block">完播率 48%</span>
+</div>
+<div class="p-2 bg-surface-container-low rounded-xl">
+<span class="text-label-sm font-label-sm text-on-surface-variant block">长图复盘</span>
+<span class="text-headline-sm font-headline-sm text-on-surface">107</span>
+<span class="text-[10px] text-on-surface-variant block">待补互动</span>
+</div>
+</div>
+</div>
+<!-- Quick Content Voice Recording / Audio Clip Component (Reference inspired) -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-base">mic</span>
+</div>
+<div>
+<h4 class="text-headline-sm font-headline-sm text-on-surface">选题语音速记切片</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant">晨曦 · 录音口播草稿 01:24</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded-full">SC2603-08</span>
+</div>
+<!-- Frequency Waveform Display -->
+<div class="py-space-sm">
+<div class="h-12 w-full flex items-center justify-between gap-1 px-2 bg-surface-container-low rounded-xl relative">
+<span class="h-3 w-1 bg-on-surface-variant/40 rounded-full"></span>
+<span class="h-6 w-1 bg-on-surface-variant/50 rounded-full"></span>
+<span class="h-8 w-1 bg-primary-container rounded-full"></span>
+<span class="h-10 w-1 bg-primary-container rounded-full"></span>
+<span class="h-5 w-1 bg-primary-container rounded-full"></span>
+<span class="h-7 w-1 bg-primary-container rounded-full"></span>
+<span class="h-11 w-1 bg-secondary-container rounded-full"></span>
+<span class="h-9 w-1 bg-secondary-container rounded-full"></span>
+<span class="h-6 w-1 bg-secondary-container rounded-full"></span>
+<span class="h-4 w-1 bg-on-surface-variant/30 rounded-full"></span>
+<span class="h-8 w-1 bg-on-surface-variant/30 rounded-full"></span>
+<span class="h-6 w-1 bg-on-surface-variant/30 rounded-full"></span>
+<span class="h-3 w-1 bg-on-surface-variant/30 rounded-full"></span>
+<span class="h-9 w-1 bg-on-surface-variant/30 rounded-full"></span>
+<span class="h-4 w-1 bg-on-surface-variant/20 rounded-full"></span>
+<!-- Red playhead indicator -->
+<div class="absolute left-1/2 top-1 bottom-1 w-0.5 bg-error flex flex-col items-center">
+<span class="w-2 h-2 rounded-full bg-error -mt-1"></span>
+<span class="text-[9px] font-mono text-error mt-auto bg-surface-container-lowest px-0.5 rounded">00:38</span>
+</div>
+</div>
+</div>
+<!-- Audio controls row -->
+<div class="flex items-center justify-between pt-space-xs text-label-md font-label-md text-on-surface">
+<div class="flex items-center gap-space-xs">
+<span class="text-label-sm font-label-sm bg-surface-container px-2 py-0.5 rounded-full text-on-surface-variant">1.0x</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="w-7 h-7 rounded-full bg-surface-container-low flex items-center justify-center hover:bg-surface-container text-on-surface" title="快退10秒" type="button">
+<span class="material-symbols-outlined text-sm">replay_10</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center hover:bg-surface-tint shadow-sm" title="播放/暂停" type="button">
+<span class="material-symbols-outlined text-lg">play_arrow</span>
+</button>
+<button class="w-7 h-7 rounded-full bg-surface-container-low flex items-center justify-center hover:bg-surface-container text-on-surface" title="快进10秒" type="button">
+<span class="material-symbols-outlined text-sm">forward_10</span>
+</button>
+</div>
+<button class="text-label-sm font-label-sm text-on-surface-variant hover:text-on-surface flex items-center gap-0.5" type="button">
+<span class="material-symbols-outlined text-base">transcribe</span>转文字
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Detailed Progress Table Section (PRD Section 3.3) -->
+<div class="w-full mt-space-lg bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-md mb-space-md">
+<div>
+<h3 class="text-headline-md font-headline-md text-on-surface tracking-tight">本月排期进度详表</h3>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-0.5">9 级色阶彩虹药丸流程联动 · 支持一键标记发布并录入今日数据快照</p>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1.5 bg-surface-container-low px-space-md py-1.5 rounded-full text-label-sm font-label-sm">
+<span class="text-on-surface-variant">共</span>
+<span class="font-semibold text-on-surface" id="tableCountBadge">5</span>
+<span class="text-on-surface-variant">条重点排期</span>
+</div>
+<button class="flex items-center gap-1 bg-surface-container-low hover:bg-surface-container text-on-surface text-label-md font-label-md px-3.5 py-1.5 rounded-full transition-colors" onclick="exportCalendarReport()" type="button">
+<span class="material-symbols-outlined text-base">table_view</span>
+<span>导出排期表</span>
+</button>
+</div>
+</div>
+<!-- Interactive Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse" id="scheduleTable">
+<thead>
+<tr class="text-label-sm font-label-sm text-on-surface-variant border-b border-surface-container">
+<th class="py-space-sm px-space-md font-medium">计划发布时间</th>
+<th class="py-space-sm px-space-md font-medium">排期编号</th>
+<th class="py-space-sm px-space-md font-medium min-w-[240px]">内容标题</th>
+<th class="py-space-sm px-space-md font-medium">发布平台</th>
+<th class="py-space-sm px-space-md font-medium">内容形式</th>
+<th class="py-space-sm px-space-md font-medium">负责人</th>
+<th class="py-space-sm px-space-md font-medium">当前阶段 (9级色阶)</th>
+<th class="py-space-sm px-space-md font-medium">关联选题</th>
+<th class="py-space-sm px-space-md font-medium text-right">关键操作</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-body-sm text-on-surface divide-y divide-surface-container-low" id="scheduleTableBody">
+<!-- Row 1 (Highlight SC2603-08: Today) -->
+<tr class="hover:bg-surface-container-low/70 transition-colors group" id="row-SC2603-08">
+<td class="py-space-md px-space-md font-mono text-label-md text-on-surface font-medium whitespace-nowrap">
+              03-18 20:00
+              <span class="inline-block ml-1 px-1.5 py-0.2 rounded text-[10px] bg-secondary-container text-on-secondary-container font-semibold">今日</span>
+</td>
+<td class="py-space-md px-space-md font-mono text-label-sm text-on-surface-variant">SC2603-08</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+<div class="flex flex-col">
+<span class="text-body-md font-medium hover:text-secondary cursor-pointer">自媒体爆款内容日历如何从0搭建？全流程模板公开</span>
+<span class="text-label-sm text-on-surface-variant font-normal">首图已过审 · 包含双平台同步分发方案</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-red-50 text-red-700">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>小红书
+              </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant">图文笔记</span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[11px] font-semibold text-on-surface">晨</span>
+<span class="text-label-md font-label-md">晨曦</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<!-- 9-Stage Color Rainbow Pill Selector -->
+<div class="relative inline-block">
+<select class="appearance-none cursor-pointer pl-3 pr-7 py-1 rounded-full text-label-sm font-label-sm font-semibold transition-all bg-amber-100 text-amber-800 border-none focus:outline-none" onchange="updateStagePill(this, 'SC2603-08')">
+<option value="选题确认">1. 选题确认</option>
+<option value="脚本撰写">2. 脚本撰写</option>
+<option value="待补素材">3. 待补素材</option>
+<option value="制作中">4. 制作中</option>
+<option value="待审核">5. 待审核</option>
+<option selected="" value="待发布">6. 待发布</option>
+<option value="已发布">7. 已发布</option>
+<option value="二次分发">8. 二次分发</option>
+<option value="已复盘">9. 已复盘</option>
+</select>
+<span class="material-symbols-outlined absolute right-1.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none text-amber-800">unfold_more</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<a class="inline-flex items-center gap-1 text-label-sm font-label-sm text-secondary hover:underline" href="#" title="点击查看源选题">
+<span class="material-symbols-outlined text-xs">link</span>TP2603-05
+              </a>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="bg-primary-container text-on-primary hover:bg-surface-tint text-label-sm font-label-sm px-3 py-1 rounded-full shadow-sm transition-transform active:scale-95" onclick="triggerPublishSnapshot('SC2603-08', '自媒体爆款内容日历如何从0搭建？')" type="button">
+                  标记已发布
+                </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface" onclick="openScheduleModal('2026-03-18', '20:00', 'SC2603-08')" title="编辑计划" type="button">
+<span class="material-symbols-outlined text-base">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/70 transition-colors group" id="row-SC2603-09">
+<td class="py-space-md px-space-md font-mono text-label-md text-on-surface font-medium whitespace-nowrap">
+              03-18 20:30
+              <span class="inline-block ml-1 px-1.5 py-0.2 rounded text-[10px] bg-secondary-container text-on-secondary-container font-semibold">今日</span>
+</td>
+<td class="py-space-md px-space-md font-mono text-label-sm text-on-surface-variant">SC2603-09</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+<div class="flex flex-col">
+<span class="text-body-md font-medium hover:text-secondary cursor-pointer">个人运营必备：2026 年度效率工具全景清单</span>
+<span class="text-label-sm text-on-surface-variant font-normal">文末附 Notion/Obsidian 工作流联动模版</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-emerald-50 text-emerald-800">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>公众号
+              </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant">长图文</span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[11px] font-semibold text-on-surface">泽</span>
+<span class="text-label-md font-label-md">阿泽</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="relative inline-block">
+<select class="appearance-none cursor-pointer pl-3 pr-7 py-1 rounded-full text-label-sm font-label-sm font-semibold transition-all bg-sky-100 text-sky-800 border-none focus:outline-none" onchange="updateStagePill(this, 'SC2603-09')">
+<option value="选题确认">1. 选题确认</option>
+<option value="脚本撰写">2. 脚本撰写</option>
+<option value="待补素材">3. 待补素材</option>
+<option value="制作中">4. 制作中</option>
+<option selected="" value="待审核">5. 待审核</option>
+<option value="待发布">6. 待发布</option>
+<option value="已发布">7. 已发布</option>
+<option value="二次分发">8. 二次分发</option>
+<option value="已复盘">9. 已复盘</option>
+</select>
+<span class="material-symbols-outlined absolute right-1.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none text-sky-800">unfold_more</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<a class="inline-flex items-center gap-1 text-label-sm font-label-sm text-secondary hover:underline" href="#" title="点击查看源选题">
+<span class="material-symbols-outlined text-xs">link</span>TP2603-02
+              </a>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="bg-surface-container-low hover:bg-surface-container text-on-surface text-label-sm font-label-sm px-3 py-1 rounded-full transition-transform active:scale-95" onclick="triggerPublishSnapshot('SC2603-09', '个人运营必备：2026 年度效率工具全景清单')" type="button">
+                  标记已发布
+                </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface" onclick="openScheduleModal('2026-03-18', '20:30', 'SC2603-09')" type="button">
+<span class="material-symbols-outlined text-base">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/70 transition-colors group" id="row-SC2603-10">
+<td class="py-space-md px-space-md font-mono text-label-md text-on-surface font-medium whitespace-nowrap">
+              03-20 20:00
+            </td>
+<td class="py-space-md px-space-md font-mono text-label-sm text-on-surface-variant">SC2603-10</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+<div class="flex flex-col">
+<span class="text-body-md font-medium hover:text-secondary cursor-pointer">普通人如何利用业余时间打造可持续复利的知识IP？</span>
+<span class="text-label-sm text-on-surface-variant font-normal">深度行业观察 · 知乎高赞问答改写</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-blue-50 text-blue-800">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>知乎
+              </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant">深度专栏</span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[11px] font-semibold text-on-surface">晨</span>
+<span class="text-label-md font-label-md">晨曦</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="relative inline-block">
+<select class="appearance-none cursor-pointer pl-3 pr-7 py-1 rounded-full text-label-sm font-label-sm font-semibold transition-all bg-indigo-100 text-indigo-800 border-none focus:outline-none" onchange="updateStagePill(this, 'SC2603-10')">
+<option value="选题确认">1. 选题确认</option>
+<option value="脚本撰写">2. 脚本撰写</option>
+<option value="待补素材">3. 待补素材</option>
+<option selected="" value="制作中">4. 制作中</option>
+<option value="待审核">5. 待审核</option>
+<option value="待发布">6. 待发布</option>
+<option value="已发布">7. 已发布</option>
+<option value="二次分发">8. 二次分发</option>
+<option value="已复盘">9. 已复盘</option>
+</select>
+<span class="material-symbols-outlined absolute right-1.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none text-indigo-800">unfold_more</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<a class="inline-flex items-center gap-1 text-label-sm font-label-sm text-secondary hover:underline" href="#" title="点击查看源选题">
+<span class="material-symbols-outlined text-xs">link</span>TP2603-11
+              </a>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="bg-surface-container-low hover:bg-surface-container text-on-surface text-label-sm font-label-sm px-3 py-1 rounded-full transition-transform active:scale-95" onclick="triggerPublishSnapshot('SC2603-10', '普通人如何利用业余时间打造可持续复利的知识IP？')" type="button">
+                  标记已发布
+                </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface" onclick="openScheduleModal('2026-03-20', '20:00', 'SC2603-10')" type="button">
+<span class="material-symbols-outlined text-base">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/70 transition-colors group" id="row-SC2603-04">
+<td class="py-space-md px-space-md font-mono text-label-md text-on-surface font-medium whitespace-nowrap">
+              03-16 20:00
+            </td>
+<td class="py-space-md px-space-md font-mono text-label-sm text-on-surface-variant">SC2603-04</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+<div class="flex flex-col">
+<span class="text-body-md font-medium hover:text-secondary cursor-pointer">一个人就是一支队伍！单兵全流程工作台软件配置思路</span>
+<span class="text-label-sm text-on-surface-variant font-normal">B站中长视频 · 包含工程文件开源仓库</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-pink-50 text-pink-700">
+<span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>B站
+              </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant">横屏视频</span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[11px] font-semibold text-on-surface">泽</span>
+<span class="text-label-md font-label-md">阿泽</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="relative inline-block">
+<select class="appearance-none cursor-pointer pl-3 pr-7 py-1 rounded-full text-label-sm font-label-sm font-semibold transition-all bg-emerald-100 text-emerald-800 border-none focus:outline-none" onchange="updateStagePill(this, 'SC2603-04')">
+<option value="选题确认">1. 选题确认</option>
+<option value="脚本撰写">2. 脚本撰写</option>
+<option value="待补素材">3. 待补素材</option>
+<option value="制作中">4. 制作中</option>
+<option value="待审核">5. 待审核</option>
+<option value="待发布">6. 待发布</option>
+<option selected="" value="已发布">7. 已发布</option>
+<option value="二次分发">8. 二次分发</option>
+<option value="已复盘">9. 已复盘</option>
+</select>
+<span class="material-symbols-outlined absolute right-1.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none text-emerald-800">unfold_more</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<a class="inline-flex items-center gap-1 text-label-sm font-label-sm text-secondary hover:underline" href="#" title="点击查看源选题">
+<span class="material-symbols-outlined text-xs">link</span>TP2602-44
+              </a>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<span class="inline-flex items-center text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-xs mr-0.5">check_circle</span>已发布
+                </span>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface" onclick="openScheduleModal('2026-03-16', '20:00', 'SC2603-04')" type="button">
+<span class="material-symbols-outlined text-base">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low/70 transition-colors group" id="row-SC2603-01">
+<td class="py-space-md px-space-md font-mono text-label-md text-on-surface font-medium whitespace-nowrap">
+              03-01 20:00
+            </td>
+<td class="py-space-md px-space-md font-mono text-label-sm text-on-surface-variant">SC2603-01</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+<div class="flex flex-col">
+<span class="text-body-md font-medium hover:text-secondary cursor-pointer">2026 小红书推荐机制风向深度拆解（附操盘手册）</span>
+<span class="text-label-sm text-on-surface-variant font-normal">首发爆款 · 累计涨粉 +1,420，互动率 12.8%</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-red-50 text-red-700">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>小红书
+              </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant">图文笔记</span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[11px] font-semibold text-on-surface">晨</span>
+<span class="text-label-md font-label-md">晨曦</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="relative inline-block">
+<select class="appearance-none cursor-pointer pl-3 pr-7 py-1 rounded-full text-label-sm font-label-sm font-semibold transition-all bg-purple-100 text-purple-900 border-none focus:outline-none" onchange="updateStagePill(this, 'SC2603-01')">
+<option value="选题确认">1. 选题确认</option>
+<option value="脚本撰写">2. 脚本撰写</option>
+<option value="待补素材">3. 待补素材</option>
+<option value="制作中">4. 制作中</option>
+<option value="待审核">5. 待审核</option>
+<option value="待发布">6. 待发布</option>
+<option value="已发布">7. 已发布</option>
+<option value="二次分发">8. 二次分发</option>
+<option selected="" value="已复盘">9. 已复盘</option>
+</select>
+<span class="material-symbols-outlined absolute right-1.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none text-purple-900">unfold_more</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<a class="inline-flex items-center gap-1 text-label-sm font-label-sm text-secondary hover:underline" href="#" title="点击查看源选题">
+<span class="material-symbols-outlined text-xs">link</span>TP2602-19
+              </a>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<span class="inline-flex items-center text-[11px] font-medium text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-xs mr-0.5">analytics</span>快照已沉淀
+                </span>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface" onclick="openScheduleModal('2026-03-01', '20:00', 'SC2603-01')" type="button">
+<span class="material-symbols-outlined text-base">edit</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Interactive Modal 1: New Schedule Plan Dialog -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-container/40 backdrop-blur-sm hidden" id="schedulePlanModal">
+<div class="bg-surface-container-lowest rounded-2xl w-full max-w-lg shadow-[0_12px_36px_rgba(32,34,36,0.18)] p-space-lg flex flex-col gap-space-md transform transition-all">
+<div class="flex items-center justify-between border-b border-surface-container pb-space-sm">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface" id="modalTitle">新建排期计划</h3>
+</div>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" onclick="closeScheduleModal()" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+<form class="flex flex-col gap-space-md" id="scheduleForm" onsubmit="handleScheduleSubmit(event)">
+<div class="grid grid-cols-2 gap-space-sm">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">计划发布日期</label>
+<input class="w-full bg-surface-container-low text-on-surface text-label-md font-label-md px-3 py-2 rounded-xl focus:outline-none" id="formDate" type="date" value="2026-03-18">
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">发布时间 (默认20:00)</label>
+<input class="w-full bg-surface-container-low text-on-surface text-label-md font-label-md px-3 py-2 rounded-xl focus:outline-none" id="formTime" type="time" value="20:00">
+</div>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">内容标题</label>
+<input class="w-full bg-surface-container-low text-on-surface text-body-sm font-body-sm px-3 py-2 rounded-xl focus:outline-none placeholder-on-surface-variant" id="formTitle" placeholder="输入吸睛排期标题或暂定名..." required="" type="text">
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">目标发布平台</label>
+<select class="w-full bg-surface-container-low text-on-surface text-label-md font-label-md px-3 py-2 rounded-xl focus:outline-none" id="formPlatform">
+<option value="小红书">小红书 (Red)</option>
+<option value="公众号">微信公众号 (WeChat)</option>
+<option value="B站">哔哩哔哩 (Bilibili)</option>
+<option value="抖音">抖音 (Douyin)</option>
+<option value="知乎">知乎 (Zhihu)</option>
+<option value="视频号">视频号 (Channels)</option>
+</select>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">内容形式</label>
+<select class="w-full bg-surface-container-low text-on-surface text-label-md font-label-md px-3 py-2 rounded-xl focus:outline-none" id="formFormat">
+<option value="图文笔记">图文笔记</option>
+<option value="短视频">短视频 (60s以内)</option>
+<option value="横屏视频">中长横屏视频</option>
+<option value="长图文">长图文/专栏</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">责任制作人</label>
+<select class="w-full bg-surface-container-low text-on-surface text-label-md font-label-md px-3 py-2 rounded-xl focus:outline-none" id="formOwner">
+<option value="晨曦">晨曦 (Alexandra)</option>
+<option value="阿泽">阿泽 (Editor)</option>
+<option value="独立外包">外包协作 (Contractor)</option>
+</select>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">关联选题池编号</label>
+<input class="w-full bg-surface-container-low text-on-surface text-label-md font-label-md px-3 py-2 rounded-xl focus:outline-none font-mono" id="formTopicRef" placeholder="例如: TP2603-08" type="text">
+</div>
+</div>
+<div class="flex items-center justify-end gap-space-sm mt-space-sm pt-space-sm border-t border-surface-container">
+<button class="px-4 py-2 rounded-full text-label-md font-label-md text-on-surface-variant hover:bg-surface-container transition-colors" onclick="closeScheduleModal()" type="button">
+            取消
+          </button>
+<button class="px-5 py-2 rounded-full text-label-md font-label-md bg-primary-container text-on-primary hover:bg-surface-tint shadow-sm transition-all" type="submit">
+            保存排期入库
+          </button>
+</div>
+</form>
+</div>
+</div>
+<!-- Interactive Modal 2: Snapshot Log Guidance (Triggered by '标记已发布') -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-container/40 backdrop-blur-sm hidden" id="snapshotModal">
+<div class="bg-surface-container-lowest rounded-2xl w-full max-w-md shadow-[0_12px_36px_rgba(32,34,36,0.2)] p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-xl">verified</span>
+</div>
+<div>
+<h4 class="text-headline-sm font-headline-sm text-on-surface">已成功标记为「已发布」</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant" id="snapshotItemTitle">SC2603-08</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl text-body-sm text-on-surface">
+<p class="font-medium mb-1">💡 开启今日数据快照追踪：</p>
+<p class="text-on-surface-variant text-label-sm leading-relaxed">
+          系统已自动将该内容纳入「24小时初始互动追踪池」。请在首发后 2 小时与 24 小时分别录入曝光、播放/阅读与点赞初始快照，以便产出完播转化漏斗。
+        </p>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-sm font-label-sm text-on-surface-variant">首发上线平台永久链接 (URL)</label>
+<input class="w-full bg-surface-container-low text-on-surface text-label-md px-3 py-2 rounded-xl focus:outline-none" placeholder="https://xhslink.com/..." type="url">
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-4 py-1.5 rounded-full text-label-md font-label-md text-on-surface-variant hover:bg-surface-container transition-colors" onclick="closeSnapshotModal()" type="button">
+          稍后录入
+        </button>
+<button class="px-5 py-1.5 rounded-full text-label-md font-label-md bg-primary-container text-on-primary hover:bg-surface-tint shadow-sm" onclick="confirmSnapshotLog()" type="button">
+          确认并同步追踪
+        </button>
+</div>
+</div>
+</div>
+<!-- Toast Notification Container -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2 bg-primary-container text-on-primary px-4 py-3 rounded-2xl shadow-xl" id="toastNotification">
+<span class="material-symbols-outlined text-secondary-container text-lg" id="toastIcon">check_circle</span>
+<span class="text-label-md font-label-md" id="toastMessage">已成功更新排期状态</span>
+</div>
+</div>
+<script>
+  // 9-Stage Color Rainbow configuration map
+  const stageColors = {
+    '选题确认': 'bg-gray-100 text-gray-700',
+    '脚本撰写': 'bg-yellow-100 text-yellow-800',
+    '待补素材': 'bg-orange-100 text-orange-800',
+    '制作中': 'bg-indigo-100 text-indigo-800',
+    '待审核': 'bg-sky-100 text-sky-800',
+    '待发布': 'bg-amber-100 text-amber-800',
+    '已发布': 'bg-emerald-100 text-emerald-800',
+    '二次分发': 'bg-teal-100 text-teal-800',
+    '已复盘': 'bg-purple-100 text-purple-900'
+  };
+
+  function updateStagePill(selectElem, id) {
+    const val = selectElem.value;
+    // reset classes
+    selectElem.className = 'appearance-none cursor-pointer pl-3 pr-7 py-1 rounded-full text-label-sm font-label-sm font-semibold transition-all border-none focus:outline-none ' + (stageColors[val] || 'bg-gray-100 text-gray-700');
+    showToast(`排期 [${id}] 阶段流转为：${val}`);
+    
+    if (val === '已发布') {
+      triggerPublishSnapshot(id, '排期计划');
+    }
+  }
+
+  function triggerPublishSnapshot(id, title) {
+    document.getElementById('snapshotItemTitle').innerText = `${id} · ${title}`;
+    document.getElementById('snapshotModal').classList.remove('hidden');
+  }
+
+  function closeSnapshotModal() {
+    document.getElementById('snapshotModal').classList.add('hidden');
+  }
+
+  function confirmSnapshotLog() {
+    closeSnapshotModal();
+    showToast('已为该条目初始化 24 小时首发快照监控');
+  }
+
+  function openScheduleModal(date, time, editId = null) {
+    const modal = document.getElementById('schedulePlanModal');
+    if (date) document.getElementById('formDate').value = date;
+    if (time) document.getElementById('formTime').value = time;
+    
+    if (editId) {
+      document.getElementById('modalTitle').innerText = `编辑排期 (${editId})`;
+    } else {
+      document.getElementById('modalTitle').innerText = '新建排期计划';
+      document.getElementById('formTitle').value = '';
+    }
+    modal.classList.remove('hidden');
+  }
+
+  function closeScheduleModal() {
+    document.getElementById('schedulePlanModal').classList.add('hidden');
+  }
+
+  function handleScheduleSubmit(e) {
+    e.preventDefault();
+    const title = document.getElementById('formTitle').value;
+    const date = document.getElementById('formDate').value;
+    const time = document.getElementById('formTime').value;
+    const platform = document.getElementById('formPlatform').value;
+    const format = document.getElementById('formFormat').value;
+    const owner = document.getElementById('formOwner').value;
+
+    closeScheduleModal();
+    showToast(`排期成功：${title} (${date} ${time})`);
+
+    // Dynamically insert into progress table
+    const tableBody = document.getElementById('scheduleTableBody');
+    const newId = `SC2603-${Math.floor(10 + Math.random() * 89)}`;
+    const newRow = document.createElement('tr');
+    newRow.className = 'hover:bg-surface-container-low/70 transition-colors group animate-pulse';
+    newRow.id = `row-${newId}`;
+    newRow.innerHTML = `
+      <td class="py-space-md px-space-md font-mono text-label-md text-on-surface font-medium whitespace-nowrap">${date.slice(5)} ${time}</td>
+      <td class="py-space-md px-space-md font-mono text-label-sm text-on-surface-variant">${newId}</td>
+      <td class="py-space-md px-space-md font-medium text-on-surface">
+        <div class="flex flex-col">
+          <span class="text-body-md font-medium hover:text-secondary cursor-pointer">${title}</span>
+          <span class="text-label-sm text-on-surface-variant font-normal">刚新建入库 · 待完成初稿</span>
+        </div>
+      </td>
+      <td class="py-space-md px-space-md whitespace-nowrap">
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface">
+          ${platform}
+        </span>
+      </td>
+      <td class="py-space-md px-space-md whitespace-nowrap">
+        <span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant">${format}</span>
+      </td>
+      <td class="py-space-md px-space-md whitespace-nowrap">
+        <div class="flex items-center gap-1.5">
+          <span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[11px] font-semibold text-on-surface">${owner[0]}</span>
+          <span class="text-label-md font-label-md">${owner}</span>
+        </div>
+      </td>
+      <td class="py-space-md px-space-md whitespace-nowrap">
+        <div class="relative inline-block">
+          <select onchange="updateStagePill(this, '${newId}')" class="appearance-none cursor-pointer pl-3 pr-7 py-1 rounded-full text-label-sm font-label-sm font-semibold transition-all bg-amber-100 text-amber-800 border-none focus:outline-none">
+            <option value="待发布" selected>6. 待发布</option>
+            <option value="已发布">7. 已发布</option>
+            <option value="已复盘">9. 已复盘</option>
+          </select>
+        </div>
+      </td>
+      <td class="py-space-md px-space-md whitespace-nowrap">
+        <span class="text-label-sm font-label-sm text-on-surface-variant font-mono">未绑定</span>
+      </td>
+      <td class="py-space-md px-space-md whitespace-nowrap text-right">
+        <div class="flex items-center justify-end gap-1.5">
+          <button type="button" onclick="triggerPublishSnapshot('${newId}', '${title}')" class="bg-primary-container text-on-primary hover:bg-surface-tint text-label-sm font-label-sm px-3 py-1 rounded-full shadow-sm">
+            标记已发布
+          </button>
+        </div>
+      </td>
+    `;
+    tableBody.insertBefore(newRow, tableBody.firstChild);
+    setTimeout(() => newRow.classList.remove('animate-pulse'), 1200);
+  }
+
+  function highlightProgressRow(rowId) {
+    const row = document.getElementById(`row-${rowId}`);
+    if (row) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('bg-secondary-container/40');
+      setTimeout(() => row.classList.remove('bg-secondary-container/40'), 2000);
+      showToast(`已定位并聚焦排期条目: ${rowId}`);
+    }
+  }
+
+  function handleStageFilter(stage) {
+    showToast(`日历已按阶段过滤: ${stage}`);
+  }
+
+  function filterByStage(stage) {
+    const sel = document.getElementById('stageFilter');
+    if (sel) {
+      sel.value = stage;
+      handleStageFilter(stage);
+    }
+  }
+
+  function navigateMonth(delta) {
+    const label = document.getElementById('currentMonthLabel');
+    if (delta > 0) {
+      label.innerText = '2026年 4月';
+    } else {
+      label.innerText = '2026年 2月';
+    }
+    showToast(`已切换日历视图至 ${label.innerText}`);
+  }
+
+  function goToToday() {
+    const label = document.getElementById('currentMonthLabel');
+    label.innerText = '2026年 3月';
+    highlightProgressRow('SC2603-08');
+  }
+
+  function openMultiEventsDialog(dateStr) {
+    showToast(`${dateStr} 共有 4 条事件计划，已全部在列表展开`);
+  }
+
+  function exportCalendarReport() {
+    showToast('正在导出《2026年3月内容排期与复盘详表.csv》...');
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toastNotification');
+    const msgElem = document.getElementById('toastMessage');
+    msgElem.innerText = msg;
+    toast.classList.remove('translate-y-20', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+    setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-20', 'opacity-0');
+    }, 3200);
+  }
+</script></div></main></div></body></html>

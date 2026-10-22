@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="shell-type" content="web_dashboard">
+<title>自媒体内容运营工作台</title>
+<link href="/assets/fonts-icons.css" rel="stylesheet">
+<link href="/assets/fonts-text.css" rel="stylesheet">
+<link href="/assets/fonts-icons2.css" rel="stylesheet">
+<style>
+  @layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } }
+  ::-webkit-scrollbar { display: none; }
+</style>
+<script src="/assets/tailwind.js"></script>
+<script id="tailwind-config">
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container":"#785d00","on-tertiary-fixed-variant":"#444465","primary-fixed-dim":"#c6c6c9","surface-container-low":"#f2f3f6","primary-container":"#202224","secondary-fixed-dim":"#e7c361","secondary-container":"#ffd975","on-error":"#ffffff","outline-variant":"#c5c6ca","surface":"#f8f9fc","surface-tint":"#5d5e61","inverse-surface":"#2e3133","on-background":"#191c1e","surface-container-high":"#e7e8eb","on-secondary-fixed":"#241a00","background":"#f8f9fc","secondary":"#755b00","secondary-fixed":"#ffdf91","surface-bright":"#f8f9fc","surface-container-highest":"#e1e2e5","surface-container-lowest":"#ffffff","on-primary-container":"#88898b","tertiary":"#070725","primary-fixed":"#e2e2e5","outline":"#75777a","surface-container":"#edeef1","tertiary-fixed-dim":"#c5c3eb","primary":"#090c0d","on-error-container":"#93000a","tertiary-fixed":"#e2dfff","on-surface-variant":"#44474a","inverse-on-surface":"#f0f1f4","on-surface":"#191c1e","inverse-primary":"#c6c6c9","surface-dim":"#d9dadd","on-primary-fixed":"#1a1c1e","on-secondary-fixed-variant":"#594400","tertiary-container":"#1e1e3d","on-primary":"#ffffff","on-tertiary":"#ffffff","on-primary-fixed-variant":"#454749","surface-variant":"#e1e2e5","error-container":"#ffdad6","on-tertiary-container":"#8785aa","error":"#ba1a1a","on-secondary":"#ffffff","on-tertiary-fixed":"#181837"},borderRadius:{DEFAULT:"1rem",lg:"2rem",xl:"3rem",full:"9999px"},spacing:{"space-xs":"0.25rem","space-xl":"2.25rem",margin:"1.5rem","space-md":"1rem","gutter":"1.25rem","space-lg":"1.5rem","space-sm":"0.5rem"},fontFamily:{"label-md":["Be Vietnam Pro"],"headline-sm":["Plus Jakarta Sans"],"body-lg":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"],"body-sm":["Be Vietnam Pro"],"headline-md":["Plus Jakarta Sans"],"display-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-sm":["Be Vietnam Pro"]},fontSize:{"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"18px",fontWeight:"400"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"display-lg":["36px",{lineHeight:"44px",fontWeight:"700"}],"headline-lg":["26px",{lineHeight:"34px",fontWeight:"600"}],"label-sm":["11px",{lineHeight:"16px",fontWeight:"600"}]}}}}</script>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased">
+
+<aside class="fixed left-0 top-0 h-full w-20 bg-primary-container z-50 flex flex-col items-center py-space-md justify-between shadow-[0_12px_36px_rgba(32,34,36,0.08)]">
+  <div class="flex flex-col items-center gap-space-lg w-full">
+    <div class="w-12 h-12 rounded-2xl bg-surface-container-highest/10 flex items-center justify-center p-2">
+      <img alt="Creator Studio Logo" class="h-8 w-auto object-contain" src="/assets/img-1.png">
+    </div>
+    <nav id="sideNav" class="flex flex-col items-center gap-space-sm w-full px-space-xs">
+      <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="home" href="#home" title="首页总览">
+        <span class="material-symbols-outlined text-xl">dashboard</span>
+        <span class="tooltip">首页总览</span>
+      </a>
+      <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="topics" href="#topics" title="选题池">
+        <span class="material-symbols-outlined text-xl">lightbulb</span>
+        <span id="badgeTopic" class="absolute top-2 right-2 w-4 h-4 bg-error text-on-error text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+        <span class="tooltip">选题池</span>
+      </a>
+      <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="calendar" href="#calendar" title="内容日历">
+        <span class="material-symbols-outlined text-xl">calendar_month</span>
+        <span class="tooltip">内容日历</span>
+      </a>
+      <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="publish" href="#publish" title="发布中心">
+        <span class="material-symbols-outlined text-xl">send</span>
+        <span id="badgePublish" class="absolute top-2 right-2 min-w-4 h-4 px-1 bg-error text-on-error text-[10px] font-bold rounded-full flex items-center justify-center" style="display:none">0</span>
+        <span class="tooltip">发布中心</span>
+      </a>
+      <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="review" href="#review" title="数据复盘">
+        <span class="material-symbols-outlined text-xl">trending_up</span>
+        <span class="tooltip">数据复盘</span>
+      </a>
+      <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="assets" href="#assets" title="素材库">
+        <span class="material-symbols-outlined text-xl">grid_view</span>
+        <span class="tooltip">素材库</span>
+      </a>
+      <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="connections" href="#connections" title="连接设置">
+        <span class="material-symbols-outlined text-xl">cable</span>
+        <span class="tooltip">连接设置</span>
+      </a>
+    </nav>
+  </div>
+  <div class="flex flex-col items-center gap-space-xs w-full px-space-xs">
+    <button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" title="设置" type="button">
+      <span class="material-symbols-outlined text-lg">settings</span>
+    </button>
+    <button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" id="helpBtn" title="帮助" type="button">
+      <span class="material-symbols-outlined text-lg">help</span>
+    </button>
+    <button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-error/20 hover:text-error transition-all" title="接口文档" type="button" id="logoutBtn">
+      <span class="material-symbols-outlined text-lg">logout</span>
+    </button>
+  </div>
+</aside>
+
+<div class="pl-20">
+  <header class="fixed top-0 left-20 right-0 h-20 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-space-lg flex items-center justify-between gap-space-md">
+    <div class="flex flex-col justify-center min-w-0 pr-space-md">
+      <h1 class="text-headline-sm font-headline-sm text-on-surface tracking-tight truncate">自媒体内容运营工作台</h1>
+      <p class="text-label-sm font-label-sm text-on-surface-variant truncate">选题 → 排期 → 发布 → 复盘 → 沉淀，一个页面管好你的内容全流程</p>
+    </div>
+    <div class="hidden xl:flex items-center max-w-xs w-full">
+      <div class="flex items-center w-full bg-surface-container-lowest rounded-full px-space-md py-space-xs shadow-sm">
+        <span class="material-symbols-outlined text-on-surface-variant text-lg mr-space-xs">search</span>
+        <input id="globalSearch" class="w-full bg-transparent text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant focus:outline-none" placeholder="搜索全库选题、内容或排期..." type="text">
+        <span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">⌘K</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-space-md flex-shrink-0">
+      <div id="sync" class="hidden lg:flex items-center gap-space-xs bg-surface-container-lowest px-space-md py-1.5 rounded-full shadow-sm">
+        <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="syncText" class="text-label-sm font-label-sm text-on-surface-variant">已连接</span>
+      </div>
+      <div class="relative">
+        <select id="pfFilter" class="appearance-none bg-surface-container-lowest text-label-md font-label-md text-on-surface pl-space-md pr-8 py-1.5 rounded-full shadow-sm focus:outline-none cursor-pointer" title="按平台筛选">
+          <option value="all">全部平台</option>
+        </select>
+        <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-base">expand_more</span>
+      </div>
+      <div class="flex items-center gap-space-xs">
+        <button id="exportBtn" class="flex items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface text-label-md font-label-md px-space-md py-1.5 rounded-full shadow-sm transition-colors" type="button" title="导出当前视图 CSV">
+          <span class="material-symbols-outlined text-base">download</span><span class="hidden sm:inline">导出 CSV</span>
+        </button>
+        <button id="refreshBtn" class="w-8 h-8 rounded-full bg-surface-container-lowest hover:bg-surface-container-high flex items-center justify-center text-on-surface shadow-sm transition-colors" type="button" title="刷新数据">
+          <span class="material-symbols-outlined text-base">refresh</span>
+        </button>
+      </div>
+      <button class="relative w-8 h-8 rounded-full bg-surface-container-lowest hover:bg-surface-container-high flex items-center justify-center text-on-surface shadow-sm transition-colors" type="button" id="notifyBtn" title="通知">
+        <span class="material-symbols-outlined text-lg">notifications</span>
+        <span id="notifyDot" class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+      </button>
+      <button class="flex items-center gap-space-sm pl-space-xs rounded-full hover:opacity-80 transition-opacity" type="button" id="profileBtn" title="编辑主理人信息">
+        <img alt="Profile" id="headerAvatar" class="w-8 h-8 rounded-full object-cover bg-surface-container" src="/assets/img-4.png">
+        <div class="hidden md:flex flex-col items-start">
+          <span id="headerName" class="text-label-md font-label-md text-on-surface leading-tight">Alexandra</span>
+          <span class="text-label-sm font-label-sm text-on-surface-variant leading-tight">主理人</span>
+        </div>
+      </button>
+    </div>
+  </header>
+
+  <main id="view" class="w-full pt-20 px-space-lg pb-space-lg bg-surface-container-low min-h-screen"></main>
+</div>
+
+<div id="mask"></div>
+<aside id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div class="min-w-0">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#785d00]"></span>
+        <span id="drawerKicker" class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">字段录入</span>
+      </div>
+      <h3 id="drawerTitle" class="text-headline-md font-headline-md text-on-surface truncate">新增记录</h3>
+      <p id="drawerSub" class="text-label-sm font-label-sm text-on-surface-variant truncate"></p>
+    </div>
+    <button id="drawerClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+      <span class="material-symbols-outlined text-lg">close</span>
+    </button>
+  </div>
+  <div id="drawerBody" class="drawer-body"></div>
+  <p id="drawerHint" class="text-label-sm font-label-sm text-on-surface-variant px-6 pb-2"></p>
+  <div class="drawer-foot">
+    <button id="drawerCancel" class="px-5 py-2.5 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" type="button">取消</button>
+    <button id="drawerSave" class="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" type="button">
+      <span class="material-symbols-outlined text-base">check</span><span>保存到数据库</span>
+    </button>
+  </div>
+</aside>
+
+<div id="modal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="w-11 h-11 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center mb-1">
+      <span class="material-symbols-outlined">help</span>
+    </div>
+    <h3 id="modalTitle" class="text-headline-md font-headline-md text-on-surface">确认操作</h3>
+    <p id="modalText" class="text-body-md font-body-md text-on-surface-variant whitespace-pre-line"></p>
+    <div class="flex items-center justify-end gap-space-sm mt-space-sm">
+      <button id="modalCancel" class="px-5 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" type="button">取消</button>
+      <button id="modalOk" class="px-6 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all" type="button">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+  <div class="modal-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Profile</span>
+        <h3 id="profileModalTitle" class="text-headline-md font-headline-md text-on-surface mt-1">编辑主理人</h3>
+        <p class="text-label-sm text-on-surface-variant mt-1">名称与头像会保存在本机 SQLite 数据库。</p>
+      </div>
+      <button id="profileClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <div class="flex items-center gap-space-md mt-space-sm">
+      <button id="profileAvatarBtn" class="profile-avatar-btn" type="button" title="上传新头像">
+        <img id="profilePreview" alt="头像预览" src="/assets/img-4.png">
+        <span class="overlay">更换头像</span>
+      </button>
+      <div class="min-w-0">
+        <p class="text-label-md font-label-md text-on-surface">个人头像</p>
+        <p class="text-label-sm text-on-surface-variant">支持 PNG / JPG / WebP / GIF，最大 5MB。</p>
+      </div>
+    </div>
+    <input id="profileFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    <div class="fld" style="margin-bottom:0">
+      <label class="lab" for="profileNameInput">主理人名称</label>
+      <input id="profileNameInput" class="inp" type="text" maxlength="24" placeholder="请输入名称" autocomplete="off">
+    </div>
+    <div class="flex items-center justify-end gap-space-sm mt-space-sm">
+      <button id="profileCancel" class="px-5 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" type="button">取消</button>
+      <button id="profileSave" class="inline-flex items-center gap-1 px-6 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all" type="button">
+        <span class="material-symbols-outlined text-base">save</span>保存
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="voiceModal" role="dialog" aria-modal="true" aria-labelledby="voiceModalTitle">
+  <div class="modal-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Voice Memo</span>
+        <h3 id="voiceModalTitle" class="text-headline-md font-headline-md text-on-surface mt-1">语音速记</h3>
+        <p class="text-label-sm text-on-surface-variant mt-1">录音保存在本机；浏览器听写不可用时可手动补转写文本。</p>
+      </div>
+      <button id="voiceClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+
+    <div class="voice-recorder">
+      <div class="flex items-center gap-space-md">
+        <button id="voiceRecordBtn" class="voice-record-btn" type="button" title="开始录音">
+          <span id="voiceRecordIcon" class="material-symbols-outlined text-2xl">mic</span>
+        </button>
+        <div class="min-w-0 flex-1">
+          <div id="voiceStatus" class="text-label-md font-label-md text-on-surface">准备录音</div>
+          <div class="flex flex-wrap items-center gap-2 mt-1">
+            <span id="voiceTimer" class="voice-timer mono">00:00</span>
+            <span id="voiceAsrTag" class="chip chip-line">浏览器听写</span>
+          </div>
+        </div>
+      </div>
+      <div id="voiceWave" class="voice-wave" aria-hidden="true"></div>
+      <div class="fld" style="margin-bottom:0">
+        <label class="lab" for="voiceTranscript">转写文本（可编辑）</label>
+        <textarea id="voiceTranscript" class="ta" rows="4" placeholder="录音时浏览器会实时听写；不可用或识别失败时，可在此手动补充。"></textarea>
+      </div>
+      <audio id="voicePreview" class="voice-preview hidden" controls></audio>
+      <div class="fld" style="margin-bottom:0">
+        <label class="lab" for="voiceTitleInput">标题</label>
+        <input id="voiceTitleInput" class="inp" type="text" maxlength="80" placeholder="例如：选题会灵感 10-21" autocomplete="off">
+      </div>
+      <div class="flex items-center justify-end gap-space-sm">
+        <button id="voiceDiscard" class="px-5 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-40" type="button" disabled>放弃</button>
+        <button id="voiceSave" class="inline-flex items-center gap-1 px-6 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all disabled:opacity-40" type="button" disabled>
+          <span class="material-symbols-outlined text-base">save</span>保存录音
+        </button>
+      </div>
+    </div>
+
+    <div class="voice-history">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-label-md font-label-md text-on-surface">历史录音</h4>
+        <span id="voiceCount" class="chip chip-line">0 条</span>
+      </div>
+      <div id="voiceList" class="voice-list"></div>
+    </div>
+  </div>
+</div>
+
+<div id="publishModal" role="dialog" aria-modal="true" aria-labelledby="publishModalTitle">
+  <div class="modal-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <span id="publishKicker" class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Publish Task</span>
+        <h3 id="publishModalTitle" class="text-headline-md font-headline-md text-on-surface mt-1">新建发布任务</h3>
+        <p id="publishSub" class="text-label-sm text-on-surface-variant mt-1"></p>
+      </div>
+      <button id="publishClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <div id="publishBody" class="publish-body"></div>
+    <div id="publishFoot" class="flex flex-wrap items-center justify-end gap-space-sm"></div>
+  </div>
+</div>
+
+<div id="cropModal" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+  <div class="modal-card crop-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Cover Crop</span>
+        <h3 id="cropTitle" class="text-headline-md font-headline-md text-on-surface mt-1">裁剪封面</h3>
+        <p id="cropSource" class="text-label-sm text-on-surface-variant mt-1"></p>
+      </div>
+      <button id="cropClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <div class="crop-ratios" id="cropRatios">
+      <button type="button" class="crop-ratio on" data-ratio="original">原始比例</button>
+      <button type="button" class="crop-ratio" data-ratio="16:9">16:9</button>
+      <button type="button" class="crop-ratio" data-ratio="9:16">9:16</button>
+      <button type="button" class="crop-ratio" data-ratio="4:3">4:3</button>
+      <button type="button" class="crop-ratio" data-ratio="3:4">3:4</button>
+      <button type="button" class="crop-ratio" data-ratio="3:2">3:2</button>
+      <button type="button" class="crop-ratio" data-ratio="1:1">1:1</button>
+      <button type="button" class="crop-ratio" data-ratio="free">自由</button>
+    </div>
+    <div class="crop-stage" id="cropStage">
+      <img id="cropImg" alt="">
+      <div id="cropBox">
+        <span class="crop-grid"></span>
+        <span class="crop-handle nw" data-handle="nw"></span>
+        <span class="crop-handle ne" data-handle="ne"></span>
+        <span class="crop-handle sw" data-handle="sw"></span>
+        <span class="crop-handle se" data-handle="se"></span>
+      </div>
+    </div>
+    <p class="crop-hint" id="cropHint">拖动选区移动，拖动四角调整大小；「自由」可任意比例。</p>
+    <div class="crop-foot">
+      <button id="cropCancel" class="px-5 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" type="button">取消</button>
+      <button id="cropConfirm" class="px-6 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all" type="button">使用此封面</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
