@@ -340,7 +340,8 @@ async function handleApi(req, res, url) {
           store.get('calendar', id);
           return sendJSON(res, 200, {
             media: media.list({ scheduleId: id }),
-            cover: media.getCover(id)
+            cover: media.getCover(id),
+            covers: media.listCovers(id)
           });
         }
         if (method === 'PUT' || method === 'POST') {
@@ -356,18 +357,21 @@ async function handleApi(req, res, url) {
       if (tableKey === 'calendar' && parts[5] === 'cover') {
         store.get('calendar', id);
         if (method === 'GET') {
-          return sendJSON(res, 200, { cover: media.getCover(id) });
+          return sendJSON(res, 200, { cover: media.getCover(id), covers: media.listCovers(id) });
         }
         if (method === 'PUT' || method === 'POST') {
           const body = await readBody(req);
-          const cover = media.attachCover(id, body.mediaId || body.coverId || null);
+          const batch = body.mediaIds || body.ids;
+          const covers = batch
+            ? media.attachCovers(id, batch)
+            : media.attachCovers(id, body.mediaId || body.coverId || null);
           touch('calendar', 'update', id);
-          return sendJSON(res, 200, { cover });
+          return sendJSON(res, 200, { cover: covers[0] || null, covers });
         }
         if (method === 'DELETE') {
-          const cover = media.attachCover(id, null);
+          const covers = media.attachCovers(id, []);
           touch('calendar', 'update', id);
-          return sendJSON(res, 200, { cover });
+          return sendJSON(res, 200, { cover: null, covers });
         }
         res.writeHead(405, { Allow: 'GET, PUT, DELETE' });
         return res.end();
@@ -535,6 +539,7 @@ async function handleApi(req, res, url) {
           name: url.searchParams.get('name') || '',
           kind: url.searchParams.get('kind') || '',
           role: url.searchParams.get('role') || 'content',
+          ratio: url.searchParams.get('ratio') || '',
           duration: url.searchParams.get('duration') || '',
           mime: req.headers['content-type'] || ''
         });
@@ -842,7 +847,7 @@ try {
 try {
   publishTasks.startScheduler();
   const ps = publishTasks.getStatus();
-  console.log(`[publish] 发布队列：每 30 秒巡检；已排程 ${ps.scheduled} 条，待人工确认 ${ps.needsConfirm} 条`);
+  console.log(`[publish] 发布队列：每 30 秒巡检，到点自动发布；已排程 ${ps.scheduled} 条`);
 } catch (err) {
   console.warn('[publish] 发布队列启动异常：', err.message);
 }

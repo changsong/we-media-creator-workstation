@@ -265,46 +265,6 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
   </div>
 </div>
 
-<div id="cropModal" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
-  <div class="modal-card crop-card">
-    <div class="flex items-start justify-between gap-space-md">
-      <div class="min-w-0">
-        <span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Cover Crop</span>
-        <h3 id="cropTitle" class="text-headline-md font-headline-md text-on-surface mt-1">裁剪封面</h3>
-        <p id="cropSource" class="text-label-sm text-on-surface-variant mt-1"></p>
-      </div>
-      <button id="cropClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
-        <span class="material-symbols-outlined text-lg">close</span>
-      </button>
-    </div>
-    <div class="crop-ratios" id="cropRatios">
-      <button type="button" class="crop-ratio on" data-ratio="original">原始比例</button>
-      <button type="button" class="crop-ratio" data-ratio="16:9">16:9</button>
-      <button type="button" class="crop-ratio" data-ratio="9:16">9:16</button>
-      <button type="button" class="crop-ratio" data-ratio="4:3">4:3</button>
-      <button type="button" class="crop-ratio" data-ratio="3:4">3:4</button>
-      <button type="button" class="crop-ratio" data-ratio="3:2">3:2</button>
-      <button type="button" class="crop-ratio" data-ratio="1:1">1:1</button>
-      <button type="button" class="crop-ratio" data-ratio="free">自由</button>
-    </div>
-    <div class="crop-stage" id="cropStage">
-      <img id="cropImg" alt="">
-      <div id="cropBox">
-        <span class="crop-grid"></span>
-        <span class="crop-handle nw" data-handle="nw"></span>
-        <span class="crop-handle ne" data-handle="ne"></span>
-        <span class="crop-handle sw" data-handle="sw"></span>
-        <span class="crop-handle se" data-handle="se"></span>
-      </div>
-    </div>
-    <p class="crop-hint" id="cropHint">拖动选区移动，拖动四角调整大小；「自由」可任意比例。</p>
-    <div class="crop-foot">
-      <button id="cropCancel" class="px-5 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" type="button">取消</button>
-      <button id="cropConfirm" class="px-6 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all" type="button">使用此封面</button>
-    </div>
-  </div>
-</div>
-
 <div id="toasts"></div>
 
 <script src="/app.js"></script>

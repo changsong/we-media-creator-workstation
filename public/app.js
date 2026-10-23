@@ -76,13 +76,12 @@
   var PUB_UPLOAD = { kind:'video', items:[], pendingIds:[], uploading:false, progress:0, previewUrls:[], kept:false, xhrs:[] };
   var MEDIA_EDIT = { scheduleId:null, format:'', kind:null, items:[], pendingIds:[], uploading:false, xhrs:[], otherCount:0 };
   var CAL_COVER = newCalendarCoverState();
-  var CROP = { active:false, img:null, natW:0, natH:0, scale:1, stageW:0, stageH:0, ratio:'original', rect:{x:0,y:0,w:0,h:0}, drag:null };
 
   function newCalendarCoverState(){
     return {
       scheduleId:null, format:'', supported:false, loading:false,
-      current:null, original:null, pendingIds:[], uploading:false,
-      dirty:false, source:null, xhrs:[], uploadRun:0
+      variants:[], originalVariants:[], pendingIds:[], uploading:false,
+      dirty:false, xhrs:[]
     };
   }
 
@@ -2127,7 +2126,7 @@
   }
   function pubStatusChip(t){
     var cls = {
-      scheduled:'chip-sky', running:'chip-honey', needs_confirm:'chip-coral',
+      scheduled:'chip-sky', running:'chip-honey',
       submitted:'chip-lilac', published:'chip-mint', failed:'chip-coral', canceled:'chip-line'
     }[t.status] || 'chip-line';
     var icon = t.status === 'running' ? '<span class="material-symbols-outlined text-[13px] animate-spin">progress_activity</span>' : '';
@@ -2201,7 +2200,7 @@
     PUB.timer = null;
     if(PUB.watch){
       var watched = pubTaskById(PUB.watch.id);
-      if(!watched || ['published','failed','needs_confirm','submitted','canceled'].indexOf(watched.status) >= 0 || Date.now() > PUB.watch.until){
+      if(!watched || ['published','failed','submitted','canceled'].indexOf(watched.status) >= 0 || Date.now() > PUB.watch.until){
         PUB.watch = null;
       }
     }
@@ -2224,7 +2223,7 @@
 
   function viewPublish(){
     var tasks = PUB.tasks;
-    var counts = { scheduled:0, running:0, needs_confirm:0, submitted:0, published:0, failed:0, canceled:0 };
+    var counts = { scheduled:0, running:0, submitted:0, published:0, failed:0, canceled:0 };
     tasks.forEach(function(t){ if(counts[t.status] != null) counts[t.status]++; });
     var st = PUB.status || {};
     var running = st.running;
@@ -2249,8 +2248,8 @@
     html += '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-lg">';
     html += kpiPastel('sky', '已排程', pad2(counts.scheduled), '到点后由调度器自动执行');
     html += kpiPastel('butter', '进行中', pad2(counts.running), '同一时间只执行一条任务');
-    html += kpiPastel('lilac', '待人工确认', pad2(counts.needs_confirm), '浏览器已填好表单，等你点发布');
-    html += kpiPastel('mint', '已发布', pad2(counts.published + counts.submitted), '含待核验 ' + counts.submitted + ' 条 · 失败 ' + counts.failed + ' 条');
+    html += kpiPastel('lilac', '待核验', pad2(counts.submitted), '已点击发布，等待作品列表核验');
+    html += kpiPastel('mint', '已发布', pad2(counts.published), '失败 ' + counts.failed + ' 条，可在队列中重试');
     html += '</div>';
 
     html += '<div class="grid grid-cols-12 gap-space-md items-start">';
@@ -2263,7 +2262,7 @@
     } else {
       html += '<div class="overflow-x-auto"><table class="w-full text-[12px]"><thead><tr class="text-label-sm text-on-surface-variant bg-surface-container-low/60">';
       html += '<th class="text-left font-semibold py-2.5 pl-4 pr-2 whitespace-nowrap">任务 / 内容</th>';
-      html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">平台 / 方式</th>';
+      html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">平台</th>';
       html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">计划执行</th>';
       html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">状态</th>';
       html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">发布素材</th>';
@@ -2275,7 +2274,7 @@
         html += '<td class="py-3 pl-4 pr-2 min-w-[200px]"><div class="mono text-[10.5px] font-semibold text-on-surface-variant">' + esc(t.code) + '</div>';
         html += '<button class="font-semibold text-on-surface truncate max-w-[280px] text-left hover:text-[#785d00]" data-act="pubDetail" data-id="' + id + '" type="button" title="查看详情">' + esc(t.title || '（未命名）') + '</button>';
         html += '<div class="text-label-sm text-on-surface-variant">' + esc(t.scheduleCode) + (t.error ? ' · <span class="text-[#8E3B26]">' + esc(truncate(t.error, 30)) + '</span>' : '') + '</div></td>';
-        html += '<td class="py-3 px-2 whitespace-nowrap">' + platformChip(t.platform) + '<div class="text-label-sm text-on-surface-variant mt-1">' + (t.mode === 'auto' ? '全自动' : '人工确认') + '</div></td>';
+        html += '<td class="py-3 px-2 whitespace-nowrap">' + platformChip(t.platform) + '</td>';
         html += '<td class="py-3 px-2 whitespace-nowrap"><div>' + esc(fmtDateTime(t.scheduledAt)) + '</div><div class="text-label-sm text-on-surface-variant">' + esc(t.attempts ? '已尝试 ' + t.attempts + ' 次' : '未执行') + '</div></td>';
         html += '<td class="py-3 px-2 whitespace-nowrap">' + pubStatusChip(t) + '</td>';
         var mediaItems = t.media || [];
@@ -2294,7 +2293,6 @@
         html += '<td class="py-3 pr-4 pl-2 whitespace-nowrap"><div class="flex items-center justify-end gap-1">';
         if(t.status === 'scheduled') html += '<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold hover:opacity-90" data-act="pubRun" data-id="' + id + '" type="button">立即执行</button>';
         if(t.status === 'failed' || t.status === 'canceled') html += '<button class="px-2.5 py-1 rounded-full bg-secondary-fixed text-[10px] font-semibold text-on-secondary-fixed-variant hover:brightness-95" data-act="pubRetry" data-id="' + id + '" type="button">重试</button>';
-        if(t.status === 'needs_confirm' || t.status === 'submitted') html += '<button class="px-2.5 py-1 rounded-full bg-secondary-fixed text-[10px] font-semibold text-on-secondary-fixed-variant hover:brightness-95" data-act="pubDetail" data-id="' + id + '" type="button">去确认</button>';
         html += '<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface hover:bg-surface-container-high" data-act="pubDetail" data-id="' + id + '" type="button">详情</button>';
         if(t.status !== 'running') html += '<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-[#8e3b26] hover:bg-[#fce3dd]" data-act="pubDelete" data-id="' + id + '" type="button">删除</button>';
         html += '</div></td></tr>';
@@ -2304,23 +2302,12 @@
     html += '</div></div>';
 
     html += '<div class="col-span-12 xl:col-span-4 flex flex-col gap-space-md">';
-    if(counts.needs_confirm){
-      html += '<div class="soft-card border-l-4 border-[#8e3b26] p-space-lg">';
-      html += '<div class="flex items-center justify-between mb-2"><h3 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-lg" style="color:#8e3b26">fact_check</span>等待人工确认</h3><span class="chip chip-coral">' + counts.needs_confirm + ' 条</span></div>';
-      html += '<p class="text-label-sm text-on-surface-variant mb-2">表单已填好，请在浏览器窗口点击「发布」，完成后回到这里标记已发布。</p>';
-      html += '<div class="flex flex-col gap-1.5">';
-      tasks.filter(function(t){ return t.status === 'needs_confirm'; }).slice(0, 4).forEach(function(t){
-        html += '<div class="flex items-center justify-between gap-2"><div class="min-w-0"><div class="text-body-sm font-medium truncate">' + esc(t.title) + '</div><div class="text-label-sm text-on-surface-variant">' + esc(t.code) + ' · ' + esc(t.platform) + '</div></div>';
-        html += '<button class="px-3 py-1 rounded-full bg-secondary-fixed text-label-sm font-semibold text-on-secondary-fixed-variant shrink-0" data-act="pubDetail" data-id="' + esc(t._id) + '" type="button">去确认</button></div>';
-      });
-      html += '</div></div>';
-    }
     html += '<div class="soft-card p-space-lg">';
     html += '<h3 class="text-headline-sm font-headline-sm text-on-surface mb-2">执行说明</h3>';
     html += '<ul class="text-label-sm text-on-surface-variant flex flex-col gap-1.5">';
     html += '<li>· 队列同一时间只执行一条任务，到点后自动打开本地浏览器。</li>';
-    html += '<li>· 人工确认模式：上传素材、填好标题与话题后停在发布按钮前，由你手动点「发布」。</li>';
-    html += '<li>· 全自动模式：点击发布后会到作品列表核验新作品链接，未核验到的显示为「待核验」。</li>';
+    html += '<li>· 任务到点后自动上传素材、填写标题与话题并点击发布，随后到作品列表核验新作品链接；未核验到的显示为「待核验」。</li>';
+    html += '<li>· 想提前发布，在队列里点「立即执行」；执行期间请勿关闭浏览器窗口。</li>';
     html += '<li>· 超过计划时间 6 小时仍未执行的任务会标记失败，可调整时间后重试。</li>';
     html += '<li>· 素材优先复用内容日历里的上传（视频在 data/videos、图片在 data/images），执行日志与截图在 data/publish-logs。</li>';
     html += '</ul>';
@@ -2356,11 +2343,7 @@
     html += '<div class="fld"><label class="lab">作品标题 <b>*</b> <span class="text-outline normal-case">· 抖音最多 30 字，超出自动截断</span></label><input id="pubTitle" class="inp" type="text" maxlength="80" value="' + esc(title) + '" placeholder="填写作品标题"></div>';
     html += '<div class="fld"><label class="lab">作品简介</label><textarea id="pubDescription" class="ta" rows="3" placeholder="留空也可以；话题标签会自动追加到简介末尾"></textarea></div>';
     html += '<div class="fld"><label class="lab">话题标签 <span class="text-outline normal-case">· 用逗号或空格分隔，最多 10 个</span></label><input id="pubTags" class="inp" type="text" placeholder="干货, 运营, 复盘"></div>';
-    html += '<div class="fld"><label class="lab">发布素材 <b>*</b></label><div id="pubMediaSlot"><div class="text-label-sm text-on-surface-variant">正在读取内容日历素材…</div></div></div>';
-    html += '<div class="fld" style="margin-bottom:0"><label class="lab">发布方式</label><div class="pub-mode">';
-    html += '<label><input type="radio" name="pubMode" value="confirm" checked><span><span class="t">人工确认（推荐）</span><span class="d">自动打开浏览器、上传素材并填好标题与话题，停在发布按钮前，由你确认后手动点「发布」。</span></span></label>';
-    html += '<label><input type="radio" name="pubMode" value="auto"><span><span class="t">全自动发布</span><span class="d">填好表单后自动点击发布，并到作品列表核验新作品链接；执行期间请勿关闭浏览器窗口。</span></span></label>';
-    html += '</div></div>';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">发布素材 <b>*</b></label><div id="pubMediaSlot"><div class="text-label-sm text-on-surface-variant">正在读取内容日历素材…</div></div></div>';
     return html;
   }
 
@@ -2623,11 +2606,11 @@
     next();
   }
 
-  function uploadMediaFile(file, kind, duration, xhrs, onProgress, role){
+  function uploadMediaFile(file, kind, duration, xhrs, onProgress, role, ratio){
     return new Promise(function(resolve, reject){
       var xhr = new XMLHttpRequest();
       if(xhrs) xhrs.push(xhr);
-      xhr.open('POST', API + '/media?name=' + encodeURIComponent(file.name) + '&kind=' + kind + '&duration=' + encodeURIComponent(duration || 0) + (role ? '&role=' + encodeURIComponent(role) : ''));
+      xhr.open('POST', API + '/media?name=' + encodeURIComponent(file.name) + '&kind=' + kind + '&duration=' + encodeURIComponent(duration || 0) + (role ? '&role=' + encodeURIComponent(role) : '') + (ratio ? '&ratio=' + encodeURIComponent(ratio) : ''));
       xhr.setRequestHeader('Content-Type', file.type || (kind === 'image' ? 'image/png' : 'video/mp4'));
       xhr.upload.onprogress = function(ev){
         if(!ev.lengthComputable || !onProgress) return;
@@ -2706,7 +2689,10 @@
         MEDIA_EDIT.otherCount = list.length;
       }
       renderCalendarMedia();
-      if(!CAL_COVER.dirty && !CAL_COVER.uploading) setCoverFromServer((res && res.cover) || null);
+      if(!CAL_COVER.dirty && !CAL_COVER.uploading){
+        var covers = (res && res.covers) || ((res && res.cover) ? [res.cover] : []);
+        setCoverFromServer(covers);
+      }
       else renderCalendarCover();
     }).catch(function(err){
       if(seq !== calMediaSeq) return;
@@ -2908,10 +2894,38 @@
 
   /* ---------- calendar cover ---------- */
   var calCoverSeq = 0;
-  var CROP_RATIOS = { '16:9': 16 / 9, '9:16': 9 / 16, '4:3': 4 / 3, '3:4': 3 / 4, '3:2': 3 / 2, '1:1': 1 };
+  var COVER_RATIOS = [
+    { key:'original', label:'原始比例' },
+    { key:'16:9', label:'16:9', value:16 / 9 },
+    { key:'9:16', label:'9:16', value:9 / 16 },
+    { key:'4:3', label:'4:3', value:4 / 3 },
+    { key:'3:4', label:'3:4', value:3 / 4 },
+    { key:'3:2', label:'3:2', value:3 / 2 },
+    { key:'1:1', label:'1:1', value:1 }
+  ];
+  var COVER_RATIO_KEYS = COVER_RATIOS.map(function(item){ return item.key; });
 
   function coverSupported(format){
     return format === '图文' || format === '长图' || format === '短视频';
+  }
+
+  function coverRatioLabel(key){
+    for(var i = 0; i < COVER_RATIOS.length; i++){
+      if(COVER_RATIOS[i].key === key) return COVER_RATIOS[i].label;
+    }
+    return key || '原始比例';
+  }
+
+  function normalizeCoverList(covers){
+    var list = Array.isArray(covers) ? covers.slice() : (covers ? [covers] : []);
+    list.sort(function(a, b){
+      var ai = COVER_RATIO_KEYS.indexOf(a.ratio);
+      var bi = COVER_RATIO_KEYS.indexOf(b.ratio);
+      if(ai < 0) ai = COVER_RATIO_KEYS.length;
+      if(bi < 0) bi = COVER_RATIO_KEYS.length;
+      return ai - bi;
+    });
+    return list;
   }
 
   function calCoverDiscardPending(){
@@ -2926,10 +2940,6 @@
   function resetCalendarCover(){
     calCoverSeq++;
     (CAL_COVER.xhrs || []).forEach(function(xhr){ try{ xhr.abort(); }catch(err){} });
-    if(CAL_COVER.source && CAL_COVER.source.revoke && CAL_COVER.source.url){
-      try{ URL.revokeObjectURL(CAL_COVER.source.url); }catch(err){}
-    }
-    closeCoverCrop();
     CAL_COVER = newCalendarCoverState();
   }
 
@@ -2947,14 +2957,10 @@
     (CAL_COVER.xhrs || []).forEach(function(xhr){ try{ xhr.abort(); }catch(err){} });
     CAL_COVER.xhrs = [];
     calCoverDiscardPending();
-    CAL_COVER.current = CAL_COVER.original;
+    CAL_COVER.variants = (CAL_COVER.originalVariants || []).slice();
     CAL_COVER.dirty = false;
     CAL_COVER.uploading = false;
-    if(CAL_COVER.current){
-      CAL_COVER.source = { url: CAL_COVER.current.fileUrl, name: CAL_COVER.current.name };
-    } else {
-      CAL_COVER.source = null;
-    }
+    renderCalendarCover();
   }
 
   function initCalendarCover(rec){
@@ -2966,12 +2972,12 @@
     renderCalendarCover();
   }
 
-  function setCoverFromServer(cover){
+  function setCoverFromServer(covers){
     CAL_COVER.loading = false;
     if(CAL_COVER.dirty || CAL_COVER.uploading) return;
-    CAL_COVER.current = cover || null;
-    CAL_COVER.original = cover || null;
-    CAL_COVER.source = cover ? { url: cover.fileUrl, name: cover.name } : null;
+    var list = normalizeCoverList(covers);
+    CAL_COVER.variants = list;
+    CAL_COVER.originalVariants = list.slice();
     renderCalendarCover();
   }
 
@@ -2989,19 +2995,24 @@
       slot.innerHTML = '<div class="text-label-sm text-on-surface-variant">正在读取封面…</div>';
       return;
     }
+    var variants = CAL_COVER.variants || [];
     var html = '';
-    if(CAL_COVER.current){
-      html += '<div class="cover-current"><img class="cover-preview" src="' + esc(CAL_COVER.current.fileUrl) + '" alt="封面">';
-      html += '<div class="cover-info"><div class="cover-title">' + (CAL_COVER.pendingIds.length ? '新封面 · 保存排期后生效' : '已设置封面') + '</div>';
-      html += '<div class="media-sub">' + esc(CAL_COVER.current.name) + ' · ' + fmtBytes(CAL_COVER.current.sizeBytes || 0) + '</div>';
+    if(variants.length){
+      html += '<div class="cover-title">' + (CAL_COVER.pendingIds.length ? '新封面 · 保存排期后生效' : '已设置封面 · ' + variants.length + ' 种比例') + '</div>';
+      html += '<div class="cover-variants">';
+      variants.forEach(function(item){
+        html += '<div class="cover-variant" title="' + esc(item.name) + '">';
+        html += '<img src="' + esc(item.fileUrl) + '" alt="' + esc(coverRatioLabel(item.ratio)) + '">';
+        html += '<span>' + esc(coverRatioLabel(item.ratio)) + '</span></div>';
+      });
+      html += '</div>';
       html += '<div class="cover-actions">';
-      if(CAL_COVER.source) html += '<button type="button" class="cover-btn" data-act="calCoverRecrop">重新裁剪</button>';
       html += '<button type="button" class="cover-btn" data-act="calCoverPick">更换封面</button>';
       html += '<button type="button" class="cover-btn cover-btn-del" data-act="calCoverRemove">移除</button>';
-      html += '</div></div></div>';
+      html += '</div>';
     } else {
       html += '<div class="pub-upload"><button type="button" class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90" data-act="calCoverPick"><span class="material-symbols-outlined text-base">image</span>选择封面</button>';
-      html += '<span class="hint">JPG / PNG / WebP，≤20MB；选择后可裁剪比例</span></div>';
+      html += '<span class="hint">JPG / PNG / WebP，≤20MB；导入后自动生成 7 种比例</span></div>';
       var imageItems = (MEDIA_EDIT.items || []).filter(function(item){ return item.kind === 'image'; });
       if(MEDIA_EDIT.kind === 'image' && imageItems.length){
         html += '<div class="cover-picks"><span class="hint">或从已上传图片中选择：</span>';
@@ -3022,307 +3033,188 @@
     var file = e.target && e.target.files && e.target.files[0];
     if(e.target) e.target.value = '';
     if(!file) return;
-    if(CAL_COVER.uploading){ toast('封面正在上传，请稍候', 'err'); return; }
+    if(CAL_COVER.uploading){ toast('封面正在生成，请稍候', 'err'); return; }
     var nameOk = /\.(jpe?g|png|webp)$/i.test(file.name);
     var typeOk = (file.type || '').indexOf('image/') === 0;
     if(!nameOk && !typeOk){ toast('封面仅支持 JPG / PNG / WebP', 'err'); return; }
     if(file.size > 20 * 1024 * 1024){ toast('封面图片不能超过 20MB', 'err'); return; }
-    openCoverCrop({ url: URL.createObjectURL(file), name: file.name, revoke: true });
+    importCoverImage({ url: URL.createObjectURL(file), name: file.name, revoke: true });
   }
 
-  function openCoverCropFromItem(id){
+  function coverFromItem(id){
     var item = null;
     (MEDIA_EDIT.items || []).forEach(function(it){ if(it.id === id) item = it; });
     if(!item || item.kind !== 'image'){ toast('请选择一张正文图片', 'err'); return; }
-    openCoverCrop({ url: item.fileUrl, name: item.name, revoke: false });
+    if(CAL_COVER.uploading){ toast('封面正在生成，请稍候', 'err'); return; }
+    importCoverImage({ url: item.fileUrl, name: item.name, revoke: false });
   }
 
   function removeCalendarCover(){
     if(CAL_COVER.uploading) return;
-    if(!CAL_COVER.current) return;
-    var current = CAL_COVER.current;
-    var p = CAL_COVER.pendingIds.indexOf(current.id);
-    if(p >= 0){
-      CAL_COVER.pendingIds.splice(p, 1);
-      request('/media/' + encodeURIComponent(current.id), { method: 'DELETE' }).catch(function(){});
-    }
-    CAL_COVER.current = null;
-    CAL_COVER.source = null;
+    if(!(CAL_COVER.variants || []).length) return;
+    CAL_COVER.pendingIds.forEach(function(id){
+      if(id) request('/media/' + encodeURIComponent(id), { method: 'DELETE' }).catch(function(){});
+    });
+    CAL_COVER.pendingIds = [];
+    CAL_COVER.variants = [];
     CAL_COVER.dirty = true;
     renderCalendarCover();
     toast('已移除封面 · 保存排期后生效', 'ok');
   }
 
   function attachEditorCover(saved){
+    var ids = (CAL_COVER.variants || []).map(function(item){ return item.id; });
     return request('/tables/calendar/records/' + encodeURIComponent(saved._id) + '/cover', {
       method: 'PUT',
-      body: JSON.stringify({ mediaId: CAL_COVER.current ? CAL_COVER.current.id : null })
+      body: JSON.stringify({ mediaIds: ids })
     }).then(function(res){
+      var covers = normalizeCoverList((res && res.covers) || []);
       CAL_COVER.pendingIds = [];
       CAL_COVER.dirty = false;
       CAL_COVER.scheduleId = saved._id;
-      CAL_COVER.original = (res && res.cover) || null;
-      CAL_COVER.current = CAL_COVER.original;
-      if(CAL_COVER.current && !CAL_COVER.source){
-        CAL_COVER.source = { url: CAL_COVER.current.fileUrl, name: CAL_COVER.current.name };
-      }
+      CAL_COVER.originalVariants = covers.slice();
+      CAL_COVER.variants = covers;
       renderCalendarCover();
-      return CAL_COVER.current;
+      return covers[0] || null;
     });
   }
 
-  /* ---------- cover cropper ---------- */
-  function openCoverCrop(source){
+  /* ---------- cover auto crop ---------- */
+  function canvasToJpeg(canvas){
+    return new Promise(function(resolve, reject){
+      canvas.toBlob(function(blob){
+        if(blob) resolve(blob);
+        else reject(new Error('封面图片生成失败'));
+      }, 'image/jpeg', 0.9);
+    });
+  }
+
+  function buildCoverVariants(img, sourceName){
+    var natW = img.naturalWidth || img.width || 1;
+    var natH = img.naturalHeight || img.height || 1;
+    var out = [];
+    var chain = Promise.resolve();
+    COVER_RATIOS.forEach(function(def){
+      chain = chain.then(function(){
+        var sx = 0;
+        var sy = 0;
+        var sw = natW;
+        var sh = natH;
+        if(def.value){
+          if(natW / natH > def.value){
+            // 原图比目标更宽：以高度为准，左右居中裁切
+            sh = natH;
+            sw = Math.round(natH * def.value);
+            sx = Math.round((natW - sw) / 2);
+          } else {
+            sw = natW;
+            sh = Math.round(natW / def.value);
+            sy = Math.round((natH - sh) / 2);
+          }
+        }
+        sw = Math.max(1, sw);
+        sh = Math.max(1, sh);
+        var cap = Math.min(1, 2048 / Math.max(sw, sh));
+        var cw = Math.max(1, Math.round(sw * cap));
+        var ch = Math.max(1, Math.round(sh * cap));
+        var canvas = document.createElement('canvas');
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
+        return canvasToJpeg(canvas).then(function(blob){
+          out.push({ key:def.key, label:def.label, blob:blob });
+        });
+      });
+    });
+    return chain.then(function(){ return out; }).catch(function(err){
+      throw new Error('封面生成失败（' + (sourceName || '图片') + '）：' + errMsg(err));
+    });
+  }
+
+  function importCoverImage(source){
     if(!source || !source.url) return;
+    if(CAL_COVER.uploading){ toast('封面正在生成，请稍候', 'err'); return; }
     var seq = calCoverSeq;
+    function release(){ if(source.revoke){ try{ URL.revokeObjectURL(source.url); }catch(err){} } }
     var img = new Image();
     img.onload = function(){
-      if(seq !== calCoverSeq){
-        if(source.revoke) { try{ URL.revokeObjectURL(source.url); }catch(err){} }
-        return;
-      }
-      if(CAL_COVER.source && CAL_COVER.source.revoke && CAL_COVER.source.url && CAL_COVER.source.url !== source.url){
-        try{ URL.revokeObjectURL(CAL_COVER.source.url); }catch(err){}
-      }
-      CAL_COVER.source = source;
-      CROP.active = true;
-      CROP.img = img;
-      CROP.natW = img.naturalWidth || img.width || 1;
-      CROP.natH = img.naturalHeight || img.height || 1;
-      CROP.ratio = 'original';
-      var srcEl = $('cropSource');
-      if(srcEl) srcEl.textContent = source.name || '';
-      layoutCoverCrop();
-      setCropRatioUI('original');
-      cropInitRect();
-      $('cropModal').classList.add('on');
+      if(seq !== calCoverSeq){ release(); return; }
+      buildCoverVariants(img, source.name).then(function(items){
+        release();
+        if(seq !== calCoverSeq) return;
+        uploadCoverBatch(items, source.name);
+      }).catch(function(err){
+        release();
+        if(seq !== calCoverSeq) return;
+        toast(errMsg(err), 'err');
+      });
     };
     img.onerror = function(){
-      if(source.revoke) { try{ URL.revokeObjectURL(source.url); }catch(err){} }
+      release();
       toast('图片载入失败，请换一张试试', 'err');
     };
     img.src = source.url;
   }
 
-  function layoutCoverCrop(){
-    var maxW = Math.max(260, Math.min(720, window.innerWidth - 120));
-    var maxH = Math.max(220, Math.min(Math.round(window.innerHeight * 0.56), 520));
-    var scale = Math.min(maxW / CROP.natW, maxH / CROP.natH);
-    CROP.scale = scale;
-    CROP.stageW = Math.max(1, Math.round(CROP.natW * scale));
-    CROP.stageH = Math.max(1, Math.round(CROP.natH * scale));
-    var stage = $('cropStage');
-    stage.style.width = CROP.stageW + 'px';
-    stage.style.height = CROP.stageH + 'px';
-    $('cropImg').src = CAL_COVER.source.url;
-  }
-
-  function cropRatioValue(key){
-    if(key === 'original') return CROP.natW / CROP.natH;
-    if(key === 'free') return 0;
-    return CROP_RATIOS[key] || 0;
-  }
-
-  function cropInitRect(){
-    var ratio = cropRatioValue(CROP.ratio);
-    var w, h;
-    if(!ratio){
-      w = CROP.stageW;
-      h = CROP.stageH;
-    } else if(CROP.stageW / CROP.stageH > ratio){
-      h = CROP.stageH;
-      w = h * ratio;
-    } else {
-      w = CROP.stageW;
-      h = w / ratio;
-    }
-    CROP.rect = { x: (CROP.stageW - w) / 2, y: (CROP.stageH - h) / 2, w: w, h: h };
-    drawCropBox();
-  }
-
-  function setCropRatioUI(key){
-    var btns = document.querySelectorAll('#cropRatios [data-ratio]');
-    for(var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].getAttribute('data-ratio') === key);
-  }
-
-  function drawCropBox(){
-    var box = $('cropBox');
-    if(!box) return;
-    box.style.left = CROP.rect.x + 'px';
-    box.style.top = CROP.rect.y + 'px';
-    box.style.width = CROP.rect.w + 'px';
-    box.style.height = CROP.rect.h + 'px';
-  }
-
-  function cropPointerPos(e){
-    var stage = $('cropStage');
-    var r = stage.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  }
-
-  function cropStartDrag(e, mode, handle){
-    if(!CROP.active) return;
-    e.preventDefault();
-    var p = cropPointerPos(e);
-    var r = CROP.rect;
-    var anchor = null;
-    if(mode === 'resize'){
-      anchor = {
-        x: handle === 'nw' || handle === 'sw' ? r.x + r.w : r.x,
-        y: handle === 'nw' || handle === 'ne' ? r.y + r.h : r.y
-      };
-    }
-    CROP.drag = {
-      mode: mode,
-      anchor: anchor,
-      startRect: { x: r.x, y: r.y, w: r.w, h: r.h },
-      start: p
-    };
-    document.addEventListener('pointermove', cropMoveDrag);
-    document.addEventListener('pointerup', cropEndDrag);
-    document.addEventListener('pointercancel', cropEndDrag);
-  }
-
-  function cropMoveDrag(e){
-    if(!CROP.drag) return;
-    var p = cropPointerPos(e);
-    if(CROP.drag.mode === 'move'){
-      var sr = CROP.drag.startRect;
-      CROP.rect.x = Math.max(0, Math.min(sr.x + (p.x - CROP.drag.start.x), CROP.stageW - CROP.rect.w));
-      CROP.rect.y = Math.max(0, Math.min(sr.y + (p.y - CROP.drag.start.y), CROP.stageH - CROP.rect.h));
-    } else {
-      cropResizeTo(p);
-    }
-    drawCropBox();
-  }
-
-  function cropResizeTo(p){
-    var anchor = CROP.drag.anchor;
-    if(!anchor) return;
-    var px = Math.max(0, Math.min(p.x, CROP.stageW));
-    var py = Math.max(0, Math.min(p.y, CROP.stageH));
-    var ratio = cropRatioValue(CROP.ratio);
-    var minSize = 24;
-    var dx = px - anchor.x;
-    var dy = py - anchor.y;
-    if(!ratio){
-      var left = Math.min(anchor.x, px);
-      var right = Math.max(anchor.x, px);
-      var top = Math.min(anchor.y, py);
-      var bottom = Math.max(anchor.y, py);
-      if(right - left < minSize){
-        if(px < anchor.x) left = Math.max(0, anchor.x - minSize);
-        else right = Math.min(CROP.stageW, anchor.x + minSize);
-      }
-      if(bottom - top < minSize){
-        if(py < anchor.y) top = Math.max(0, anchor.y - minSize);
-        else bottom = Math.min(CROP.stageH, anchor.y + minSize);
-      }
-      CROP.rect = { x: left, y: top, w: right - left, h: bottom - top };
-      return;
-    }
-    var signX = dx < 0 ? -1 : 1;
-    var signY = dy < 0 ? -1 : 1;
-    var w = Math.max(Math.abs(dx), Math.abs(dy) * ratio, minSize);
-    var maxW = Math.min(
-      signX < 0 ? anchor.x : CROP.stageW - anchor.x,
-      (signY < 0 ? anchor.y : CROP.stageH - anchor.y) * ratio
-    );
-    if(w > maxW) w = maxW;
-    w = Math.max(1, w);
-    var h = w / ratio;
-    CROP.rect = {
-      x: signX < 0 ? anchor.x - w : anchor.x,
-      y: signY < 0 ? anchor.y - h : anchor.y,
-      w: w,
-      h: h
-    };
-  }
-
-  function cropEndDrag(){
-    CROP.drag = null;
-    document.removeEventListener('pointermove', cropMoveDrag);
-    document.removeEventListener('pointerup', cropEndDrag);
-    document.removeEventListener('pointercancel', cropEndDrag);
-  }
-
-  function closeCoverCrop(){
-    CROP.active = false;
-    CROP.drag = null;
-    CROP.img = null;
-    document.removeEventListener('pointermove', cropMoveDrag);
-    document.removeEventListener('pointerup', cropEndDrag);
-    document.removeEventListener('pointercancel', cropEndDrag);
-    var modal = $('cropModal');
-    if(modal) modal.classList.remove('on');
-    var imgEl = $('cropImg');
-    if(imgEl) imgEl.removeAttribute('src');
-  }
-
-  function confirmCoverCrop(){
-    if(!CROP.active || !CROP.img) return;
-    var r = CROP.rect;
-    var s = CROP.scale || 1;
-    var sx = Math.max(0, Math.round(r.x / s));
-    var sy = Math.max(0, Math.round(r.y / s));
-    var sw = Math.max(1, Math.round(r.w / s));
-    var sh = Math.max(1, Math.round(r.h / s));
-    if(sx + sw > CROP.natW) sw = CROP.natW - sx;
-    if(sy + sh > CROP.natH) sh = CROP.natH - sy;
-    sw = Math.max(1, sw);
-    sh = Math.max(1, sh);
-    var cap = Math.min(1, 4096 / Math.max(sw, sh));
-    var cw = Math.max(1, Math.round(sw * cap));
-    var ch = Math.max(1, Math.round(sh * cap));
-    var canvas = document.createElement('canvas');
-    canvas.width = cw;
-    canvas.height = ch;
-    var ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, cw, ch);
-    ctx.drawImage(CROP.img, sx, sy, sw, sh, 0, 0, cw, ch);
-    var name = 'cover-' + Date.now() + '.jpg';
-    canvas.toBlob(function(blob){
-      if(!blob){ toast('封面生成失败，请重试', 'err'); return; }
-      closeCoverCrop();
-      uploadCoverBlob(blob, name);
-    }, 'image/jpeg', 0.9);
-  }
-
-  function uploadCoverBlob(blob, name){
+  function uploadCoverBatch(items, sourceName){
     if(!CAL_COVER.supported){ toast('当前内容形式不需要封面', 'err'); return; }
-    var file = new File([blob], name, { type: 'image/jpeg' });
+    if(!items || !items.length) return;
     var seq = calCoverSeq;
+    var baseName = String(sourceName || 'cover').replace(/\.[^.]+$/, '').slice(0, 60) || 'cover';
+    calCoverDiscardPending();
     CAL_COVER.uploading = true;
     CAL_COVER.xhrs = [];
     renderCalendarCover();
+    var uploaded = [];
     function sameRun(){ return calCoverSeq === seq; }
-    uploadMediaFile(file, 'image', 0, CAL_COVER.xhrs, function(pct){
-      if(!sameRun()) return;
-      var bar = $('coverBar');
-      var label = $('coverPct');
-      if(bar) bar.style.width = pct + '%';
-      if(label) label.textContent = pct + '%';
-    }, 'cover').then(function(media){
-      if(!sameRun() || !$('calCoverBlock')){
-        if(media && !media.scheduleId) request('/media/' + encodeURIComponent(media.id), { method: 'DELETE' }).catch(function(){});
-        return;
-      }
-      calCoverDiscardPending();
-      CAL_COVER.current = media;
-      CAL_COVER.pendingIds = media.scheduleId ? [] : [media.id];
+    function rollback(){
+      uploaded.forEach(function(media){
+        request('/media/' + encodeURIComponent(media.id), { method: 'DELETE' }).catch(function(){});
+      });
+    }
+    function finish(){
+      CAL_COVER.variants = uploaded;
       CAL_COVER.uploading = false;
+      CAL_COVER.xhrs = [];
       CAL_COVER.dirty = true;
-      CAL_COVER.xhrs = [];
       renderCalendarCover();
-      toast('封面已上传 · 保存排期后生效', 'ok');
-    }).catch(function(err){
+      toast('封面已生成 ' + uploaded.length + ' 种比例 · 保存排期后生效', 'ok');
+    }
+    function next(index){
       if(!sameRun()) return;
-      CAL_COVER.uploading = false;
-      CAL_COVER.xhrs = [];
-      renderCalendarCover();
-      toast('封面上传失败：' + errMsg(err), 'err');
-    });
+      if(index >= items.length) return finish();
+      var item = items[index];
+      var file = new File([item.blob], baseName + '-' + item.key.replace(':', 'x') + '.jpg', { type:'image/jpeg' });
+      uploadMediaFile(file, 'image', 0, CAL_COVER.xhrs, function(pct){
+        if(!sameRun()) return;
+        var overall = Math.round(((index + pct / 100) / items.length) * 100);
+        var bar = $('coverBar');
+        var label = $('coverPct');
+        if(bar) bar.style.width = overall + '%';
+        if(label) label.textContent = (index + 1) + '/' + items.length + ' · ' + pct + '%';
+      }, 'cover', item.key).then(function(media){
+        if(!sameRun()){
+          if(media && !media.scheduleId) request('/media/' + encodeURIComponent(media.id), { method: 'DELETE' }).catch(function(){});
+          return;
+        }
+        media.ratio = media.ratio || item.key;
+        uploaded.push(media);
+        CAL_COVER.pendingIds = uploaded.map(function(m){ return m.id; });
+        next(index + 1);
+      }).catch(function(err){
+        if(!sameRun()) return;
+        rollback();
+        CAL_COVER.pendingIds = [];
+        CAL_COVER.uploading = false;
+        CAL_COVER.xhrs = [];
+        renderCalendarCover();
+        toast('封面上传失败：' + errMsg(err), 'err');
+      });
+    }
+    next(0);
   }
 
   function savePublishTask(){
@@ -3339,7 +3231,6 @@
     if(!mediaIds.length){ toast('请先上传发布素材', 'err'); return; }
     var title = String(titleEl && titleEl.value || '').trim();
     if(!title){ toast('作品标题不能为空', 'err'); if(titleEl) titleEl.focus(); return; }
-    var modeEl = document.querySelector('input[name="pubMode"]:checked');
     var body = {
       scheduleCode: scheduleEl.value,
       platform: platformEl.value,
@@ -3347,8 +3238,7 @@
       title: title,
       description: String(descEl && descEl.value || '').trim(),
       tags: String(tagsEl && tagsEl.value || '').trim(),
-      scheduledAt: whenEl ? whenEl.value : '',
-      mode: modeEl ? modeEl.value : 'confirm'
+      scheduledAt: whenEl ? whenEl.value : ''
     };
     var btn = $('pubSaveBtn');
     if(btn){ btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span><span>保存中…</span>'; }
@@ -3358,7 +3248,7 @@
       closePublishModal();
       return loadPublishData().then(function(){
         switchView('publish');
-        toast('任务 ' + (task ? task.code : '') + ' 已排程 · ' + (task && task.mode === 'auto' ? '到点自动发布' : '到点打开浏览器等你确认'), 'ok');
+        toast('任务 ' + (task ? task.code : '') + ' 已排程 · 到点自动发布', 'ok');
       });
     }).catch(function(err){
       toast('创建失败：' + errMsg(err), 'err');
@@ -3395,7 +3285,6 @@
   function fillPublishDetail(t){
     var html = '';
     html += '<div class="flex items-center gap-2 flex-wrap">' + pubStatusChip(t)
-      + '<span class="chip chip-line">' + (t.mode === 'auto' ? '全自动' : '人工确认') + '</span>'
       + (t.attempts ? '<span class="chip chip-line">已尝试 ' + t.attempts + ' 次</span>' : '') + '</div>';
     html += '<div class="pub-detail">';
     html += pubKv('排期', esc(t.scheduleCode) + (t.scheduleTitle ? ' · ' + esc(t.scheduleTitle) : ''));
@@ -3422,8 +3311,8 @@
       if(t.tags && t.tags.length) html += '<div class="text-label-sm text-[#785d00] mt-1">' + t.tags.map(function(x){ return '#' + esc(x); }).join(' ') + '</div>';
       html += '</div>';
     }
-    if(t.status === 'needs_confirm' || t.status === 'submitted'){
-      html += '<div class="fld" style="margin-bottom:0"><label class="lab">发布链接 <span class="text-outline normal-case">· 确认发布后粘贴，可留空</span></label><input id="pubResultUrl" class="inp" type="url" placeholder="https://www.douyin.com/video/…"></div>';
+    if(t.status === 'submitted'){
+      html += '<div class="fld" style="margin-bottom:0"><label class="lab">发布链接 <span class="text-outline normal-case">· 已发布但未自动核验到时，可粘贴链接并标记</span></label><input id="pubResultUrl" class="inp" type="url" placeholder="https://www.douyin.com/video/…"></div>';
     }
     html += '<div><div class="flex items-center justify-between mb-1"><span class="text-label-sm font-semibold text-on-surface">执行日志</span><span class="text-label-sm text-on-surface-variant mono">' + esc(t.code) + '</span></div><pre id="pubLog" class="pub-log">（加载中…）</pre></div>';
     html += '<div><div class="text-label-sm font-semibold text-on-surface mb-1">页面截图</div><div id="pubShots" class="pub-shots"><span class="pub-empty">加载中…</span></div></div>';
@@ -3441,7 +3330,7 @@
     if(t.status === 'failed' || t.status === 'canceled'){
       html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90" data-act="pubRetry" data-id="' + id + '" type="button"><span class="material-symbols-outlined text-base">replay</span>重试</button>';
     }
-    if(t.status === 'needs_confirm' || t.status === 'submitted'){
+    if(t.status === 'submitted'){
       html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-label-md font-label-md hover:brightness-95" data-act="pubComplete" data-id="' + id + '" type="button"><span class="material-symbols-outlined text-base">task_alt</span>标记已发布</button>';
     }
     if(t.status === 'failed' || t.status === 'canceled'){
@@ -3545,12 +3434,8 @@
       var d = parseDate(r['计划发布时间']);
       return d && d < startOfDay(new Date()) && ['已发布','二次分发','已复盘'].indexOf(r['当前阶段']) < 0;
     }) ? 'block' : 'none');
-    var needConfirm = PUB.tasks.filter(function(t){ return t.status === 'needs_confirm'; }).length;
     var pubBadge = $('badgePublish');
-    if(pubBadge){
-      pubBadge.textContent = needConfirm > 99 ? '99+' : String(needConfirm);
-      pubBadge.style.display = needConfirm ? 'flex' : 'none';
-    }
+    if(pubBadge) pubBadge.style.display = 'none';
     var exportBtn = $('exportBtn');
     if(exportBtn) exportBtn.style.display = (state.view === 'connections' || state.view === 'publish') ? 'none' : '';
     syncVoiceIcons();
@@ -4112,7 +3997,7 @@
       }
       if(calForm){
         html += '<div class="fld full"><label class="lab">发布素材 <span class="text-outline normal-case">· 短视频 1 个视频；图文 / 长图最多 30 张图片</span></label><div id="calMediaBlock"></div></div>';
-        html += '<div class="fld full" id="calCoverFld" style="display:none"><label class="lab">封面 <span class="text-outline normal-case">· 图文 / 长图 / 短视频可设置，支持裁剪</span></label><div id="calCoverBlock"></div></div>';
+        html += '<div class="fld full" id="calCoverFld" style="display:none"><label class="lab">封面 <span class="text-outline normal-case">· 图文 / 长图 / 短视频可设置，导入后自动生成 7 种比例</span></label><div id="calCoverBlock"></div></div>';
         props.forEach(function(p){
           if(CAL_FORM_HIDDEN.indexOf(p.name) >= 0) return;
           if(CAL_TAIL.indexOf(p.name) < 0) return;
@@ -4527,14 +4412,9 @@
         if(coverEl) coverEl.click();
         return;
       }
-      if(act === 'calCoverRecrop'){
-        e.preventDefault();
-        if(CAL_COVER.source) openCoverCrop(CAL_COVER.source);
-        return;
-      }
       if(act === 'calCoverFromItem'){
         e.preventDefault();
-        openCoverCropFromItem(actEl.getAttribute('data-media-id'));
+        coverFromItem(actEl.getAttribute('data-media-id'));
         return;
       }
       if(act === 'calCoverRemove'){
@@ -5326,25 +5206,6 @@
   });
   $('publishClose').addEventListener('click', closePublishModal);
 
-  /* ---------- cover crop modal ---------- */
-  $('cropModal').addEventListener('click', function(e){
-    if(e.target === this) closeCoverCrop();
-  });
-  $('cropClose').addEventListener('click', closeCoverCrop);
-  $('cropCancel').addEventListener('click', closeCoverCrop);
-  $('cropConfirm').addEventListener('click', confirmCoverCrop);
-  $('cropRatios').addEventListener('click', function(e){
-    var el = e.target.closest ? e.target.closest('[data-ratio]') : null;
-    if(!el) return;
-    CROP.ratio = el.getAttribute('data-ratio');
-    setCropRatioUI(CROP.ratio);
-    cropInitRect();
-  });
-  $('cropBox').addEventListener('pointerdown', function(e){
-    var handle = e.target && e.target.getAttribute ? e.target.getAttribute('data-handle') : null;
-    cropStartDrag(e, handle ? 'resize' : 'move', handle);
-  });
-
   /* ---------- modal / info ---------- */
   var pendingDelete = null;
   function askDelete(dbKey, id, name){
@@ -5490,7 +5351,6 @@
   $('mask').addEventListener('click', closeEditor);
   document.addEventListener('keydown', function(e){
     if(e.keyCode === 27){
-      if(CROP.active){ closeCoverCrop(); return; }
       closeEditor();
       $('modal').classList.remove('on');
       $('profileModal').classList.remove('on');
