@@ -2166,6 +2166,10 @@
       if(r.created.length){
         toast('已自动排入 ' + r.created.length + ' 条发布任务', 'ok');
         loadPublishData().catch(function(){ /* 下次进入发布中心再刷新 */ });
+      } else if(r.updated && r.updated.length){
+        var u = r.updated[0];
+        toast('计划执行时间已同步到任务 ' + u.code + ' · ' + fmtDateTime(u.scheduledAt), 'ok');
+        loadPublishData().catch(function(){ /* 下次进入发布中心再刷新 */ });
       } else if(rec['当前阶段'] === '待发布' && r.skipped.length){
         var hasTask = r.skipped.some(function(s){ return /^已有发布任务/.test(s.reason); });
         if(!hasTask) toast('未自动排入发布任务：' + r.skipped[0].reason);
@@ -2294,7 +2298,7 @@
         if(t.status === 'scheduled') html += '<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold hover:opacity-90" data-act="pubRun" data-id="' + id + '" type="button">立即执行</button>';
         if(t.status === 'failed' || t.status === 'canceled') html += '<button class="px-2.5 py-1 rounded-full bg-secondary-fixed text-[10px] font-semibold text-on-secondary-fixed-variant hover:brightness-95" data-act="pubRetry" data-id="' + id + '" type="button">重试</button>';
         html += '<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface hover:bg-surface-container-high" data-act="pubDetail" data-id="' + id + '" type="button">详情</button>';
-        if(t.status !== 'running') html += '<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-[#8e3b26] hover:bg-[#fce3dd]" data-act="pubDelete" data-id="' + id + '" type="button">删除</button>';
+        html += '<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-[#8e3b26] hover:bg-[#fce3dd]" data-act="pubDelete" data-id="' + id + '" type="button">删除</button>';
         html += '</div></td></tr>';
       });
       html += '</tbody></table></div>';
@@ -3333,9 +3337,7 @@
     if(t.status === 'submitted'){
       html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-label-md font-label-md hover:brightness-95" data-act="pubComplete" data-id="' + id + '" type="button"><span class="material-symbols-outlined text-base">task_alt</span>标记已发布</button>';
     }
-    if(t.status === 'failed' || t.status === 'canceled'){
-      html += '<button class="px-4 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-[#8e3b26] hover:bg-[#fce3dd]" data-act="pubDelete" data-id="' + id + '" type="button">删除任务</button>';
-    }
+    html += '<button class="px-4 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-[#8e3b26] hover:bg-[#fce3dd]" data-act="pubDelete" data-id="' + id + '" type="button">删除任务</button>';
     html += '<button class="px-5 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high" data-act="pubClose" type="button">关闭</button>';
     return html;
   }
@@ -3401,7 +3403,8 @@
     if(!t) return;
     pendingDelete = { kind:'publish', id:t._id };
     $('modalTitle').textContent = '删除这个发布任务？';
-    $('modalText').textContent = '「' + t.code + ' · ' + (t.title || '未命名') + '」将删除本地任务、日志与截图；已发布的作品不受影响。';
+    var runningTip = t.status === 'running' ? '任务正在执行，删除会立即中止本次自动发布（已点击发布的无法撤回）。' : '';
+    $('modalText').textContent = runningTip + '「' + t.code + ' · ' + (t.title || '未命名') + '」将删除本地任务、日志与截图；已发布的作品不受影响。';
     $('modalOk').textContent = '确认删除';
     $('modal').classList.add('on');
   }
