@@ -2246,7 +2246,6 @@
     });
     html += '<button class="w-9 h-9 rounded-full bg-surface-container-low text-on-surface flex items-center justify-center hover:bg-surface-container-high transition-colors" data-act="pubReload" type="button" title="刷新"><span class="material-symbols-outlined text-base">refresh</span></button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-surface-container-low text-on-surface rounded-full text-label-md font-label-md hover:bg-surface-container-high transition-all" data-act="pubAutoQueueAll" type="button"><span class="material-symbols-outlined text-base">playlist_add_check</span>扫描待发布排期</button>';
-    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-primary text-on-primary rounded-full text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" data-act="pubNew" type="button"><span class="material-symbols-outlined text-base">add</span>新建发布任务</button>';
     html += '</div></div>';
 
     html += '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-lg">';
