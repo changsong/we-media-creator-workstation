@@ -72,7 +72,7 @@
   };
   var editing = { dbKey:null, recordId:null, record:null };
   var loading = false;
-  var PUB = { tasks:[], status:null, loaded:false, detailId:null, timer:null, mode:'detail', watch:null };
+  var PUB = { tasks:[], status:null, loaded:false, detailId:null, timer:null, mode:'detail', watch:null, page:1, size:30 };
   var PUB_UPLOAD = { kind:'video', items:[], pendingIds:[], uploading:false, progress:0, previewUrls:[], kept:false, xhrs:[] };
   var MEDIA_EDIT = { scheduleId:null, format:'', kind:null, items:[], pendingIds:[], uploading:false, xhrs:[], otherCount:0 };
   var CAL_COVER = newCalendarCoverState();
@@ -2226,7 +2226,11 @@
   }
 
   function viewPublish(){
-    var tasks = PUB.tasks;
+    var allTasks = PUB.tasks;
+    // 跟随顶部平台筛选，队列与 KPI 都只看当前平台
+    var tasks = state.platform && state.platform !== 'all'
+      ? allTasks.filter(function(t){ return t.platform === state.platform; })
+      : allTasks;
     var counts = { scheduled:0, running:0, submitted:0, published:0, failed:0, canceled:0 };
     tasks.forEach(function(t){ if(counts[t.status] != null) counts[t.status]++; });
     var st = PUB.status || {};
@@ -2258,10 +2262,20 @@
     html += '<div class="grid grid-cols-12 gap-space-md items-start">';
     html += '<div class="col-span-12 xl:col-span-8">';
     html += '<div class="soft-card overflow-hidden">';
-    html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">发布任务队列</h3><p class="text-label-sm text-on-surface-variant">' + tasks.length + ' 条任务 · 按创建时间倒序</p></div>';
+    var size = PUB.size || 30;
+    var pageCount = Math.max(1, Math.ceil(tasks.length / size));
+    var page = Math.min(Math.max(1, PUB.page || 1), pageCount);
+    PUB.page = page;
+    var pageStart = (page - 1) * size;
+    var pageTasks = tasks.slice(pageStart, pageStart + size);
+    var filterNote = state.platform && state.platform !== 'all' ? ' · ' + state.platform : '';
+
+    html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">发布任务队列</h3><p class="text-label-sm text-on-surface-variant">' + tasks.length + ' 条任务' + esc(filterNote) + ' · 按创建时间倒序</p></div>';
     html += '<span class="chip chip-line">' + (running ? '执行中' : '空闲') + '</span></div>';
     if(!tasks.length){
-      html += emptyState('还没有发布任务', '在内容日历里把排期推进到「待发布」，点「准备发布」即可排入队列', 'send');
+      html += allTasks.length
+        ? emptyState('当前平台没有发布任务', '切换顶部「全部平台」查看其它渠道的任务', 'filter_alt')
+        : emptyState('还没有发布任务', '在内容日历里把排期推进到「待发布」，点「准备发布」即可排入队列', 'send');
     } else {
       html += '<div class="overflow-x-auto"><table class="w-full text-[12px]"><thead><tr class="text-label-sm text-on-surface-variant bg-surface-container-low/60">';
       html += '<th class="text-left font-semibold py-2.5 pl-4 pr-2 whitespace-nowrap">任务 / 内容</th>';
@@ -2271,7 +2285,7 @@
       html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">发布素材</th>';
       html += '<th class="text-right font-semibold py-2.5 pr-4 pl-2 whitespace-nowrap">操作</th>';
       html += '</tr></thead><tbody class="divide-y divide-surface-container-low">';
-      tasks.forEach(function(t){
+      pageTasks.forEach(function(t){
         var id = esc(t._id);
         html += '<tr class="row-hover">';
         html += '<td class="py-3 pl-4 pr-2 min-w-[200px]"><div class="mono text-[10.5px] font-semibold text-on-surface-variant">' + esc(t.code) + '</div>';
@@ -2301,6 +2315,7 @@
         html += '</div></td></tr>';
       });
       html += '</tbody></table></div>';
+      html += pagerFooter('pubSize', 'pubPage', size, page, pageCount, pageStart, pageStart + pageTasks.length, tasks.length, '任务');
     }
     html += '</div></div>';
 
@@ -3473,6 +3488,7 @@
   if(pf){
     pf.addEventListener('change', function(){
       state.platform = this.value;
+      PUB.page = 1;
       render();
     });
   }
@@ -3556,6 +3572,12 @@
     if(t.id === 'reviewListSize'){
       state.reviewListSize = parseInt(t.value, 10) || 30;
       state.reviewListPage = 1;
+      render();
+      return;
+    }
+    if(t.id === 'pubSize'){
+      PUB.size = parseInt(t.value, 10) || 30;
+      PUB.page = 1;
       render();
       return;
     }
@@ -3877,6 +3899,12 @@
     if(act === 'pubRetry'){ e.preventDefault(); pubTaskAction(id, 'retry'); return; }
     if(act === 'pubCancel'){ e.preventDefault(); pubTaskAction(id, 'cancel'); return; }
     if(act === 'pubDelete'){ e.preventDefault(); askDeletePublish(pubTaskById(id)); return; }
+    if(act === 'pubPage'){
+      e.preventDefault();
+      PUB.page = parseInt(actEl.getAttribute('data-page'), 10) || 1;
+      render();
+      return;
+    }
     if(act === 'pubReload'){
       e.preventDefault();
       loadPublishData().then(render).catch(function(err){ toast('刷新失败：' + errMsg(err), 'err'); });
