@@ -57,13 +57,7 @@ mac:
   artifactName: WeMedia-Workstation-${version}-mac-${arch}.${ext}
   target:
     - target: dmg
-      arch:
-        - x64
-        - arm64
     - target: zip
-      arch:
-        - x64
-        - arm64
 
 linux:
   icon: desktop/build/icon.png
