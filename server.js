@@ -19,6 +19,8 @@ const profile = require('./lib/profile');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PORT = Number(process.env.PORT) || readFlag('--port') || 5180;
 const HOST = process.env.HOST || readFlag('--host') || '127.0.0.1';
+// 桌面版 app-server 不带 package.json，版本由主进程通过 APP_VERSION 注入
+const APP_VERSION = process.env.APP_VERSION || readPackageVersion();
 
 /* ---------------- 事件推送（多标签页双向同步） ---------------- */
 const clients = new Set();
@@ -40,6 +42,14 @@ function readFlag(name) {
   const idx = process.argv.indexOf(name);
   if (idx > 0 && process.argv[idx + 1]) return process.argv[idx + 1];
   return null;
+}
+
+function readPackageVersion() {
+  try {
+    return require('./package.json').version;
+  } catch (err) {
+    return '0.0.0';
+  }
 }
 
 function sendJSON(res, status, body) {
@@ -199,7 +209,7 @@ async function handleApi(req, res, url) {
   if (url.pathname === '/api/health') {
     return sendJSON(res, 200, {
       ok: true,
-      version: require('./package.json').version,
+      version: APP_VERSION,
       storage: 'sqlite',
       db: store.dbPath,
       integrity: store.integrity(),
@@ -857,19 +867,44 @@ try {
   console.warn('[publish] 发布队列启动异常：', err.message);
 }
 
+server.on('error', (err) => {
+  console.error('[server] 启动失败：', err.message);
+  process.exit(1);
+});
+
 server.listen(PORT, HOST, () => {
   console.log(`自媒体内容运营工作台已启动：http://${HOST}:${PORT}`);
   console.log('按 Ctrl+C 停止；数据库 data/workbench.db，每日自动备份到 data/backups/');
 });
 
-process.on('SIGINT', () => {
-  console.log('\n正在关闭…');
-  publishTasks.stopScheduler();
+let shuttingDown = false;
+function gracefulShutdown(reason) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log('\n正在关闭…' + (reason ? `（${reason}）` : ''));
+  try {
+    publishTasks.stopScheduler();
+  } catch (err) {}
+  try {
+    require('./lib/browser-login').cancel();
+  } catch (err) {}
   clients.forEach((res) => {
     try {
       res.end();
     } catch (err) {}
   });
-  server.close(() => process.exit(0));
-  setTimeout(() => process.exit(0), 800);
-});
+  const timer = setTimeout(() => process.exit(0), 2000);
+  if (timer.unref) timer.unref();
+  server.close(() => {
+    clearTimeout(timer);
+    process.exit(0);
+  });
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+if (process.send) {
+  process.on('message', (msg) => {
+    if (msg && msg.type === 'shutdown') gracefulShutdown('desktop');
+  });
+}

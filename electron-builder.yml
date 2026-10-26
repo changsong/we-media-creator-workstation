@@ -1,0 +1,78 @@
+appId: com.changsong.wemediacreator
+productName: WeMedia Creator Workstation
+copyright: Copyright © 2026
+
+asar: true
+npmRebuild: false
+
+directories:
+  buildResources: desktop/build
+  output: dist
+
+files:
+  - desktop/**/*
+  - package.json
+  - "!server.js"
+  - "!lib/**"
+  - "!public/**"
+  - "!data/**"
+  - "!tools/**"
+  - "!doc/**"
+  - "!stitch-export/**"
+  - "!*.md"
+
+# ELECTRON_RUN_AS_NODE 子进程无法读取 asar，服务代码必须放在 asar 外
+extraResources:
+  - from: server.js
+    to: app-server/server.js
+  - from: lib
+    to: app-server/lib
+  - from: public
+    to: app-server/public
+
+publish:
+  provider: generic
+  url: ${env.PUBLISH_BASE_URL}/we-media/${os}/${arch}
+
+win:
+  icon: desktop/build/icon.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowElevation: false
+  deleteAppDataOnUninstall: false
+  shortcutName: 自媒体内容运营工作台
+  artifactName: WeMedia-Workstation-Setup-${version}.${ext}
+
+mac:
+  icon: desktop/build/icon.png
+  category: public.app-category.productivity
+  identity: null
+  hardenedRuntime: false
+  artifactName: WeMedia-Workstation-${version}-mac-${arch}.${ext}
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+
+linux:
+  icon: desktop/build/icon.png
+  category: Office
+  artifactName: WeMedia-Workstation-${version}-linux-${arch}.${ext}
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64

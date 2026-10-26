@@ -3,16 +3,29 @@
   "version": "2.0.0",
   "private": true,
   "description": "自媒体内容运营工作台：选题池 / 内容日历 / 数据复盘 / 素材沉淀，SQLite 持久化",
-  "main": "server.js",
+  "author": "changsong <qianjinfu@gmail.com>",
+  "main": "desktop/main.js",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server.js",
     "dev": "node --disable-warning=ExperimentalWarning server.js --port 5180",
+    "desktop": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win --x64",
+    "dist:mac": "electron-builder --mac --x64 --arm64",
+    "dist:linux": "electron-builder --linux --x64",
     "migrate": "node --disable-warning=ExperimentalWarning tools/migrate-json-to-sqlite.js",
-    "check": "node --check server.js && node --check public/app.js && node --check lib/db.js && node --check lib/store.js && node --check lib/migrate.js",
+    "check": "node --check server.js && node --check public/app.js && node --check lib/db.js && node --check lib/store.js && node --check lib/migrate.js && node --check desktop/main.js && node --check desktop/updater.js && node --check tools/upload-oss.js",
     "test": "node tools/smoke-test.js && node tools/sync-test.js"
   },
   "engines": {
     "node": ">=22.5"
   },
-  "dependencies": {}
+  "devDependencies": {
+    "ali-oss": "^6.23.0",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  }
 }

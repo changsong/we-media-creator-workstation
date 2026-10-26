@@ -20,6 +20,57 @@ npm start -- --port 8080  # 换端口
 
 > 只监听 `127.0.0.1`。需要局域网访问时用 `npm start -- --host 0.0.0.0`，自行确认网络安全。
 
+## 桌面版（Windows / macOS / Linux）
+
+桌面版用 Electron 外壳托管同一个本地服务：主进程挑一个空闲端口启动 `server.js` 子进程，窗口加载 `http://127.0.0.1:<port>/`。关闭窗口只是隐藏到托盘，定时发布、数据同步继续在后台运行；托盘菜单可以重新打开窗口、打开数据目录、检查更新或退出。
+
+- **Windows**：NSIS 一键安装（无需管理员），支持自动更新
+- **macOS**：dmg / zip（x64 与 arm64），当前未签名，首次打开需右键「打开」绕过 Gatekeeper；不支持自动更新，升级请重新下载安装包
+- **Linux**：AppImage（支持自动更新）与 deb（需手动升级）
+
+打包（需要 Node ≥ 22.5）：
+
+```bash
+npm install
+npm run dist:win     # dist/WeMedia-Workstation-Setup-<version>.exe
+npm run dist:mac     # 需在 macOS 上执行
+npm run dist:linux   # 建议在 Ubuntu 22.04 上执行
+```
+
+国内网络下载 Electron / NSIS 工具链较慢时，可以加镜像：
+
+```bash
+ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ \
+ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/ \
+npm run dist:win
+```
+
+运行数据放在系统用户目录，不在安装目录：
+
+| 平台 | 数据目录 |
+|---|---|
+| Windows | `%APPDATA%\WeMedia Creator Workstation\data` |
+| macOS | `~/Library/Application Support/WeMedia Creator Workstation/data` |
+| Linux | `~/.config/WeMedia Creator Workstation/data` |
+
+同级 `logs/server.log` 是本地服务日志（超过 5 MB 自动轮转）。从源码版迁移时，把原 `data/` 复制到上表目录即可。发布功能仍依赖本机安装的 Chrome / Edge（可用 `CHROME_PATH` 指定）。
+
+### 自动更新与发布
+
+客户端用 `electron-updater` 的 generic provider：构建时把 `PUBLISH_BASE_URL` 写入 `app-update.yml`，各平台从 `${PUBLISH_BASE_URL}/we-media/${os}/${arch}` 拉取 `latest*.yml` 和安装包。Windows 安装版与 Linux AppImage 会在启动 10 秒后检查一次、之后每 4 小时检查一次，下载完成后提示重启安装；deb 和未签名的 macOS 版本需要手动升级。
+
+发布流程：
+
+1. 修改 `package.json` 的 `version` 并提交。
+2. 打 tag 推送：`git tag v2.0.1 && git push origin v2.0.1`。
+3. GitHub Actions（`.github/workflows/release.yml`）校验 tag 与版本一致、执行 `npm run check`，然后构建 win-x64 / linux-x64 / mac-x64 / mac-arm64 四份产物。
+4. `publish` job 用 `tools/upload-oss.js` 上传到阿里云 OSS；`latest*.yml` 设为不缓存，安装包长期缓存。
+
+仓库需要的配置：
+
+- Actions 变量 `PUBLISH_BASE_URL`：OSS 公网访问地址（不带末尾斜杠）
+- Actions secrets：`OSS_REGION`、`OSS_ENDPOINT`、`OSS_BUCKET`、`OSS_ACCESS_KEY_ID`、`OSS_ACCESS_KEY_SECRET`
+
 ## 目录
 
 ```
@@ -37,6 +88,11 @@ data/legacy/                 迁移前的 JSON 存档
 tools/migrate-json-to-sqlite.js  迁移命令
 tools/smoke-test.js          页面冒烟测试（需要 jsdom）
 tools/sync-test.js           SSE 同步验证
+desktop/main.js              Electron 主进程：窗口、托盘、服务子进程、日志
+desktop/updater.js           自动更新（electron-updater）
+electron-builder.yml         桌面打包与发布源配置
+tools/upload-oss.js          CI 上传构建产物到阿里云 OSS
+.github/workflows/release.yml 三平台构建与发布
 ```
 
 ## 表设计

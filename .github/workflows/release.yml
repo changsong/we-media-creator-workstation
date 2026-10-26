@@ -1,0 +1,117 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PUBLISH_BASE_URL: ${{ vars.PUBLISH_BASE_URL }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Verify tag matches package version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          echo "tag=$tag package=$pkg"
+          test "$tag" = "$pkg"
+      - run: npm run check
+
+  build:
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: win-x64
+            build: npx electron-builder --win --x64 --publish never
+            paths: |
+              dist/*.exe
+              dist/*.blockmap
+              dist/latest.yml
+          - os: ubuntu-22.04
+            name: linux-x64
+            build: npx electron-builder --linux --x64 --publish never
+            paths: |
+              dist/*.AppImage
+              dist/*.deb
+              dist/*.blockmap
+              dist/latest-linux.yml
+          - os: macos-latest
+            name: mac-x64
+            build: npx electron-builder --mac --x64 --publish never --config.directories.output=dist-mac-x64
+            paths: |
+              dist-mac-x64/*.dmg
+              dist-mac-x64/*.zip
+              dist-mac-x64/*.blockmap
+              dist-mac-x64/latest-mac.yml
+          - os: macos-latest
+            name: mac-arm64
+            build: npx electron-builder --mac --arm64 --publish never --config.directories.output=dist-mac-arm64
+            paths: |
+              dist-mac-arm64/*.dmg
+              dist-mac-arm64/*.zip
+              dist-mac-arm64/*.blockmap
+              dist-mac-arm64/latest-mac.yml
+    runs-on: ${{ matrix.os }}
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Ensure PUBLISH_BASE_URL is set
+        shell: bash
+        run: test -n "$PUBLISH_BASE_URL"
+      - name: Build
+        run: ${{ matrix.build }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.paths }}
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Upload update artifacts to Aliyun OSS
+        env:
+          OSS_REGION: ${{ secrets.OSS_REGION }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        run: node tools/upload-oss.js
