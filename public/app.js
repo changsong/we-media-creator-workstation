@@ -65,7 +65,7 @@
 
   var state = {
     view:'home', platform:'all', status:'all', stage:'all', q:'', month:null,
-    assetId:null, reviewMode:'agg', reviewRange:'all',
+    assetId:null, assetEdit:null, reviewMode:'agg', reviewRange:'7',
     lifecyclePage:1, lifecycleSize:30, reviewListPage:1, reviewListSize:30,
     inlineTopic:null, topicDraft:null, topicSort:'desc', assetKeyword:'all', inspectCode:null,
     topicChecked:{}
@@ -226,40 +226,12 @@
         var saved = null;
         DATA.calendar.forEach(function(r){ if(r['_id'] === id) saved = r; });
         syncTopicStatus(saved);
-        if(field === '当前阶段' && value === '已发布') askTodaySnapshot(saved);
         if(field === '当前阶段' && value === '待发布') autoQueuePublish(saved);
       }
     }).catch(function(err){
       loadTable(dbKey).then(render);
       toast('更新失败：' + errMsg(err), 'err');
     });
-  }
-
-  function promptToast(msg, okLabel, cb){
-    var box = $('toasts');
-    var el = document.createElement('div');
-    el.className = 'toast ask';
-    el.innerHTML = '<div class="flex items-start gap-2"><span class="material-symbols-outlined text-lg" style="color:#a07e00">notifications_active</span><span class="text-body-sm">' + esc(msg) + '</span></div>';
-    var row = document.createElement('div');
-    row.className = 'trow justify-end';
-    var ok = document.createElement('button');
-    ok.className = 'tbtn'; ok.textContent = okLabel;
-    var no = document.createElement('button');
-    no.className = 'tbtn ghost'; no.textContent = '先不记';
-    row.appendChild(no); row.appendChild(ok);
-    el.appendChild(row);
-    box.appendChild(el);
-    setTimeout(function(){ el.classList.add('on'); }, 10);
-    var dismissed = false;
-    function dismiss(){
-      if(dismissed) return;
-      dismissed = true;
-      el.classList.remove('on');
-      setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 320);
-    }
-    ok.addEventListener('click', function(){ dismiss(); cb(); });
-    no.addEventListener('click', dismiss);
-    setTimeout(dismiss, 12000);
   }
 
   function hasSnapshotToday(scheduleCode){
@@ -269,17 +241,6 @@
       if(r['排期ID'] === scheduleCode && dayKey(r['统计日期']) === today) hit = true;
     });
     return hit;
-  }
-
-  function askTodaySnapshot(calRec){
-    if(!calRec || !calRec['排期ID'] || calRec['当前阶段'] !== '已发布') return;
-    if(hasSnapshotToday(calRec['排期ID'])) return;
-    promptToast('「' + (calRec['标题'] || calRec['排期ID']) + '」已发布，今天的数据快照还没建', '记一条', function(){
-      openEditor('review', null, {
-        fill: { '排期ID': calRec['排期ID'], '平台': platformList(calRec['平台'])[0] || '' },
-        subText: '已带出排期与平台，数字可以先估一份，明天再记累计值'
-      });
-    });
   }
 
   function bindText(el, text){
@@ -502,6 +463,7 @@
   function filteredGroups(){
     var start = reviewRangeStart();
     return reviewGroups().filter(function(g){
+      if(state.platform !== 'all' && platformList(g.platform).indexOf(state.platform) < 0) return false;
       if(!start) return true;
       var d = parseDate(g.latest['统计日期']);
       return d && startOfDay(d) >= start;
@@ -698,10 +660,6 @@
       return d && d < now0 && ['已发布','二次分发','已复盘'].indexOf(r['当前阶段']) < 0;
     }).sort(function(a,b){ return parseDate(a['计划发布时间']) - parseDate(b['计划发布时间']); });
 
-    var toRecord = cal.filter(function(r){
-      return ['已发布','二次分发','已复盘'].indexOf(r['当前阶段']) >= 0 && !hasSnapshotToday(r['排期ID']);
-    });
-
     var today = startOfDay(now);
     var days = [];
     for(var i = 6; i >= 0; i--){ days.push(addDays(today, -i)); }
@@ -880,23 +838,6 @@
       });
       html += '</div>';
       if(overdue.length > 4) html += '<button class="text-label-sm text-[#785d00] mt-2 hover:underline" data-act="goto" data-view="calendar" type="button">查看全部 ' + overdue.length + ' 条 →</button>';
-    }
-    html += '</div>';
-
-    /* today snapshot */
-    html += '<div class="soft-card p-space-lg">';
-    html += '<div class="flex items-center justify-between mb-2"><h3 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-lg" style="color:#785d00">edit_note</span>今日待录数据清单</h3><span class="chip chip-sky">' + toRecord.length + ' 条</span></div>';
-    if(!toRecord.length){
-      html += '<p class="text-label-sm text-on-surface-variant">今天都记过了，所有已发布内容均已有快照。</p>';
-    } else {
-      html += '<div class="flex flex-col gap-1.5">';
-      toRecord.slice(0, 4).forEach(function(r){
-        html += '<div class="flex items-center justify-between gap-2">';
-        html += '<div class="min-w-0"><div class="text-body-sm font-medium truncate">' + esc(r['标题'] || '（未命名）') + '</div><div class="text-label-sm text-on-surface-variant">' + esc(r['排期ID'] || '') + ' · 已发布</div></div>';
-        html += '<button class="px-3 py-1 rounded-full bg-surface-container-lowest border border-surface-container text-label-sm font-semibold hover:bg-surface-container-high shrink-0" data-act="rec" data-calcode="' + esc(r['排期ID']) + '" data-platform="' + esc(platformList(r['平台'])[0] || '') + '" type="button">记一条</button></div>';
-      });
-      html += '</div>';
-      if(toRecord.length > 4) html += '<button class="text-label-sm text-[#785d00] mt-2 hover:underline" data-act="goto" data-view="review" type="button">查看全部 →</button>';
     }
     html += '</div>';
 
@@ -1397,7 +1338,6 @@
       var d = parseDate(g.latest['统计日期']);
       return d && startOfDay(d) >= week;
     }).length;
-    var missing = missingSnapshots();
     var snapshotTotal = DATA.review.length;
 
     var html = '';
@@ -1418,7 +1358,6 @@
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="xhsSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从小红书同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="douyinSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从抖音同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="channelsSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从视频号同步</button>';
-    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-secondary-container text-on-secondary-container rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="new" data-db="review" type="button"><span class="material-symbols-outlined text-base">add_chart</span>记一条数据快照</button>';
     html += '</div></div>';
 
     /* KPI banners */
@@ -1426,7 +1365,6 @@
     html += kpiPastel('lilac', '监控中作品数', pad2(allGroups.length), '+' + newThisWeek + ' 本周 · 累计 ' + snapshotTotal + ' 批快照', '检查异常', 'checkMissing');
     html += kpiPastel('sky', '7 日综合互动率', last7.rate.toFixed(2) + '%', '点赞 / 阅读播放 · ' + (last7.rate >= 5 ? '高于基准线' : '继续优化'), '算法拆解', 'explainRate');
     html += kpiPastel('butter', '累计全渠道增粉', (rangeFans >= 0 ? '+' : '') + fmtNum(rangeFans), '涨粉率 ' + pct(rangeFans, rangeRead) + ' · 转化 ' + fmtNum(rangeConv), '转化明细', 'explainFans');
-    html += kpiPastel('mint', '待补录快照排期', pad2(missing.length), '已发布但今天还没打点', '一键催更', 'recMissing');
     html += '</div>';
 
     html += '<div class="grid grid-cols-12 gap-space-md items-start">';
@@ -1470,7 +1408,7 @@
       html += '<div class="soft-card overflow-hidden">';
       html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">作品全生命周期看板</h3><p class="text-label-sm text-on-surface-variant">一篇一行，展示最新快照与发布以来走势</p></div><span class="chip chip-line">' + groups.length + ' 个排期</span></div>';
       if(!groups.length){
-        html += emptyState('还没有数据快照', '发布后每天记一条，首页趋势才有得看', 'monitoring');
+        html += emptyState('还没有数据快照', '连接平台账号并同步后，这里会按天自动生成', 'monitoring');
       } else {
         html += '<div class="overflow-x-auto"><table class="w-full text-[12px]"><thead><tr class="text-label-sm text-on-surface-variant bg-surface-container-low/60">';
         html += '<th class="text-left font-semibold py-2.5 pl-4 pr-2">排期 ID / 作品主题</th>';
@@ -1495,7 +1433,6 @@
           html += '<td class="py-3 px-2 text-right whitespace-nowrap"><span class="font-semibold text-[#785d00]">' + pct(like, read) + '</span></td>';
           html += '<td class="py-3 px-2">' + miniSpark(g.reads.slice(-7), '#6f66a8') + '</td>';
           html += '<td class="py-3 pr-4 pl-2"><div class="flex items-center justify-end gap-1">';
-          html += '<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface hover:bg-surface-container-high" data-act="rec" data-calcode="' + esc(g.code) + '" data-platform="' + esc(g.platform) + '" type="button">补录</button>';
           html += '<button class="px-2.5 py-1 rounded-full bg-tertiary-fixed text-[10px] font-semibold text-on-tertiary-fixed-variant hover:brightness-95" data-act="inspect" data-code="' + esc(g.code) + '" type="button">复盘</button></div></td></tr>';
         });
         html += '</tbody></table></div>';
@@ -1514,10 +1451,10 @@
     var listEnd = listStart + pageRows.length;
 
     html += '<div class="soft-card overflow-hidden">';
-    html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">日常流水账快照记录</h3><p class="text-label-sm text-on-surface-variant">' + rows.length + ' 条快照 · 同一排期可每天记一条</p></div>';
+    html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">日常流水账快照记录</h3><p class="text-label-sm text-on-surface-variant">' + rows.length + ' 条快照 · 同一排期每天一条</p></div>';
     html += '<span class="chip chip-line">' + (state.reviewRange === 'all' ? '全部时间' : '近 ' + state.reviewRange + ' 天') + '</span></div>';
     if(!rows.length){
-      html += emptyState('这个区间还没有快照', '调整时间范围，或点上方「记一条数据快照」', 'table_view');
+      html += emptyState('这个区间还没有快照', '调整时间范围，或等待平台数据同步', 'table_view');
     } else {
       html += '<div class="overflow-x-auto"><table class="w-full text-[12px]"><thead><tr class="text-label-sm text-on-surface-variant bg-surface-container-low/60">';
       html += '<th class="text-left font-semibold py-2.5 pl-4 pr-2 whitespace-nowrap">统计日期</th>';
@@ -1558,7 +1495,7 @@
     html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm border-b border-surface-container-low"><div class="flex items-center gap-2"><span class="kicker-dot"></span><div><h3 class="text-headline-sm font-headline-sm text-on-surface">复盘单篇深度解构</h3><p class="text-label-sm text-on-surface-variant">选中作品的数据切片</p></div></div>';
     html += '<span class="material-symbols-outlined text-on-surface-variant text-lg">page_info</span></div>';
     if(!focusGroup){
-      html += emptyState('还没有可复盘的作品', '先记一条数据快照', 'query_stats');
+      html += emptyState('还没有可复盘的作品', '同步平台作品数据后即可查看', 'query_stats');
     } else {
       var lr = num(focusGroup.latest['阅读播放']), ll = num(focusGroup.latest['点赞']), lf = num(focusGroup.latest['涨粉']);
       html += '<div class="px-space-lg py-space-md">';
@@ -1588,6 +1525,12 @@
 
   /* ---------- view: assets ---------- */
   function viewAssets(){
+    if(state.assetEdit){
+      var editRec = null;
+      DATA.asset.forEach(function(r){ if(r['_id'] === state.assetEdit.id) editRec = r; });
+      if(editRec) return viewAssetEditor(editRec);
+      state.assetEdit = null;
+    }
     var base = byPlatform(DATA.asset);
     var kw = state.assetKeyword;
     var rows = base.slice();
@@ -1595,7 +1538,7 @@
     if(state.q){
       var q = state.q.toLowerCase();
       rows = rows.filter(function(r){
-        var hay = [r['标题'], r['成稿Markdown'], r['配图说明'], r['素材ID'], r['关联选题ID'], r['关联排期ID']].join(' ');
+        var hay = [r['标题'], r['成稿Markdown'], r['配图说明'], r['语音复盘'], r['素材ID'], r['关联选题ID'], r['关联排期ID']].join(' ');
         if(r['关键词'] && r['关键词'].length) hay += ' ' + r['关键词'].join(' ');
         return hay.toLowerCase().indexOf(q) >= 0;
       });
@@ -1700,7 +1643,7 @@
       html += '<p class="text-label-sm text-on-surface-variant mt-0.5">' + esc(selected['素材ID'] || '') + ' · 关联选题 ' + esc(selected['关联选题ID'] || '—') + ' · 关联排期 ' + esc(selected['关联排期ID'] || '—') + '</p></div>';
       html += '<div class="flex items-center gap-2 shrink-0">';
       html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface hover:bg-surface-container-high" data-act="linkSchedule" data-id="' + esc(selected['_id']) + '" type="button"><span class="material-symbols-outlined text-base">calendar_month</span>关联排期</button>';
-      html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90" data-act="edit" data-db="asset" data-id="' + esc(selected['_id']) + '" type="button"><span class="material-symbols-outlined text-base">edit</span>编辑此素材</button>';
+      html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90" data-act="assetEdit" data-id="' + esc(selected['_id']) + '" type="button"><span class="material-symbols-outlined text-base">edit</span>编辑此素材</button>';
       html += '</div></div>';
       if(docA || docB || pub){
         html += '<div class="flex flex-wrap items-center gap-3 mt-2 text-label-sm">';
@@ -1733,9 +1676,41 @@
         html += '<p class="text-label-sm text-on-surface-variant">未关联排期，或排期已被删除。</p>';
       }
       html += '</div>';
+      var assetRecs = VOICE.recordings.filter(function(r){ return r.assetId === selected['_id']; });
+      var latestRec = assetRecs[0] || null;
+      var storedReview = String(selected['语音复盘'] || '').trim();
       html += '<div class="rounded-xl bg-surface-container-low p-space-md">';
-      html += '<div class="flex items-center justify-between mb-2"><span class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant">语音复盘</span><span class="text-label-sm text-on-surface-variant">00:46</span></div>';
-      html += waveHtml();
+      html += '<div class="flex items-center justify-between mb-2"><span class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant">语音复盘</span>' +
+        (latestRec
+          ? '<span class="chip chip-line"><span class="material-symbols-outlined text-[13px]">graphic_eq</span>' + esc(fmtDuration(latestRec.durationSec)) + ' · ' + assetRecs.length + ' 条</span>'
+          : '<span class="chip chip-line"><span class="material-symbols-outlined text-[13px]">mic</span>待录制</span>') +
+        '</div>';
+      if(latestRec){
+        var recExcerpt = latestRec.transcript
+          ? String(latestRec.transcript).replace(/\s+/g, ' ')
+          : '尚无转写文本，可在语音复盘中手动补写。';
+        if(recExcerpt.length > 96) recExcerpt = recExcerpt.slice(0, 96) + '…';
+        html += '<h4 class="text-body-md font-semibold text-on-surface leading-snug truncate">' + esc(latestRec.title) + '</h4>';
+        html += '<p class="text-label-sm text-on-surface-variant mt-0.5">' + esc(fmtVoiceDate(latestRec.createdAt)) + '</p>';
+        html += '<p class="text-label-sm text-on-surface-variant mt-1.5 leading-relaxed line-clamp-2">' + esc(recExcerpt) + '</p>';
+        html += waveHtml();
+        html += '<div class="flex flex-wrap items-center gap-2 mt-2">';
+        html += '<button class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center hover:opacity-90" data-act="voicePlay" data-id="' + esc(latestRec.id) + '" type="button" title="播放"><span class="material-symbols-outlined text-base">play_arrow</span></button>';
+        html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-label-sm font-semibold text-on-surface hover:bg-surface-container-high" data-act="voiceMemoForAsset" data-id="' + esc(selected['_id']) + '" type="button"><span class="material-symbols-outlined text-base">mic</span>录制复盘</button>';
+        if(latestRec.transcript){
+          html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-label-sm font-semibold text-on-surface hover:bg-surface-container-high" data-act="voiceView" data-id="' + esc(latestRec.id) + '" type="button"><span class="material-symbols-outlined text-base">subject</span>查看转写</button>';
+          if(storedReview === String(latestRec.transcript).trim()){
+            html += '<span class="chip chip-mint">已存入素材</span>';
+          } else {
+            html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-label-sm font-semibold text-on-surface hover:bg-surface-container-high" data-act="voiceToAsset" data-id="' + esc(latestRec.id) + '" data-asset-id="' + esc(selected['_id']) + '" type="button"><span class="material-symbols-outlined text-base">save</span>' + (storedReview ? '更新存入' : '存入素材') + '</button>';
+          }
+        }
+        html += '</div>';
+      } else {
+        html += '<p class="text-label-sm text-on-surface-variant leading-relaxed">还没有这个素材的复盘录音。录一段口述：这条内容哪里有效、下次怎么改。</p>';
+        html += waveHtml();
+        html += '<button class="mt-2 inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90" data-act="voiceMemoForAsset" data-id="' + esc(selected['_id']) + '" type="button"><span class="material-symbols-outlined text-base">mic</span>录制复盘</button>';
+      }
       html += '</div>';
       html += '</div></div>';
     }
@@ -1743,6 +1718,190 @@
 
     html += '</div></div>';
     return html;
+  }
+
+  function viewAssetEditor(rec){
+    if(!SCHEMAS.asset || !SCHEMAS.asset.length){
+      return '<div class="soft-card p-space-lg">' + emptyState('素材字段还没加载完', '请稍后或点右上角刷新重试', 'sync_problem') + '</div>';
+    }
+    var draft = state.assetEdit.draft || {};
+    function val(name){
+      return Object.prototype.hasOwnProperty.call(draft, name) ? draft[name] : rec[name];
+    }
+    var skip = { '成稿Markdown': true, '配图说明': true };
+    var html = '<div class="fade-in" id="assetEditRoot">';
+    html += '<div class="soft-card px-space-lg py-space-md mb-space-md">';
+    html += '<div class="flex flex-wrap items-center justify-between gap-space-sm">';
+    html += '<div class="min-w-0">';
+    html += '<div class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">素材库 · 编辑</div>';
+    html += '<h2 id="assetEditTitle" class="text-headline-md font-headline-md text-on-surface truncate">' + esc(val('标题') || '（未命名）') + '</h2>';
+    html += '<p class="text-label-sm text-on-surface-variant mt-0.5">' + esc(rec['素材ID'] || '') + ' · 关联选题 ' + esc(rec['关联选题ID'] || '—') + ' · 关联排期 ' + esc(rec['关联排期ID'] || '—') + '</p>';
+    html += '</div>';
+    html += '<div class="flex items-center gap-2 shrink-0">';
+    html += '<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface hover:bg-surface-container-high" data-act="assetEditCancel" type="button">取消</button>';
+    html += '<button id="assetEditSaveBtn" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90" data-act="assetEditSave" type="button"><span class="material-symbols-outlined text-base">check</span>保存</button>';
+    html += '</div></div></div>';
+
+    html += '<div class="grid grid-cols-12 gap-space-md items-start">';
+
+    html += '<div class="col-span-12 xl:col-span-3">';
+    html += '<div class="soft-card p-space-md">';
+    html += '<h3 class="text-headline-sm font-headline-sm text-on-surface mb-2">基本信息</h3>';
+    (SCHEMAS.asset || []).forEach(function(p){
+      if(p.readonly || skip[p.name]) return;
+      html += fieldHtml(p, val(p.name), 'asset', null, true);
+    });
+    html += '</div></div>';
+
+    html += '<div class="col-span-12 xl:col-span-5 flex flex-col gap-space-md">';
+    html += '<div class="soft-card p-space-md">';
+    html += '<div class="flex items-center justify-between mb-2"><h3 class="text-headline-sm font-headline-sm text-on-surface">成稿 Markdown</h3><span class="chip chip-mint">右侧实时预览</span></div>';
+    html += '<div class="md-tools mb-1.5"><button type="button" data-md="h2">H2 小标题</button><button type="button" data-md="quote">引用</button><button type="button" data-md="code">代码块</button><button type="button" data-md="list">列表</button></div>';
+    html += '<textarea class="ta" rows="24" style="min-height:440px;font-family:ui-monospace,Consolas,monospace;font-size:12px" data-field="成稿Markdown">' + esc(val('成稿Markdown') || '') + '</textarea>';
+    html += '</div>';
+    html += '<div class="soft-card p-space-md">';
+    html += '<div class="flex items-center justify-between mb-2"><h3 class="text-headline-sm font-headline-sm text-on-surface">配图说明</h3><span class="text-label-sm text-on-surface-variant">支持 Markdown</span></div>';
+    html += '<textarea class="ta" rows="6" data-field="配图说明">' + esc(val('配图说明') || '') + '</textarea>';
+    html += '</div></div>';
+
+    html += '<div class="col-span-12 xl:col-span-4">';
+    html += '<div class="soft-card p-space-md xl:sticky xl:top-4">';
+    html += '<div class="flex items-center justify-between mb-2"><h3 class="text-headline-sm font-headline-sm text-on-surface">实时预览</h3><span class="chip chip-line">Markdown</span></div>';
+    html += '<h4 id="assetPreviewTitle" class="text-headline-sm font-headline-sm text-on-surface leading-snug mb-2">' + esc(val('标题') || '（未命名）') + '</h4>';
+    html += '<div class="rounded-xl border border-surface-container-low bg-surface-container-lowest p-space-md max-h-[460px] overflow-y-auto">';
+    html += '<div id="assetPreviewMd" class="md-body">' + mdToHtml(val('成稿Markdown')) + '</div>';
+    html += '</div>';
+    html += '<div class="mt-space-md pt-space-md border-t border-surface-container-low">';
+    html += '<div class="flex items-center justify-between mb-2"><h4 class="text-label-md font-label-md uppercase tracking-wide text-on-surface-variant">配图说明</h4><span id="assetPreviewPlatform" class="chip chip-line">' + esc(val('平台') || '通用') + '</span></div>';
+    html += '<img alt="配图预览" class="w-full h-24 object-cover rounded-lg mb-2" src="/assets/img-3.jpg">';
+    html += '<div id="assetPreviewDesc" class="md-body text-[12px] max-h-40 overflow-y-auto">' + mdToHtml(val('配图说明')) + '</div>';
+    html += '</div></div></div>';
+
+    html += '</div></div>';
+    return html;
+  }
+
+  function collectAssetProps(root){
+    var props = SCHEMAS.asset || [];
+    var out = {};
+    for(var i = 0; i < props.length; i++){
+      var p = props[i];
+      var name = p.name;
+      var type = p.type;
+      if(p.readonly) continue;
+      if(type === 'multi_select'){
+        var boxes = root.querySelectorAll('[data-field="' + name + '"]:checked');
+        var arr = [];
+        for(var b = 0; b < boxes.length; b++) arr.push(boxes[b].value);
+        out[name] = { multi_select: arr };
+        continue;
+      }
+      if(type === 'radio'){
+        var picked = root.querySelector('[data-field="' + name + '"]:checked');
+        if(picked) out[name] = { select: picked.value };
+        continue;
+      }
+      var el = root.querySelector('[data-field="' + name + '"]');
+      if(!el) continue;
+      if(type === 'checkbox'){
+        out[name] = { checkbox: !!el.checked };
+        continue;
+      }
+      var v = el.value == null ? '' : String(el.value).trim();
+      if(v === '') continue;
+      if(type === 'number'){
+        var n = parseFloat(v);
+        if(isNaN(n)) throw new Error('「' + name + '」需要是数字');
+        out[name] = { number: n };
+      } else if(type === 'select'){
+        out[name] = { select: v };
+      } else if(type === 'date'){
+        var fmt = (p.config && p.config.format) ? p.config.format : 'yyyy-mm-dd';
+        if(fmt.indexOf('hh') >= 0){
+          var d = new Date(v);
+          if(isNaN(d.getTime())) throw new Error('「' + name + '」日期格式不正确');
+          out[name] = { date: d.toISOString() };
+        } else {
+          out[name] = { date: v.substring(0, 10) };
+        }
+      } else if(type === 'url'){
+        var low = v.toLowerCase();
+        if(low.indexOf('http:') !== 0 && low.indexOf('https:') !== 0){
+          throw new Error('「' + name + '」需要以 http 或 https 开头的完整链接');
+        }
+        out[name] = { url: { text: v, link: v } };
+      } else {
+        out[name] = { text: v };
+      }
+    }
+    return out;
+  }
+
+  function saveAssetInline(){
+    var root = $('assetEditRoot');
+    if(!root || !state.assetEdit) return;
+    var titleEl = root.querySelector('[data-field="标题"]');
+    var title = titleEl ? String(titleEl.value || '').trim() : '';
+    if(!title){
+      toast('「标题」不能为空', 'err');
+      if(titleEl){ titleEl.classList.add('err'); titleEl.focus(); }
+      return;
+    }
+    if(titleEl) titleEl.classList.remove('err');
+    var props;
+    try{
+      props = collectAssetProps(root);
+    } catch(err){
+      toast(errMsg(err), 'err');
+      return;
+    }
+    var btn = $('assetEditSaveBtn');
+    if(btn) btn.disabled = true;
+    suppressUntil = Date.now() + 1500;
+    OPS.asset.upd(state.assetEdit.id, props).then(function(){
+      return loadTable('asset');
+    }).then(function(){
+      state.assetEdit = null;
+      render();
+      toast('素材已保存 · ' + hhmm(), 'ok');
+    }).catch(function(err){
+      if(btn) btn.disabled = false;
+      toast('保存失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function onAssetEditInput(el){
+    if(!state.assetEdit) return;
+    var field = el.getAttribute ? el.getAttribute('data-field') : null;
+    if(!field) return;
+    var draft = state.assetEdit.draft || (state.assetEdit.draft = {});
+    if(el.type === 'checkbox' || el.type === 'radio'){
+      if(el.type === 'radio'){
+        draft[field] = el.value;
+      } else {
+        var root = $('assetEditRoot');
+        var boxes = root ? root.querySelectorAll('[data-field="' + field + '"]:checked') : [];
+        draft[field] = Array.prototype.map.call(boxes, function(x){ return x.value; });
+      }
+    } else {
+      draft[field] = el.value;
+    }
+    if(field === '成稿Markdown'){
+      var md = $('assetPreviewMd');
+      if(md) md.innerHTML = mdToHtml(el.value);
+    } else if(field === '配图说明'){
+      var desc = $('assetPreviewDesc');
+      if(desc) desc.innerHTML = mdToHtml(el.value);
+    } else if(field === '标题'){
+      var shown = String(el.value || '').trim() || '（未命名）';
+      var h = $('assetEditTitle');
+      var t = $('assetPreviewTitle');
+      if(h) h.textContent = shown;
+      if(t) t.textContent = shown;
+    } else if(field === '平台'){
+      var pf = $('assetPreviewPlatform');
+      if(pf) pf.textContent = String(el.value || '') || '通用';
+    }
   }
 
   /* ---------- markdown ---------- */
@@ -1814,8 +1973,7 @@
     '微博':'bg-[#FFDF91] text-[#594400]', '快手':'bg-[#FFE3D3] text-[#8A3B0F]'
   };
   var CONN_MODE = {
-    official: { label:'官方接口', cls:'chip-mint' },
-    cookie:   { label:'Cookie 兜底', cls:'chip-honey' },
+    cookie:   { label:'Cookie 登录', cls:'chip-honey' },
     custom:   { label:'自定义', cls:'chip-line' }
   };
 
@@ -1831,12 +1989,11 @@
     var enabledCount = d.platforms.filter(function(p){
       return d.connections[p] && d.connections[p].enabled;
     }).length;
-    var officialCount = d.platforms.filter(function(p){ return d.defs[p].apiMode === 'official'; }).length;
     var cookieCount = d.platforms.filter(function(p){ return d.defs[p].apiMode === 'cookie'; }).length;
     var html = '';
     html += '<div class="flex items-end justify-between mb-space-lg gap-space-md flex-wrap">'
       + '<div><h2 class="text-headline-md font-headline-md text-on-surface">连接设置</h2>'
-      + '<p class="text-label-sm text-on-surface-variant mt-1">为各渠道配置连接凭证，打通官方接口或 Cookie 兜底，让数据自动回流到工作台。</p></div>'
+      + '<p class="text-label-sm text-on-surface-variant mt-1">为各渠道一键登录获取 Cookie，数据采集与自动发布复用同一登录态。</p></div>'
       + '<button class="flex items-center gap-1 px-space-md py-2 rounded-full bg-surface-container-lowest text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="connReload" type="button"><span class="material-symbols-outlined text-base">refresh</span>刷新</button>'
       + '</div>';
 
@@ -1848,8 +2005,7 @@
       + '<p class="text-label-sm text-on-surface-variant">配置文件 data/channel-connections.json；密钥不会回传明文，留空保存即保持原值。</p></div></div>'
       + '<div class="flex items-center gap-2 flex-wrap">'
       + '<span class="chip chip-mint">已启用 ' + enabledCount + ' / ' + d.platforms.length + '</span>'
-      + '<span class="chip chip-line">官方接口 ' + officialCount + '</span>'
-      + '<span class="chip chip-honey">Cookie 兜底 ' + cookieCount + '</span>'
+      + '<span class="chip chip-honey">Cookie 登录 ' + cookieCount + '</span>'
       + '</div></div>';
 
     if(!platforms.length){
@@ -3463,6 +3619,7 @@
     state.view = view;
     state.q = '';
     state.assetId = null;
+    state.assetEdit = null;
     if(location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
     render();
     scrollTop();
@@ -3502,7 +3659,7 @@
 
   var helpBtn = $('helpBtn');
   if(helpBtn) helpBtn.addEventListener('click', function(){
-    openInfo('使用提示', '· 所有写入即时保存到本地 SQLite 数据库\n· 阶段 / 状态下拉选完即存\n· 发布后可直接补录当日数据快照\n· 支持多标签页实时同步与 CSV 导出');
+    openInfo('使用提示', '· 所有写入即时保存到本地 SQLite 数据库\n· 阶段 / 状态下拉选完即存\n· 抖音 / 小红书 / 视频号数据可在数据复盘中一键同步\n· 支持多标签页实时同步与 CSV 导出');
   });
   var notifyBtn = $('notifyBtn');
   if(notifyBtn) notifyBtn.addEventListener('click', function(){
@@ -3617,6 +3774,21 @@
     }
   });
 
+  function assetEditTarget(e){
+    if(!state.assetEdit) return null;
+    var root = $('assetEditRoot');
+    if(!root || !e.target || !root.contains(e.target)) return null;
+    return (e.target.getAttribute && e.target.getAttribute('data-field')) ? e.target : null;
+  }
+  viewEl.addEventListener('input', function(e){
+    var el = assetEditTarget(e);
+    if(el) onAssetEditInput(el);
+  });
+  viewEl.addEventListener('change', function(e){
+    var el = assetEditTarget(e);
+    if(el) onAssetEditInput(el);
+  });
+
   viewEl.addEventListener('dblclick', function(e){
     if(e.target.closest && e.target.closest('input,label,select,button,a')) return;
     var tr = e.target.closest ? e.target.closest('[data-row-topic]') : null;
@@ -3631,6 +3803,28 @@
   viewEl.addEventListener('click', function(e){
     var t = e.target;
     if(t && t.tagName === 'A') return;
+    var mdBtn = (t.closest && state.assetEdit) ? t.closest('[data-md]') : null;
+    var mdRoot = $('assetEditRoot');
+    if(mdBtn && mdRoot && mdRoot.contains(mdBtn)){
+      e.preventDefault();
+      var mdTa = mdRoot.querySelector('[data-field="成稿Markdown"]');
+      if(!mdTa) return;
+      var mdSnippets = {
+        h2: '\n## 小标题\n',
+        quote: '\n> 写一句可以单独传播的金句\n',
+        code: '\n```\n在这里粘贴代码或固定文案\n```\n',
+        list: '\n- 要点一\n- 要点二\n- 要点三\n'
+      };
+      var snippet = mdSnippets[mdBtn.getAttribute('data-md')] || '';
+      var mdStart = mdTa.selectionStart || mdTa.value.length;
+      mdTa.value = mdTa.value.substring(0, mdStart) + snippet + mdTa.value.substring(mdTa.selectionEnd || mdStart);
+      mdTa.focus();
+      mdTa.setSelectionRange(mdStart + snippet.length, mdStart + snippet.length);
+      state.assetEdit.draft['成稿Markdown'] = mdTa.value;
+      var mdPreview = $('assetPreviewMd');
+      if(mdPreview) mdPreview.innerHTML = mdToHtml(mdTa.value);
+      return;
+    }
     var actEl = t.closest ? t.closest('[data-act]') : null;
     if(!actEl) return;
     var act = actEl.getAttribute('data-act');
@@ -3652,6 +3846,19 @@
     if(act === 'nextMonth'){ shiftMonth(1); return; }
     if(act === 'todayMonth'){ var n = new Date(); state.month = { y:n.getFullYear(), m:n.getMonth() }; render(); return; }
     if(act === 'openAsset'){ e.preventDefault(); state.assetId = id; render(); return; }
+    if(act === 'assetEdit'){
+      e.preventDefault();
+      var targetAsset = null;
+      DATA.asset.forEach(function(r){ if(r['_id'] === id) targetAsset = r; });
+      if(!targetAsset) return;
+      state.assetEdit = { id: id, draft: {} };
+      state.assetId = id;
+      render();
+      scrollTop();
+      return;
+    }
+    if(act === 'assetEditCancel'){ e.preventDefault(); state.assetEdit = null; render(); return; }
+    if(act === 'assetEditSave'){ e.preventDefault(); saveAssetInline(); return; }
     if(act === 'publish'){ e.preventDefault(); markPublished(id); return; }
     if(act === 'postpone'){ e.preventDefault(); postpone(id); return; }
     if(act === 'toSchedule'){
@@ -3685,17 +3892,6 @@
     if(act === 'xhsSync'){ e.preventDefault(); syncXhs(actEl); return; }
     if(act === 'douyinSync'){ e.preventDefault(); syncDouyin(actEl); return; }
     if(act === 'channelsSync'){ e.preventDefault(); syncChannels(actEl); return; }
-    if(act === 'rec'){
-      e.preventDefault();
-      var code = actEl.getAttribute('data-calcode') || '';
-      var platform = actEl.getAttribute('data-platform') || '';
-      if(!code) return;
-      openEditor('review', null, {
-        fill: { '排期ID': code, '平台': platform },
-        subText: '已带出排期与平台，数字可以先估一份，累计到今天'
-      });
-      return;
-    }
     if(act === 'goto'){
       e.preventDefault();
       var target = actEl.getAttribute('data-view');
@@ -3868,7 +4064,7 @@
       openInfo('快照异常检查', '共 ' + missing2.length + ' 条已发布排期今天还没有数据快照：\n' +
         missing2.slice(0, 6).map(function(r){ return '· ' + (r['标题'] || r['排期ID']) + '（' + r['排期ID'] + '）'; }).join('\n') +
         (missing2.length > 6 ? '\n… 等 ' + missing2.length + ' 条' : '') +
-        '\n\n点击「一键催更」可优先带出第一条待补录排期。');
+        '\n\n请确认对应平台账号已连接并完成数据同步。');
       return;
     }
     if(act === 'explainRate'){
@@ -3884,9 +4080,31 @@
       openInfo('转化与涨粉明细', '当前区间累计增粉 ' + fmtNum(rFans) + '，涨粉率 ' + pct(rFans, rRead) + '。\n转化合计 ' + fmtNum(rConv) + '，共 ' + rRows.length + ' 条快照。');
       return;
     }
-    if(act === 'recMissing'){ recMissingSnapshot(); return; }
     if(act === 'voiceMemo'){ e.preventDefault(); openVoiceMemo(); return; }
+    if(act === 'voiceMemoForAsset'){ e.preventDefault(); openVoiceMemo(id); return; }
     if(act === 'voicePlay'){ e.preventDefault(); playVoice(id); return; }
+    if(act === 'voiceView'){
+      e.preventDefault();
+      var recView = findVoice(id);
+      if(!recView) return;
+      openInfo('复盘转写 · ' + recView.title, recView.transcript || '这条录音还没有转写文本，可在语音复盘中手动补写。');
+      return;
+    }
+    if(act === 'voiceToAsset'){
+      e.preventDefault();
+      var recSave = findVoice(id);
+      var assetTarget = actEl.getAttribute('data-asset-id');
+      if(!recSave || !assetTarget) return;
+      var noteText = String(recSave.transcript || '').trim();
+      if(!noteText){ toast('这条录音还没有转写文本', 'err'); return; }
+      OPS.asset.upd(assetTarget, { '语音复盘': { text: noteText } }).then(function(){
+        return loadTable('asset');
+      }).then(function(){
+        render();
+        toast('转写已存入素材「语音复盘」 · ' + hhmm(), 'ok');
+      }).catch(function(err){ toast('存入失败：' + errMsg(err), 'err'); });
+      return;
+    }
     if(act === 'pubNew'){
       e.preventDefault();
       var calRec = null;
@@ -3916,18 +4134,6 @@
       return;
     }
   });
-
-  function recMissingSnapshot(){
-    var missing = byPlatform(DATA.calendar).filter(function(r){
-      return ['已发布','二次分发','已复盘'].indexOf(r['当前阶段']) >= 0 && !hasSnapshotToday(r['排期ID']);
-    });
-    if(!missing.length){ toast('没有待补录的排期'); return; }
-    var first = missing[0];
-    openEditor('review', null, {
-      fill: { '排期ID': first['排期ID'], '平台': platformList(first['平台'])[0] || '' },
-      subText: '共 ' + missing.length + ' 条待补录，已优先带出「' + (first['标题'] || first['排期ID']) + '」'
-    });
-  }
 
   function postpone(id){
     var rec = null;
@@ -4056,7 +4262,9 @@
     $('drawerHint').textContent = '';
     $('drawerSave').disabled = false;
     $('drawerSave').innerHTML = '<span class="material-symbols-outlined text-base">check</span><span>保存到数据库</span>';
-    $('drawer').classList.toggle('cal-popup', dbKey === 'calendar');
+    // 内容日历与选题录入都用居中弹窗，其余记录仍走右侧抽屉
+    $('drawer').classList.toggle('center-popup', dbKey === 'calendar' || dbKey === 'topic');
+    $('drawer').classList.toggle('topic-popup', dbKey === 'topic');
     $('drawer').classList.add('on');
     $('mask').classList.add('on');
     updateRatePreview();
@@ -4640,7 +4848,6 @@
         var saved = null;
         DATA.calendar.forEach(function(r){ if(r['_id'] === id) saved = r; });
         syncTopicStatus(saved);
-        askTodaySnapshot(saved);
       })
       .catch(function(err){ toast('更新失败：' + errMsg(err), 'err'); });
   }
@@ -4666,7 +4873,8 @@
     finalText: '',
     interim: '',
     manualEdited: false,
-    lastAsrWrite: ''
+    lastAsrWrite: '',
+    assetId: null
   };
   var voiceAudio = null;
   var voicePlayingId = null;
@@ -4757,13 +4965,18 @@
   function renderVoiceList(){
     var box = $('voiceList');
     if(!box) return;
+    var rows = VOICE.assetId
+      ? VOICE.recordings.filter(function(r){ return r.assetId === VOICE.assetId; })
+      : VOICE.recordings;
     var count = $('voiceCount');
-    if(count) count.textContent = VOICE.recordings.length + ' 条';
-    if(!VOICE.recordings.length){
-      box.innerHTML = emptyState('还没有录音', '点上方麦克风开始第一条语音速记', 'mic');
+    if(count) count.textContent = rows.length + ' 条';
+    if(!rows.length){
+      box.innerHTML = VOICE.assetId
+        ? emptyState('这个素材还没有复盘录音', '点上方麦克风录一段，保存后素材详情即可播放', 'mic')
+        : emptyState('还没有录音', '点上方麦克风开始第一条语音速记', 'mic');
       return;
     }
-    box.innerHTML = VOICE.recordings.map(function(r){
+    box.innerHTML = rows.map(function(r){
       var excerpt = r.transcript ? String(r.transcript).replace(/\s+/g, ' ') : '尚无转写文本，可打开速记手动补充。';
       if(excerpt.length > 120) excerpt = excerpt.slice(0, 120) + '…';
       var playing = voicePlayingId === r.id && voiceAudio && !voiceAudio.paused;
@@ -4821,7 +5034,25 @@
     if(icon) icon.textContent = on ? 'stop' : 'mic';
   }
 
-  function openVoiceMemo(){
+  function openVoiceMemo(assetId){
+    var asset = null;
+    if(assetId){
+      DATA.asset.forEach(function(r){ if(r['_id'] === assetId) asset = r; });
+      assetId = asset ? asset['_id'] : null;
+    }
+    VOICE.assetId = assetId || null;
+    var titleEl = $('voiceModalTitle');
+    var subEl = $('voiceModalSub');
+    if(titleEl) titleEl.textContent = asset ? '语音复盘' : '语音速记';
+    if(subEl){
+      subEl.textContent = asset
+        ? '本次录制的复盘会关联到素材「' + (asset['标题'] || '未命名') + '」，保存后可在素材详情直接播放。'
+        : '录音保存在本机；浏览器听写不可用时可手动补转写文本。';
+    }
+    if(asset && !VOICE.recording && !VOICE.blob){
+      var input = $('voiceTitleInput');
+      if(input && !input.value.trim()) input.value = '语音复盘 · ' + String(asset['标题'] || '').slice(0, 40);
+    }
     ensureVoiceWave();
     renderVoiceList();
     $('voiceModal').classList.add('on');
@@ -4835,6 +5066,7 @@
       toast('正在录音，请先停止录音并保存或放弃', 'err');
       return;
     }
+    VOICE.assetId = null;
     $('voiceModal').classList.remove('on');
   }
 
@@ -5111,6 +5343,7 @@
     var qs = '?title=' + encodeURIComponent(title) +
       '&duration=' + encodeURIComponent(String(Math.round(VOICE.duration * 10) / 10)) +
       '&mime=' + encodeURIComponent(mime);
+    if(VOICE.assetId) qs += '&assetId=' + encodeURIComponent(VOICE.assetId);
     fetch(API + '/recordings' + qs, {
       method: 'POST',
       headers: { 'Content-Type': mime },
@@ -5133,6 +5366,12 @@
     }).then(function(){
       resetVoiceDraft();
       setVoiceStatus('录音已保存');
+      if(VOICE.assetId){
+        var savedAsset = null;
+        DATA.asset.forEach(function(r){ if(r['_id'] === VOICE.assetId) savedAsset = r; });
+        var nextTitle = $('voiceTitleInput');
+        if(savedAsset && nextTitle) nextTitle.value = '语音复盘 · ' + String(savedAsset['标题'] || '').slice(0, 40);
+      }
       renderVoiceList();
       return loadVoiceRecordings().then(function(){ render(); });
     }).then(function(){

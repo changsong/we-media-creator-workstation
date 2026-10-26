@@ -325,6 +325,10 @@ async function handleApi(req, res, url) {
         return sendJSON(res, 200, list);
       }
       if (method === 'POST') {
+        // 数据快照只由平台采集器写入，不接受手工新增
+        if (tableKey === 'review') {
+          return sendJSON(res, 405, { error: '数据快照由平台数据自动同步生成，不支持手工新增' });
+        }
         const body = await readBody(req);
         const row = store.create(tableKey, body.properties || body);
         touch(tableKey, 'create', row._id);
@@ -405,7 +409,7 @@ async function handleApi(req, res, url) {
       const result = await wechatMonitor.runOnce();
       return sendJSON(res, 200, result);
     } catch (err) {
-      return sendJSON(res, 502, { error: err.message });
+      return sendJSON(res, err.status || 502, { error: err.message });
     }
   }
   if (url.pathname === '/api/monitor/wechat/config') {
@@ -477,14 +481,17 @@ async function handleApi(req, res, url) {
     const id = parts[2] || '';
     const sub = parts[3] || '';
     if (!id && method === 'GET') {
-      return sendJSON(res, 200, { recordings: recordings.list() });
+      return sendJSON(res, 200, {
+        recordings: recordings.list({ assetId: url.searchParams.get('assetId') || '' })
+      });
     }
     if (!id && method === 'POST') {
       try {
         const rec = await recordings.createFromRequest(req, {
           title: url.searchParams.get('title') || '',
           duration: url.searchParams.get('duration') || '',
-          mime: url.searchParams.get('mime') || ''
+          mime: url.searchParams.get('mime') || '',
+          assetId: url.searchParams.get('assetId') || ''
         });
         touch('recordings', 'add', rec.id);
         return sendJSON(res, 201, { recording: rec });
@@ -759,13 +766,11 @@ async function handleApi(req, res, url) {
       const body = await readBody(req);
       try {
         const rec = channelConnections.save(platform, body);
-        // 公众号连接信息同步给数据监控模块（优先以其为准）
+        // 公众号连接启用/停用时，同步开关数据监控定时任务
         if (platform === '公众号') {
           const raw = channelConnections.getRaw('公众号');
           if (raw) {
             wechatMonitor.saveConfig({
-              appid: raw.fields['App ID'] || '',
-              appsecret: raw.fields['App Secret'] || '',
               platform: '公众号',
               enabled: raw.enabled
             });
@@ -838,7 +843,7 @@ try {
   const started = wechatMonitor.startScheduler();
   const ms = wechatMonitor.getStatus();
   console.log(
-    `[monitor] 公众号监控：${started ? `已启用，每 ${ms.intervalMinutes} 分钟抓取（平台：${ms.platform}）` : '未启用（POST /api/monitor/wechat/config 开启并填入 appid/secret）'}`
+    `[monitor] 公众号监控：${started ? `已启用，每 ${ms.intervalMinutes} 分钟抓取（平台：${ms.platform}）` : '未启用（在「连接设置」完成公众号一键登录后自动启用）'}`
   );
 } catch (err) {
   console.warn('[monitor] 定时器启动异常（可稍后配置）：', err.message);
