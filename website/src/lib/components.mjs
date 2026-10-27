@@ -173,25 +173,33 @@ const PAIN = {
 
 export function painOutcome({ lang }) {
   const isEn = lang === 'en';
-  const cards = (PAIN[lang] || PAIN.zh).map((c) => `<div class="p-6 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-    <div>
-      <div class="p-3 rounded-xl bg-error-container/40 text-on-error-container font-body-sm mb-4">
-        <span class="font-label-capsule font-bold">${isEn ? 'Before:' : '过去痛点：'}</span> ${esc(c.pain)}
+  const cards = (PAIN[lang] || PAIN.zh).map((c) => `<article class="group flex flex-col rounded-2xl bg-surface-white p-6 shadow-sm ring-1 ring-border-light transition-shadow hover:shadow-md">
+    <div class="rounded-xl bg-surface-container-low p-4">
+      <div class="mb-2 flex items-center gap-2">
+        <span class="h-1.5 w-1.5 rounded-full bg-status-error"></span>
+        <span class="font-label-capsule text-[11px] uppercase tracking-wider text-on-surface-variant">${isEn ? 'The old way' : '过去痛点'}</span>
       </div>
-      <div class="font-headline-sm text-headline-sm text-on-surface mb-2">${esc(c.title)}</div>
-      <p class="font-body-md text-body-md text-on-surface-variant">${esc(c.body)}</p>
+      <p class="font-body-sm text-body-sm leading-relaxed text-on-surface-variant">${esc(c.pain)}</p>
     </div>
-    <div class="mt-6 pt-4 border-0 flex items-center text-status-success font-label-capsule text-body-sm gap-1">
-      ${icon(c.icon, 'text-[18px]')} ${esc(c.win)}
+    <div class="my-5 flex items-center gap-3">
+      <span class="h-px flex-1 bg-border-light"></span>
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-subtle text-primary ring-1 ring-gold-accent/30">${icon('arrow_downward', 'text-[18px]')}</span>
+      <span class="h-px flex-1 bg-border-light"></span>
     </div>
-  </div>`).join('');
+    <div class="flex-1">
+      <h3 class="mb-1.5 font-headline-sm text-[17px] font-semibold text-on-surface">${esc(c.title)}</h3>
+      <p class="font-body-md text-body-md leading-relaxed text-on-surface-variant">${esc(c.body)}</p>
+    </div>
+    <div class="mt-5 flex items-start gap-2 border-t border-border-light pt-4 font-label-capsule text-body-sm text-primary">
+      ${icon(c.icon, 'text-[18px]')}<span>${esc(c.win)}</span>
+    </div>
+  </article>`).join('');
   return `<section class="w-full py-space-3xl">
   <div class="max-w-6xl mx-auto">
-    ${sectionHeading({
-      lang,
-      eyebrow: isEn ? 'Pain versus outcome' : '痛点与结果强烈对比',
-      title: isEn ? 'We are not selling a feature list. We are selling three outcomes.' : '我们卖的不是“功能清单”，而是三种真切的结果',
-    })}
+    <div class="text-center max-w-3xl mx-auto mb-space-2xl">
+      <span class="section-eyebrow">${isEn ? 'Pain versus outcome' : '痛点与结果强烈对比'}</span>
+      <h2 class="font-headline-lg text-headline-lg text-on-surface mt-1 text-balance">${isEn ? 'We are not selling a feature list.<br class="hidden sm:block"/> We are selling three outcomes.' : '我们卖的不是“功能清单”，<br class="hidden sm:block"/>而是三种真切的结果'}</h2>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">${cards}</div>
   </div>
 </section>`;
