@@ -196,9 +196,9 @@ export function painOutcome({ lang }) {
   </article>`).join('');
   return `<section class="w-full py-space-3xl">
   <div class="max-w-6xl mx-auto">
-    <div class="text-center max-w-3xl mx-auto mb-space-2xl">
+    <div class="text-center max-w-4xl mx-auto mb-space-2xl">
       <span class="section-eyebrow">${isEn ? 'Pain versus outcome' : '痛点与结果强烈对比'}</span>
-      <h2 class="font-headline-lg text-headline-lg text-on-surface mt-1 text-balance">${isEn ? 'We are not selling a feature list.<br class="hidden sm:block"/> We are selling three outcomes.' : '我们卖的不是“功能清单”，<br class="hidden sm:block"/>而是三种真切的结果'}</h2>
+      <h2 class="font-headline-lg text-[34px] leading-tight text-on-surface mt-1 text-balance">${isEn ? 'We are not selling a feature list. We solve three real pain points.' : '我们卖的不是“功能清单”，而是解决三种真切的痛点'}</h2>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">${cards}</div>
   </div>
