@@ -61,3 +61,20 @@ Repository configuration:
 
 - Actions variable `PUBLISH_BASE_URL`: public OSS URL, no trailing slash
 - Actions secrets: `OSS_REGION`, `OSS_ENDPOINT`, `OSS_BUCKET`, `OSS_ACCESS_KEY_ID`, `OSS_ACCESS_KEY_SECRET`
+
+## Marketing site (`website/`)
+
+A bilingual product site for end users. The build output is a static directory; the feedback form posts to `website/server.mjs`, which stores submissions in a local SQLite database.
+
+```bash
+npm run site:build             # writes website/site (63 pages, including the full /en/ mirror)
+PORT=8788 npm run site:serve   # local preview plus /api/feedback
+npm run site:deploy            # build and ship to production (SSH upload + restart + health check)
+npm run site:releases          # pull latest*.yml from OSS and refresh src/data/releases.json
+```
+
+- Pages live in `website/src/lib/home.mjs` (homepage) and `lib/pages.mjs` (everything else); structured data is in `website/src/data/`
+- Versions and installers come from `website/src/data/releases.json`. After a desktop release, run `npm run site:releases` and rebuild
+- Build-time variables: `SITE_URL` (canonical / OG origin), `SITE_BASE` (sub-path deploys), `FEEDBACK_ENDPOINT`, `CHECKOUT_URL`, `CONTACT_EMAIL`
+- Deploy by uploading `website/site/` to static hosting (Nginx / OSS + CDN) and proxying `/api/feedback` to `node website/server.mjs`; submissions land in `website/data/feedback.db`
+- Feedback admin: `GET /api/feedback?format=csv` with `Authorization: Bearer $FEEDBACK_ADMIN_TOKEN`. Rate limit defaults to 5/hour (`FEEDBACK_RATE_LIMIT`); set `ALLOWED_ORIGINS` for cross-origin use

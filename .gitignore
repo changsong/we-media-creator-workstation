@@ -1,5 +1,5 @@
 node_modules/
-data/
+/data/
 *.log
 .DS_Store
 dist/
@@ -7,3 +7,6 @@ dist-mac-x64/
 dist-mac-arm64/
 release/
 .codex/
+website/site/
+website/data/
+.tmp-*/

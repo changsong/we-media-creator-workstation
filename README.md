@@ -209,3 +209,20 @@ node tools/sync-test.js                    # SSE 推送
 ## 与资料库页面的关系
 
 资料库里还有一份云端版（`资料库 → 自媒体内容运营工作台`），数据存在资料库表格中，适合多设备查看。这份本地工程是自托管版本：数据完全在本机、写入更快、便于二次开发。两边字段结构一致，CSV 可以互导。
+
+## 官网（`website/`）
+
+面向终端用户的中英双语产品站。构建产物是纯静态目录，反馈表单由 `website/server.mjs` 接收并写入本地 SQLite。
+
+```bash
+npm run site:build             # 生成 website/site（63 页，含 /en/ 全量镜像）
+PORT=8788 npm run site:serve   # 本地预览 + /api/feedback
+npm run site:deploy            # 构建并发布到生产服务器（SSH 上传 + 重启 + 健康检查）
+npm run site:releases          # 从 OSS 拉取 latest*.yml，更新 src/data/releases.json
+```
+
+- 页面与文案：首页在 `website/src/lib/home.mjs`，其余页面在 `lib/pages.mjs`；结构化数据在 `website/src/data/`
+- 版本与安装包：来自 `website/src/data/releases.json`。桌面版发版后先跑 `npm run site:releases`，再重新构建
+- 构建环境变量：`SITE_URL`（canonical / OG 绝对地址）、`SITE_BASE`（子路径部署）、`FEEDBACK_ENDPOINT`、`CHECKOUT_URL`、`CONTACT_EMAIL`
+- 部署：把 `website/site/` 上传到静态托管（Nginx / OSS + CDN），并把 `/api/feedback` 反向代理到 `node website/server.mjs`；反馈数据落在 `website/data/feedback.db`
+- 反馈管理：`GET /api/feedback?format=csv`，请求头 `Authorization: Bearer $FEEDBACK_ADMIN_TOKEN`。默认限流 5 次/小时（`FEEDBACK_RATE_LIMIT`），跨域白名单 `ALLOWED_ORIGINS`

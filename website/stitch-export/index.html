@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>WeMedia 自媒体内容运营工作台</title><meta name="description" content="WeMedia 自媒体内容运营工作台：本地优先的八平台内容分发与数据复盘工具，选题、排期、一键发布、效果复盘一站完成，支持 Windows / macOS / Linux。"/><meta property="og:type" content="website"/><meta property="og:title" content="WeMedia 自媒体内容运营工作台"/><meta property="og:description" content="八个平台，一张工作台。本地存储、八网分发、数据自动回流，告别重复发帖与手抄后台。"/><link rel="icon" type="image/png" href="./assets/img-1.png"/><link href="./assets/fonts-text.css" rel="stylesheet"/><link href="./assets/fonts-icons2.css" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="./assets/tailwind.js"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"text-light-secondary":"#9fa3a9","on-secondary-fixed":"#1a1c1e","border-dark":"rgba(255, 255, 255, 0.08)","surface-container-low":"#f2f3f6","on-tertiary-container":"#5e6162","secondary-fixed":"#e2e2e5","status-success":"#34d399","surface-dim":"#d9dadd","secondary-fixed-dim":"#c6c6c9","tertiary":"#5c5f60","on-background":"#191c1e","on-tertiary":"#ffffff","tertiary-container":"#dbddde","error-container":"#ffdad6","canvas-dark":"#090c0d","surface-variant":"#e1e2e5","secondary":"#5d5e61","error":"#ba1a1a","gold-accent-hover":"#f2cb60","surface-bright":"#f8f9fc","on-tertiary-fixed":"#191c1d","background":"#f8f9fc","outline-variant":"#d0c5b2","status-warning":"#fbbf24","on-primary-container":"#785d00","border-light":"rgba(9, 12, 13, 0.06)","surface-white":"#ffffff","canvas-light":"#f8f9fc","inverse-primary":"#e7c361","on-secondary":"#ffffff","secondary-container":"#e2e2e5","on-primary-fixed-variant":"#594400","inverse-on-surface":"#f0f1f4","on-surface":"#191c1e","on-primary":"#ffffff","primary-container":"#ffd975","surface":"#f8f9fc","gold-accent":"#ffd975","on-primary-fixed":"#241a00","surface-container-high":"#e7e8eb","primary":"#755b00","surface-dark":"#202224","inverse-surface":"#2e3133","on-secondary-container":"#636467","surface-container":"#edeef1","surface-dark-elevated":"#2a2d30","tertiary-fixed":"#e1e3e4","text-dark-secondary":"#63676c","tertiary-fixed-dim":"#c5c7c8","text-light-primary":"#f8f9fc","on-surface-variant":"#4d4637","surface-container-highest":"#e1e2e5","on-error-container":"#93000a","surface-container-lowest":"#ffffff","primary-fixed-dim":"#e7c361","gold-subtle":"rgba(255, 217, 117, 0.15)","on-tertiary-fixed-variant":"#444748","on-secondary-fixed-variant":"#454749","status-error":"#f87171","on-error":"#ffffff","outline":"#7f7665","primary-fixed":"#ffdf91","surface-tint":"#755b00","text-dark-primary":"#090c0d"},"borderRadius":{"DEFAULT":"1rem","lg":"2rem","xl":"3rem","full":"9999px"},"spacing":{"margin-mobile":"1rem","gutter-mobile":"0.75rem","space-lg":"1.5rem","space-md":"1rem","space-2xl":"3rem","space-xs":"0.25rem","margin":"2rem","space-xl":"2rem","gutter":"1.5rem","space-sm":"0.5rem","space-3xl":"4.5rem"},"fontFamily":{"headline-sm":["Plus Jakarta Sans"],"display-hero":["Plus Jakarta Sans"],"metric-large":["Plus Jakarta Sans"],"label-capsule":["Plus Jakarta Sans"],"body-lg":["Be Vietnam Pro"],"headline-lg":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-md":["Be Vietnam Pro"],"display-hero-mobile":["Plus Jakarta Sans"],"body-sm":["Be Vietnam Pro"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"-0.01em","fontWeight":"600"}],"display-hero":["56px",{"lineHeight":"64px","letterSpacing":"-0.03em","fontWeight":"700"}],"metric-large":["32px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"700"}],"label-capsule":["13px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"26px","letterSpacing":"0em","fontWeight":"400"}],"headline-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.025em","fontWeight":"700"}],"headline-lg-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-md":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","letterSpacing":"0em","fontWeight":"400"}],"display-hero-mobile":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"400"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(9,12,13,0.04)]"><div class="h-20 max-w-[1440px] mx-auto px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><img alt="WeMedia Logo" class="h-8 w-auto object-contain" src="./assets/img-1.png"/><div class="flex flex-col"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">自媒体内容运营工作台</span><span class="hidden lg:inline text-on-surface-variant font-body-sm text-body-sm">/ WeMedia</span><span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-capsule text-body-sm text-[11px]">v1.2 稳定版</span></div></div></div><nav class="hidden xl:flex items-center gap-space-lg" data-active-classes="text-on-surface font-headline-sm font-semibold"><a aria-current="page" class="transition-colors text-on-surface font-headline-sm font-semibold" data-path="features" href="#">功能特性</a><a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" data-path="platforms" href="#">支持平台</a><a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" data-path="showcase" href="#">工作流展示</a><a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" data-path="pricing" href="#">价格方案</a><a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" data-path="local-first" href="#">安全与隐私</a><a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" data-path="faq" href="#">常见问题</a></nav><div class="flex items-center gap-space-sm shrink-0"><div class="hidden sm:flex items-center bg-surface-container-low px-2 py-1 rounded-full text-on-surface-variant font-label-capsule text-body-sm"><span class="px-2 py-0.5 rounded-full bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]">中</span><span class="px-2 py-0.5 hover:text-on-surface cursor-pointer">EN</span></div><div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm"><span class="w-2 h-2 rounded-full bg-status-success"></span><span>macOS / Win</span></div><a class="hidden lg:inline-flex items-center px-4 py-2 rounded-full bg-surface-container-low text-on-surface font-label-capsule text-label-capsule hover:bg-surface-container transition-colors" data-path="pricing" href="#">查看价格</a><a class="inline-flex items-center px-5 py-2.5 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-[0_4px_14px_rgba(255,217,117,0.4)] transition-all" data-path="download" href="#">下载桌面版 (免费体验)</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background max-w-[1440px] mx-auto px-margin"><div class="flex flex-col w-full">
+<!-- SECTION 1: HERO & PRODUCT SHOWCASE -->
+<section class="relative w-full pt-space-xl pb-space-3xl flex flex-col items-center">
+<!-- Ambient subtle background glow -->
+<div class="absolute top-10 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-gold-accent/10 rounded-full blur-[110px] pointer-events-none -z-10"></div>
+<!-- Announcement Tag -->
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-white text-on-surface text-body-sm font-label-capsule shadow-sm mb-space-md border-0 transition-transform hover:scale-105">
+<span class="w-2 h-2 rounded-full bg-status-success animate-pulse"></span>
+<span class="text-on-surface-variant font-medium">🚀 2026 全新架构</span>
+<span class="text-outline-variant">|</span>
+<span>本地优先桌面端 · 适配主流新媒体改版</span>
+</div>
+<!-- Hero Title & Subheading -->
+<div class="max-w-4xl text-center px-margin-mobile flex flex-col items-center">
+<h1 class="font-display-hero text-headline-lg lg:text-display-hero text-on-surface tracking-tight leading-tight mb-space-md">
+        八个平台，<span class="relative inline-block text-primary">一张工作台。<svg class="absolute -bottom-2 left-0 w-full h-3 text-gold-accent/60 -z-10" preserveaspectratio="none" viewbox="0 0 100 12"><path d="M0,8 Q50,0 100,8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="6"></path></svg></span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl text-center mb-space-xl leading-relaxed">
+        选题、排期、发布、复盘、沉淀，全在一个本地应用里完成。到点自动发布，数据自动回填，账号与素材始终留在你自己的电脑上。
+      </p>
+<!-- CTA Buttons & Trust Indicators -->
+<div class="flex flex-wrap items-center justify-center gap-space-md mb-space-sm">
+<a class="inline-flex items-center gap-3 px-8 py-3.5 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-lg shadow-gold-accent/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0" href="#download">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">download</span>
+<span>下载桌面版 (Windows / macOS / Linux)</span>
+</a>
+<a class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-surface-white hover:bg-surface-container-low text-on-surface font-label-capsule text-label-capsule shadow-sm transition-all hover:shadow" href="#pricing">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>查看授权价格 (¥49.9起)</span>
+</a>
+</div>
+<p class="font-body-sm text-body-sm text-text-dark-secondary">
+        Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="text-on-surface font-medium">无需申请 API</span> ｜ 数据完全保存在本机 SQLite
+      </p>
+</div>
+<!-- HIGH-FIDELITY APP SHOWCASE MOCKUP (Faithful to image reference layout) -->
+<div class="w-full max-w-[1240px] mt-space-2xl rounded-2xl bg-canvas-dark p-2 sm:p-3 shadow-2xl shadow-canvas-dark/20">
+<!-- Outer Shell Window Frame -->
+<div class="relative w-full rounded-xl bg-surface-bright overflow-hidden grid grid-cols-1 lg:grid-cols-[68px_1fr_310px] min-h-[640px]">
+<!-- LEFT DOCK: Client Sidebar (Dark Slate Theme from Reference) -->
+<aside class="bg-canvas-dark flex flex-row lg:flex-col items-center justify-between py-4 px-2 z-10">
+<div class="flex flex-row lg:flex-col items-center gap-4">
+<!-- App Monogram Logo -->
+<div class="w-11 h-11 rounded-full bg-surface-dark-elevated flex items-center justify-center text-text-light-primary shadow-sm font-headline-sm">
+<span class="material-symbols-outlined text-gold-accent text-[22px]">widgets</span>
+</div>
+<!-- Active Navigation Icons -->
+<nav class="flex flex-row lg:flex-col items-center gap-3">
+<button class="w-10 h-10 rounded-full bg-surface-white text-canvas-dark flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+</button>
+<button class="w-10 h-10 rounded-full text-text-light-secondary hover:text-text-light-primary hover:bg-surface-dark flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+</button>
+<button class="w-10 h-10 rounded-full text-text-light-secondary hover:text-text-light-primary hover:bg-surface-dark flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">send_time_extension</span>
+</button>
+<button class="w-10 h-10 rounded-full text-text-light-secondary hover:text-text-light-primary hover:bg-surface-dark flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+</button>
+<button class="w-10 h-10 rounded-full text-text-light-secondary hover:text-text-light-primary hover:bg-surface-dark flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">folder_special</span>
+</button>
+</nav>
+</div>
+<!-- Bottom Status Pill in Rail -->
+<div class="flex flex-row lg:flex-col items-center gap-3">
+<div class="w-3 h-3 rounded-full bg-status-success animate-ping" title="本地发布引擎服务就绪"></div>
+<button class="w-9 h-9 rounded-full text-text-light-secondary hover:text-text-light-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+</button>
+</div>
+</aside>
+<!-- CENTER WORKBENCH AREA -->
+<div class="flex flex-col p-4 lg:p-6 bg-surface overflow-y-auto">
+<!-- Top Row Header in Workstation -->
+<div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+<div>
+<div class="font-headline-md text-headline-md text-on-surface">Hi, 内容主理人</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">本地引擎常驻运行中 · 8个平台 Cookie 状态健康</p>
+</div>
+<!-- Search + Bell Header utility -->
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]">search</span>
+<input class="bg-transparent border-0 outline-none w-36 text-on-surface placeholder:text-outline" placeholder="搜索本地排期/选题..." readonly="" type="text" value="8月矩阵规划"/>
+<span class="px-1.5 py-0.5 rounded bg-surface-white text-[10px] text-on-surface-variant">⌘K</span>
+</div>
+<div class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[18px]">notifications</span>
+</div>
+</div>
+</div>
+<!-- 3 Colored Metric Highlight Cards (Direct Reference Styling) -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+<!-- Metric 1: Light Lavender / Purple card -->
+<div class="p-4 rounded-xl bg-secondary-fixed/50 flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-secondary-fixed-variant">今日自动发布任务</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-white text-on-surface text-[11px] font-label-capsule shadow-sm">查看队列</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-metric-large text-metric-large text-on-surface font-headline-lg">14</span>
+<span class="font-body-sm text-body-sm text-status-success font-medium">全平台排期中</span>
+</div>
+</div>
+<!-- Metric 2: Soft Sky / Blue card -->
+<div class="p-4 rounded-xl bg-tertiary-fixed/60 flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-tertiary-fixed-variant">自动核验成功率</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-white text-on-surface text-[11px] font-label-capsule shadow-sm">日志</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-metric-large text-metric-large text-on-surface font-headline-lg">99.4%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">本地重试机制</span>
+</div>
+</div>
+<!-- Metric 3: Warm Honey / Gold card (Reference Visual Highlight) -->
+<div class="p-4 rounded-xl bg-gold-accent flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-primary-fixed">数据自动回流平台</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-white text-canvas-dark text-[11px] font-label-capsule shadow-sm">4 / 4 已联通</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-metric-large text-metric-large text-canvas-dark font-headline-lg">3.8h</span>
+<span class="font-body-sm text-body-sm text-canvas-dark font-medium">今日预计节省</span>
+</div>
+</div>
+</div>
+<!-- Mid Section: Visual Flow Curve (Chart Stream Visual from Reference) -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm mb-6 flex flex-col">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-3">
+<span class="font-headline-sm text-headline-sm text-on-surface">全网互动与分发流向</span>
+<span class="px-2 py-0.5 rounded-full bg-status-success/15 text-primary text-body-sm font-label-capsule font-bold">+128% 环比增长</span>
+</div>
+<div class="flex items-center gap-2 text-body-sm font-label-capsule text-on-surface-variant">
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low">8月发布周期</span>
+<span class="material-symbols-outlined text-[16px]">tune</span>
+</div>
+</div>
+<!-- SVG Flow lines recreating the Sankey-like curves from the image -->
+<div class="w-full h-36 relative flex items-center justify-between overflow-hidden">
+<svg class="w-full h-full" fill="none" preserveaspectratio="none" viewbox="0 0 680 140">
+<!-- Stream Paths -->
+<path d="M 0 70 C 180 70, 240 18, 420 18" opacity="0.95" stroke="#ffd975" stroke-linecap="round" stroke-width="14"></path>
+<path d="M 0 76 C 190 76, 260 52, 420 52" stroke="#e2e2e5" stroke-linecap="round" stroke-width="9"></path>
+<path d="M 0 82 C 210 82, 280 88, 420 88" stroke="#dbddde" stroke-linecap="round" stroke-width="6"></path>
+<path d="M 0 88 C 220 88, 300 118, 420 118" opacity="0.4" stroke="#ffd975" stroke-linecap="round" stroke-width="5"></path>
+<!-- Destination metric dots -->
+<circle cx="440" cy="18" fill="#ffd975" r="4"></circle>
+<circle cx="470" cy="24" fill="#ffd975" r="3"></circle>
+<circle cx="510" cy="15" fill="#ffd975" r="5"></circle>
+<circle cx="560" cy="30" fill="#ffd975" r="3"></circle>
+<circle cx="600" cy="18" fill="#ffd975" r="4"></circle>
+<circle cx="460" cy="54" fill="#c6c6c9" r="3"></circle>
+<circle cx="520" cy="60" fill="#c6c6c9" r="4"></circle>
+<circle cx="580" cy="50" fill="#c6c6c9" r="3"></circle>
+<circle cx="450" cy="90" fill="#dbddde" r="4"></circle>
+<circle cx="530" cy="85" fill="#dbddde" r="3"></circle>
+<circle cx="590" cy="95" fill="#dbddde" r="4"></circle>
+</svg>
+</div>
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant pt-2 border-0">
+<span class="font-label-capsule">1条主素材发布</span>
+<span class="font-label-capsule">抖音 · 视频号 · 小红书 · B站 4网同步裂变</span>
+<span class="text-on-surface font-semibold">总播放：124.6 万</span>
+</div>
+</div>
+<!-- Bottom Content Feed / Schedule Queue (Reference Table Component) -->
+<div class="rounded-2xl bg-surface-white shadow-sm overflow-hidden flex flex-col">
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-gold-accent"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface">排期与自动执行队列</span>
+</div>
+<span class="text-body-sm text-on-surface-variant font-label-capsule">今日 18:00 前将自动完成 4 项</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-body-sm">
+<thead>
+<tr class="text-text-dark-secondary bg-surface-container-low/60 font-label-capsule text-[11px] uppercase tracking-wider">
+<th class="py-2.5 px-4 w-10">状态</th>
+<th class="py-2.5 px-3">平台</th>
+<th class="py-2.5 px-3">内容标题</th>
+<th class="py-2.5 px-3">封面比例</th>
+<th class="py-2.5 px-3">排期设定</th>
+<th class="py-2.5 px-4 text-right">执行进程</th>
+</tr>
+</thead>
+<tbody class="divide-y-0">
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4"><span class="w-2 h-2 rounded-full bg-status-success inline-block"></span></td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-capsule text-[11px]">
+<span class="material-symbols-outlined text-[13px] text-red-500">play_circle</span>抖音短视频
+                      </span>
+</td>
+<td class="py-3 px-3 font-medium text-on-surface">《2026自由创作者年度软硬件清单》</td>
+<td class="py-3 px-3 text-on-surface-variant">9:16 (竖版裁切)</td>
+<td class="py-3 px-3 text-on-surface-variant">18:00 (自动触发)</td>
+<td class="py-3 px-4 text-right">
+<span class="px-2.5 py-1 rounded-full bg-status-success/15 text-status-success font-label-capsule text-[11px]">就绪待发</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4"><span class="w-2 h-2 rounded-full bg-status-success inline-block"></span></td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-capsule text-[11px]">
+<span class="material-symbols-outlined text-[13px] text-rose-500">photo_library</span>小红书图文
+                      </span>
+</td>
+<td class="py-3 px-3 font-medium text-on-surface">干货｜一个人如何用本地工具日更8大平台</td>
+<td class="py-3 px-3 text-on-surface-variant">3:4 (9图矩阵)</td>
+<td class="py-3 px-3 text-on-surface-variant">18:00 (自动触发)</td>
+<td class="py-3 px-4 text-right">
+<span class="px-2.5 py-1 rounded-full bg-status-success/15 text-status-success font-label-capsule text-[11px]">已自动核验</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4"><span class="w-2 h-2 rounded-full bg-gold-accent inline-block"></span></td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-capsule text-[11px]">
+<span class="material-symbols-outlined text-[13px] text-green-600">videocam</span>微信视频号
+                      </span>
+</td>
+<td class="py-3 px-3 font-medium text-on-surface">创作者私密电台第 14 期：安全与本地化</td>
+<td class="py-3 px-3 text-on-surface-variant">6:7 原生标准</td>
+<td class="py-3 px-3 text-on-surface-variant">19:30 (排队中)</td>
+<td class="py-3 px-4 text-right">
+<span class="px-2.5 py-1 rounded-full bg-gold-subtle text-primary font-label-capsule text-[11px]">定时队列中</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- RIGHT SIDEBAR DRAWER (Direct Reference: Profile, Summarize, Waveform Audio) -->
+<aside class="bg-surface-white p-5 flex flex-col justify-between shadow-[-1px_0_0_rgba(9,12,13,0.04)]">
+<!-- Profile Badge -->
+<div class="flex flex-col items-center text-center">
+<div class="relative w-16 h-16 rounded-full overflow-hidden mb-2 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A portrait photograph of a confident young digital media studio operator smiling at desk with gentle natural window light and warm ambient background" src="./assets/img-4.png"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-status-success ring-2 ring-surface-white"></span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">林晓 / 个人创作者</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-status-success">lock</span> 本地 SQLite 凭证加密
+            </div>
+<!-- Quick Action Pills from Reference -->
+<div class="flex items-center gap-2 mt-4">
+<button class="w-9 h-9 rounded-full bg-gold-accent flex items-center justify-center text-canvas-dark">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[18px]">ios_share</span>
+</button>
+</div>
+</div>
+<!-- Summarize / Execution Notes -->
+<div class="my-5 p-3.5 rounded-xl bg-surface-container-low flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<span class="font-label-capsule text-label-capsule text-on-surface">发布引擎动态摘要</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_downward</span>
+</div>
+<div class="text-body-sm text-on-surface-variant space-y-2">
+<div class="flex items-start gap-2">
+<span class="font-mono text-[11px] text-primary">17:45</span>
+<span>Chrome 实例安全唤起，免密加载本地会话</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="font-mono text-[11px] text-status-success">17:50</span>
+<span>抖音后台封面与视频素材自动切片上传完毕</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="font-mono text-[11px] text-on-surface">18:00</span>
+<span>预备触发定时自动勾选并发布</span>
+</div>
+</div>
+</div>
+<!-- Call / Voice Recording Memo (Mirroring Reference Audio Module) -->
+<div class="rounded-xl bg-surface p-3.5 flex flex-col">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-capsule text-label-capsule text-on-surface">选题语音灵感备忘</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">00:32 / 01:45</span>
+</div>
+<!-- Waveform visual bars -->
+<div class="flex items-center justify-between gap-1 h-8 my-1 px-1">
+<span class="w-1 h-3 bg-outline-variant rounded-full"></span>
+<span class="w-1 h-5 bg-outline rounded-full"></span>
+<span class="w-1 h-7 bg-primary rounded-full"></span>
+<span class="w-1 h-4 bg-outline rounded-full"></span>
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+<span class="w-1 h-8 bg-gold-accent rounded-full"></span>
+<span class="w-1 h-5 bg-gold-accent rounded-full"></span>
+<span class="w-1 h-7 bg-primary rounded-full"></span>
+<span class="w-1 h-3 bg-outline-variant rounded-full"></span>
+<span class="w-1 h-5 bg-outline rounded-full"></span>
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+<span class="w-1 h-4 bg-outline-variant rounded-full"></span>
+<span class="w-1 h-2 bg-outline-variant rounded-full"></span>
+</div>
+<div class="flex items-center justify-between mt-2 pt-2 border-0">
+<span class="text-body-sm font-label-capsule text-on-surface-variant">1.0x 速</span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center text-[12px]"><span class="material-symbols-outlined text-[14px]">replay_10</span></button>
+<button class="w-7 h-7 rounded-full bg-canvas-dark text-text-light-primary flex items-center justify-center"><span class="material-symbols-outlined text-[14px]">pause</span></button>
+<button class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center text-[12px]"><span class="material-symbols-outlined text-[14px]">forward_10</span></button>
+</div>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">volume_up</span>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</section>
+<!-- SECTION 2: 8 SUPPORTED PLATFORMS BAR -->
+<section class="w-full py-space-xl bg-surface-container-low/70 rounded-2xl my-space-lg">
+<div class="max-w-6xl mx-auto px-margin-mobile">
+<div class="text-center mb-space-md">
+<span class="font-label-capsule text-label-capsule text-primary uppercase tracking-wider">原生支持主流媒体生态</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mt-1">八大平台一网打尽 · 4 平台独家数据自动回流</h2>
+</div>
+<!-- 8 Platform Badges Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+<!-- 1. 抖音 -->
+<div class="p-3 rounded-xl bg-surface-white shadow-sm flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold mb-1.5">抖</div>
+<span class="font-label-capsule text-body-sm font-semibold text-on-surface">抖音</span>
+<span class="text-[10px] text-status-success font-medium">视频/图文 · 回流</span>
+</div>
+<!-- 2. 视频号 -->
+<div class="p-3 rounded-xl bg-surface-white shadow-sm flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold mb-1.5">视</div>
+<span class="font-label-capsule text-body-sm font-semibold text-on-surface">微信视频号</span>
+<span class="text-[10px] text-status-success font-medium">长短视频 · 回流</span>
+</div>
+<!-- 3. 小红书 -->
+<div class="p-3 rounded-xl bg-surface-white shadow-sm flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm font-bold mb-1.5">红</div>
+<span class="font-label-capsule text-body-sm font-semibold text-on-surface">小红书</span>
+<span class="text-[10px] text-status-success font-medium">图文/视频 · 回流</span>
+</div>
+<!-- 4. 微信公众号 -->
+<div class="p-3 rounded-xl bg-surface-white shadow-sm flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center text-sm font-bold mb-1.5">公</div>
+<span class="font-label-capsule text-body-sm font-semibold text-on-surface">公众号</span>
+<span class="text-[10px] text-status-success font-medium">文章/草稿 · 回流</span>
+</div>
+<!-- 5. 哔哩哔哩 -->
+<div class="p-3 rounded-xl bg-surface-white shadow-sm flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold mb-1.5">B</div>
+<span class="font-label-capsule text-body-sm font-semibold text-on-surface">哔哩哔哩</span>
+<span class="text-[10px] text-on-surface-variant">4K视频/动态</span>
+</div>
+<!-- 6. 快手 -->
+<div class="p-3 rounded-xl bg-surface-white shadow-sm flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold mb-1.5">快</div>
+<span class="font-label-capsule text-body-sm font-semibold text-on-surface">快手</span>
+<span class="text-[10px] text-on-surface-variant">短视频/双封面</span>
+</div>
+<!-- 7. 微博 -->
+<div class="p-3 rounded-xl bg-surface-white shadow-sm flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center text-sm font-bold mb-1.5">微</div>
+<span class="font-label-capsule text-body-sm font-semibold text-on-surface">微博</span>
+<span class="text-[10px] text-on-surface-variant">视频/9图长文</span>
+</div>
+<!-- 8. 知乎 -->
+<div class="p-3 rounded-xl bg-surface-white shadow-sm flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold mb-1.5">知</div>
+<span class="font-label-capsule text-body-sm font-semibold text-on-surface">知乎</span>
+<span class="text-[10px] text-on-surface-variant">专栏/视频/想法</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: PAIN POINT VS OUTCOME (WHY WEMEDIA) -->
+<section class="w-full py-space-3xl">
+<div class="max-w-6xl mx-auto">
+<div class="text-center max-w-2xl mx-auto mb-space-2xl">
+<span class="font-label-capsule text-label-capsule text-primary uppercase tracking-wider">痛点与结果强烈对比</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-1">我们卖的不是“功能清单”，而是三种真切的结果</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<div class="p-6 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="p-3 rounded-xl bg-error-container/40 text-on-error-container font-body-sm mb-4">
+<span class="font-label-capsule font-bold">过去痛点：</span> 一条内容打开8个网页标签，重复复制标题简介、反复裁剪封面、多次勾选发布选项，耗时且极易漏发。
+            </div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-2">
+              一次排期，八个平台自动完成
+            </div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              准备好主素材、勾选目标网络与裁切格式，到点后台安静唤醒执行。任务失败自动重试，发布完毕自动核验回执。
+            </p>
+</div>
+<div class="mt-6 pt-4 border-0 flex items-center text-status-success font-label-capsule text-body-sm gap-1">
+<span class="material-symbols-outlined text-[18px]">schedule</span> 每天释放 2–3 小时机械劳作
+          </div>
+</div>
+<!-- Card 2 -->
+<div class="p-6 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="p-3 rounded-xl bg-error-container/40 text-on-error-container font-body-sm mb-4">
+<span class="font-label-capsule font-bold">过去痛点：</span> 数据散落在各个后台，次日复盘得纯靠手工抄表；一旦忙碌就放弃复盘，内容优化彻底流于形式。
+            </div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-2">
+              数据自动回流，打开就能复盘
+            </div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              抖音、小红书、视频号、公众号关键播放、点赞与涨粉数据自动归集，互动率与完播转化一目了然，即开即看。
+            </p>
+</div>
+<div class="mt-6 pt-4 border-0 flex items-center text-status-success font-label-capsule text-body-sm gap-1">
+<span class="material-symbols-outlined text-[18px]">query_stats</span> 告别手动抄表，数据真实留存
+          </div>
+</div>
+<!-- Card 3 -->
+<div class="p-6 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="p-3 rounded-xl bg-error-container/40 text-on-error-container font-body-sm mb-4">
+<span class="font-label-capsule font-bold">过去痛点：</span> 担心云端托管工具泄露 Cookie 导致封号或隐私泄露，通用开放平台接口个人博主又根本申请不下来。
+            </div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-2">
+              数据留在电脑，不用注册云账号
+            </div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              基于 Local-First 本地优先架构设计。所有登录 Cookie、素材、复盘数据库均存在你电脑的 SQLite 中，零云端托管。
+            </p>
+</div>
+<div class="mt-6 pt-4 border-0 flex items-center text-status-success font-label-capsule text-body-sm gap-1">
+<span class="material-symbols-outlined text-[18px]">encrypted</span> 绝对掌控资产，远离平台风控
+          </div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 4: 5-STEP CLOSED-LOOP WORKFLOW -->
+<section class="w-full py-space-3xl bg-surface-white rounded-3xl my-space-lg">
+<div class="max-w-6xl mx-auto px-margin-mobile">
+<div class="text-center max-w-2xl mx-auto mb-space-2xl">
+<span class="font-label-capsule text-label-capsule text-primary uppercase tracking-wider">全流程贯通</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-1">从灵感到复盘，五步极简闭环</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">
+          不再四处拼凑碎片工具，完整覆盖专业创作者日常的每一个关键节点。
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+<!-- Step 1 -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="w-7 h-7 rounded-full bg-canvas-dark text-text-light-primary text-[12px] font-bold flex items-center justify-center mb-3">01</span>
+<div class="font-headline-sm text-[16px] text-on-surface font-semibold mb-1">选题池储备</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">记录灵感、爆款潜力评分与目标发布平台标签，随时搜索筛选导出。</p>
+</div>
+<span class="material-symbols-outlined text-primary mt-4 text-[24px]">lightbulb</span>
+</div>
+<!-- Step 2 -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="w-7 h-7 rounded-full bg-canvas-dark text-text-light-primary text-[12px] font-bold flex items-center justify-center mb-3">02</span>
+<div class="font-headline-sm text-[16px] text-on-surface font-semibold mb-1">内容日历甘特</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">九个制作阶段（文案、粗剪、精剪、成片、审核），全月节奏一清二楚。</p>
+</div>
+<span class="material-symbols-outlined text-primary mt-4 text-[24px]">calendar_view_month</span>
+</div>
+<!-- Step 3 -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="w-7 h-7 rounded-full bg-gold-accent text-canvas-dark text-[12px] font-bold flex items-center justify-center mb-3">03</span>
+<div class="font-headline-sm text-[16px] text-on-surface font-semibold mb-1">发布中心执行</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">八个平台排期队列，支持多比例封面自动适配，到点自动唤醒、发布后核验。</p>
+</div>
+<span class="material-symbols-outlined text-primary mt-4 text-[24px]">rocket_launch</span>
+</div>
+<!-- Step 4 -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="w-7 h-7 rounded-full bg-canvas-dark text-text-light-primary text-[12px] font-bold flex items-center justify-center mb-3">04</span>
+<div class="font-headline-sm text-[16px] text-on-surface font-semibold mb-1">自动数据复盘</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">4大平台指标全自动写入本地报表，互动率、完播率、增粉率自动算妥。</p>
+</div>
+<span class="material-symbols-outlined text-primary mt-4 text-[24px]">monitoring</span>
+</div>
+<!-- Step 5 -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="w-7 h-7 rounded-full bg-canvas-dark text-text-light-primary text-[12px] font-bold flex items-center justify-center mb-3">05</span>
+<div class="font-headline-sm text-[16px] text-on-surface font-semibold mb-1">永久素材沉淀</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">成稿正文、语音复盘录音、关键词关联打通归档，优质资产可持续复用。</p>
+</div>
+<span class="material-symbols-outlined text-primary mt-4 text-[24px]">inventory_2</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 5: 8 CORE BENEFIT CARDS (Strict PRD Matrix) -->
+<section class="w-full py-space-3xl">
+<div class="max-w-6xl mx-auto">
+<div class="text-center max-w-2xl mx-auto mb-space-2xl">
+<span class="font-label-capsule text-label-capsule text-primary uppercase tracking-wider">功能收益网格</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-1">每个能力，都为你明确省下时间</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Benefit 1 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-1">选题池：灵感有处安放</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">记录平台、角度、标签和爆款潜力评分，搜索、筛选、导出，下一条内容不再靠翻备忘录。</p>
+</div>
+</div>
+<!-- Benefit 2 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">date_range</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-1">内容日历：整月节奏一眼看清</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">九个制作阶段、负责人、内容形式和发布时间，一张时间轴排完整个月的生产节奏。</p>
+</div>
+</div>
+<!-- Benefit 3 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">queue</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-1">发布中心：排好队，它自己发</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">八个平台一次排期，视频、图文、多比例封面；失败可重试，发布后自动核验。</p>
+</div>
+</div>
+<!-- Benefit 4 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">insights</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-1">数据复盘：不用再手抄</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">抖音、小红书、视频号、公众号数据自动回流，互动率、涨粉率、更新频率实时算好。</p>
+</div>
+</div>
+<!-- Benefit 5 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">library_books</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-1">素材库：好内容可以复用</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">成稿、配图说明、关键词、语音复盘统一归档，和选题、排期互相打通。</p>
+</div>
+</div>
+<!-- Benefit 6 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">vpn_key</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-1">一键登录：不用申请 API</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">独立浏览器窗口扫码登录，Cookie 只留在本机；过期了重新登录即可，无需开发者认证。</p>
+</div>
+</div>
+<!-- Benefit 7 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">database</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-1">本地优先：数据只属于你</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">SQLite 存储、每日快照、CSV 导出；不用注册云端账号，无任何隐私外泄顾虑。</p>
+</div>
+</div>
+<!-- Benefit 8 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">laptop_mac</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface mb-1">桌面常驻：关窗也在跑</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">最小化到托盘，定时发布和数据同步继续；客户端自动更新，平台改版跟着适配。</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 6: HONEST BOUNDARIES (Building Deep Trust) -->
+<section class="w-full py-space-2xl bg-canvas-dark text-text-light-secondary rounded-3xl my-space-lg">
+<div class="max-w-6xl mx-auto px-margin-mobile">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-space-xl gap-4">
+<div>
+<span class="font-label-capsule text-label-capsule text-gold-accent uppercase tracking-wider">诚实披露与技术边界</span>
+<h2 class="font-headline-lg text-headline-lg text-text-light-primary mt-1">建立信任的前提，是坦白不隐瞒</h2>
+</div>
+<p class="font-body-sm text-body-sm text-text-light-secondary max-w-md">
+          我们不夸大宣传，也不承诺无法企及的技术黑魔法。把边界交代清楚，让您买得踏实、用得放心。
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="p-4 rounded-xl bg-surface-dark border-0">
+<div class="font-headline-sm text-[15px] text-text-light-primary font-semibold mb-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-gold-accent text-[18px]">devices</span>依赖本机浏览器
+          </div>
+<p class="font-body-sm text-body-sm text-text-light-secondary">发布与部分数据采集依赖本机安装的 Chrome 或 Edge 浏览器环境驱动。</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-dark border-0">
+<div class="font-headline-sm text-[15px] text-text-light-primary font-semibold mb-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-gold-accent text-[18px]">verified_user</span>扫码授权登录态
+          </div>
+<p class="font-body-sm text-body-sm text-text-light-secondary">首次需在独立窗口登录平台账号，会话 Cookie 仅保存在本机，过期需轻点重登。</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-dark border-0">
+<div class="font-headline-sm text-[15px] text-text-light-primary font-semibold mb-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-gold-accent text-[18px]">update</span>平台风控与改版响应
+          </div>
+<p class="font-body-sm text-body-sm text-text-light-secondary">平台更新前端时可能出现短暂异常，开发团队会持续发布热更新补丁进行适配。</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-dark border-0">
+<div class="font-headline-sm text-[15px] text-text-light-primary font-semibold mb-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-gold-accent text-[18px]">person</span>单机单人专注设计
+          </div>
+<p class="font-body-sm text-body-sm text-text-light-secondary">当前版本专为独立创作者设计，暂不支持云端跨团队协同或多人远程共享。</p>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 7: PRICING PREVIEW -->
+<section class="w-full py-space-3xl" id="pricing">
+<div class="max-w-6xl mx-auto">
+<div class="text-center max-w-2xl mx-auto mb-space-2xl">
+<span class="font-label-capsule text-label-capsule text-primary uppercase tracking-wider">透明价格方案</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-1">一份授权，三种买法 · 功能完全一致</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">
+          没有低版本阉割功能的套路，全功能开放，按您的现金流节奏自由选择。
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter items-stretch">
+<!-- Tier 1: Monthly -->
+<div class="p-8 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="font-label-capsule text-label-capsule text-on-surface-variant uppercase">月付体验方案</div>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="text-display-hero-mobile font-bold text-on-surface">¥49.9</span>
+<span class="text-body-sm text-on-surface-variant">/ 月</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">先试水，按月续费，随时可暂停。</p>
+<ul class="mt-6 space-y-3 font-body-sm text-on-surface">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 8 大平台定时自动发布</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 4 大平台数据自动回流复盘</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 授权激活 3 台个人设备</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 订阅期内全功能更新与支持</li>
+</ul>
+</div>
+<a class="mt-8 w-full py-3 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface text-center font-label-capsule text-label-capsule transition-colors" href="#download">
+            按月试水
+          </a>
+</div>
+<!-- Tier 2: Annual (High-Value Highlight) -->
+<div class="p-8 rounded-2xl bg-surface-white shadow-xl shadow-canvas-dark/5 flex flex-col justify-between relative transform md:-translate-y-2">
+<div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-canvas-dark text-gold-accent font-label-capsule text-[11px] uppercase tracking-wider shadow">
+            最受欢迎 · 省 ¥98.8
+          </div>
+<div>
+<div class="font-label-capsule text-label-capsule text-primary uppercase">年付最具性价比</div>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="text-display-hero-mobile font-bold text-on-surface">¥500</span>
+<span class="text-body-sm text-on-surface-variant">/ 年</span>
+</div>
+<p class="font-body-sm text-body-sm text-status-success mt-2">相当于 ¥41.7/月，折合 8.4 折优惠。</p>
+<ul class="mt-6 space-y-3 font-body-sm text-on-surface">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> <strong>包含全部功能与全平台发布</strong></li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 4 大平台数据回流及导出 CSV</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 授权同时激活 3 台设备</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 1 年内版本自动升级与改版适配</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 优先邮件与社群工单技术答疑</li>
+</ul>
+</div>
+<a class="mt-8 w-full py-3 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark text-center font-label-capsule text-label-capsule shadow transition-all" href="#download">
+            立即订阅年付
+          </a>
+</div>
+<!-- Tier 3: Lifetime Buyout -->
+<div class="p-8 rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between">
+<div>
+<div class="font-label-capsule text-label-capsule text-on-surface-variant uppercase">终身买断方案</div>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="text-display-hero-mobile font-bold text-on-surface">¥980</span>
+<span class="text-body-sm text-on-surface-variant">一次买断</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">最省心，约等于 20 个月月付，长期更划算。</p>
+<ul class="mt-6 space-y-3 font-body-sm text-on-surface">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 永久使用 WeMedia 全部核心模块</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 终身常规适配补丁与故障修复</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 3 台设备授权，支持自助换机解绑</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-status-success text-[18px]">check_circle</span> 专属创作者交流内测渠道</li>
+</ul>
+</div>
+<a class="mt-8 w-full py-3 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface text-center font-label-capsule text-label-capsule transition-colors" href="#download">
+            终身一次买断
+          </a>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 8: FAQ ACCORDION -->
+<section class="w-full py-space-3xl bg-surface-container-low/50 rounded-3xl my-space-lg">
+<div class="max-w-4xl mx-auto px-margin-mobile">
+<div class="text-center mb-space-2xl">
+<span class="font-label-capsule text-label-capsule text-primary uppercase tracking-wider">解除疑虑</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-1">购买前的 6 个核心问答</h2>
+</div>
+<div class="space-y-3" id="faq-list">
+<!-- Q1 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm cursor-pointer transition-all" onclick="this.classList.toggle('active')">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>1. 会不会把我账号封了？安全吗？</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
+            绝对安全。工作台通过您本机的 Chrome/Edge 环境直接与平台交互，使用您自身的 IP 与 Cookie 登录态，绝不共享中转。同时内置防风控执行间隔与失败温和重试机制。
+          </p>
+</div>
+<!-- Q2 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm cursor-pointer transition-all" onclick="this.classList.toggle('active')">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>2. 我的内容素材和数据保存在哪里？</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
+            全部存储在您自己电脑本地的 SQLite 数据库文件中。不向任何云端上传，即使断网也能完全正常浏览历史排期、素材与本地复盘报表，支持随时一键导出为通用 CSV。
+          </p>
+</div>
+<!-- Q3 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm cursor-pointer transition-all" onclick="this.classList.toggle('active')">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>3. 我需要申请各平台的开发者 API 资质吗？</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
+            完全不需要。普通个人作者根本拿不到各平台的官方企业开发者资质。WeMedia 采用桌面原生一键扫码登录，扫码成功后登录态自动保存在本机，零门槛开箱即用。
+          </p>
+</div>
+<!-- Q4 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm cursor-pointer transition-all" onclick="this.classList.toggle('active')">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>4. 平台界面改版导致自动化失败怎么办？</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
+            我们的专职维护团队持续监测各大创作者平台的结构变动。一旦检测到改版，会第一时间推送桌面端热适配更新，任务发布后会自动进行核验，如有故障会立刻提示重试。
+          </p>
+</div>
+<!-- Q5 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm cursor-pointer transition-all" onclick="this.classList.toggle('active')">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>5. 一份授权码支持在几台电脑上使用？</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
+            每个授权码标准支持同时激活 3 台设备（例如工作台式机、随身笔记本与备用机）。换新电脑时，可以通过客户端自助解绑旧设备进行迁移。
+          </p>
+</div>
+<!-- Q6 -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm cursor-pointer transition-all" onclick="this.classList.toggle('active')">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>6. 月付、年付与终身买断的功能有差异吗？</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
+            功能完全一致！我们坚决不设功能墙或低价阉割。唯一的差异是付费周期与授权期限，年付最具性价比，终身买断一次付费终身免续费。
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 9: FINAL POWER CONVERSION BANNER (DOWNLOAD) -->
+<section class="w-full py-space-3xl mb-space-2xl" id="download">
+<div class="max-w-6xl mx-auto rounded-3xl bg-canvas-dark text-text-light-primary p-8 md:p-14 relative overflow-hidden flex flex-col items-center text-center">
+<!-- Glow ambient light -->
+<div class="absolute -top-24 right-1/4 w-96 h-96 bg-gold-accent/20 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="relative z-10 max-w-2xl flex flex-col items-center">
+<span class="px-3.5 py-1 rounded-full bg-surface-dark text-gold-accent font-label-capsule text-body-sm mb-4">
+          把时间还给好创作
+        </span>
+<h2 class="font-headline-lg text-headline-lg md:text-display-hero text-text-light-primary mb-4 leading-tight">
+          告别重复发帖与手抄后台
+        </h2>
+<p class="font-body-lg text-body-lg text-text-light-secondary mb-8">
+          现在就下载 WeMedia 本地工作台，用一台电脑、一张表，轻松稳固运营八个平台的内容矩阵。
+        </p>
+<div class="flex flex-wrap items-center justify-center gap-4">
+<button class="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-xl transition-all transform hover:-translate-y-0.5">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">download</span>
+<span>免费下载体验 (v1.2)</span>
+</button>
+<a class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-surface-dark hover:bg-surface-dark-elevated text-text-light-primary font-label-capsule text-label-capsule transition-colors" href="#pricing">
+<span>购买正式授权</span>
+</a>
+</div>
+<div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-body-sm text-text-light-secondary">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-status-success">verified</span> 免注册云端账号</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-status-success">verified</span> 绿色单机安装</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-status-success">verified</span> 14 天退款无忧保证</span>
+</div>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-canvas-dark text-text-light-secondary mt-space-3xl"><div class="max-w-[1440px] mx-auto px-margin py-space-3xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-gutter mb-space-2xl"><div class="lg:col-span-2 flex flex-col items-start"><div class="flex items-center gap-space-sm mb-space-md"><img alt="WeMedia Logo" class="h-8 w-auto object-contain" src="./assets/img-1.png"/><span class="font-headline-sm text-headline-sm text-text-light-primary">WeMedia 工作台</span></div><p class="font-body-md text-body-md text-text-light-secondary mb-space-lg max-w-sm">面向专业创作者与出版矩阵的新一代 Local-First 媒体协同工作台。本地加密存储、八网分发流转，彻底告别浏览器多开卡顿与数据泄露隐患。</p><div class="flex items-center gap-space-sm"><span class="px-3 py-1 rounded-full bg-surface-dark text-text-light-primary font-label-capsule text-body-sm border border-border-dark flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-status-success"></span>全节点本地运行中</span><span class="px-3 py-1 rounded-full bg-surface-dark text-text-light-secondary font-label-capsule text-body-sm border border-border-dark">Electron 31 + SQLite</span></div></div><div><div class="font-label-capsule text-label-capsule text-text-light-primary uppercase tracking-wider mb-space-md">产品矩阵</div><ul class="space-y-space-sm font-body-md text-body-md"><li class="hover:text-text-light-primary transition-colors cursor-pointer">桌面客户端 (macOS)</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">桌面客户端 (Windows)</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">Chrome 浏览器助手</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">本地媒体处理引擎</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">更新发布日志</li></ul></div><div><div class="font-label-capsule text-label-capsule text-text-light-primary uppercase tracking-wider mb-space-md">支持的 8 大平台</div><ul class="space-y-space-sm font-body-md text-body-md"><li class="hover:text-text-light-primary transition-colors cursor-pointer">抖音 (Douyin Studio)</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">小红书 (Xiaohongshu)</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">微信视频号 &amp; 公众号</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">哔哩哔哩 (Bilibili)</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">快手 / 知乎 / 微博 / 今日头条</li></ul></div><div><div class="font-label-capsule text-label-capsule text-text-light-primary uppercase tracking-wider mb-space-md">安全与承诺</div><ul class="space-y-space-sm font-body-md text-body-md"><li class="hover:text-text-light-primary transition-colors cursor-pointer">Local-First 架构详解</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">诚实边界白皮书</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">零云端 Cookie 承诺</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">开源协议与代码审查</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">隐私安全规范</li></ul></div><div><div class="font-label-capsule text-label-capsule text-text-light-primary uppercase tracking-wider mb-space-md">资源与开发者</div><ul class="space-y-space-sm font-body-md text-body-md"><li class="hover:text-text-light-primary transition-colors cursor-pointer">插件开发者文档</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">CLI 自动化工具</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">GitHub 仓库</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">社群讨论区</li><li class="hover:text-text-light-primary transition-colors cursor-pointer">商务合作联系</li></ul></div></div><div class="pt-space-lg border-t border-border-dark flex flex-col md:flex-row items-center justify-between gap-space-md font-body-sm text-body-sm"><div class="text-text-light-secondary">© 2024 WeMedia Studio. 保留所有权利。本地优先自媒体发布系统。</div><div class="flex items-center gap-space-lg text-text-light-secondary"><span class="hover:text-text-light-primary cursor-pointer">服务条款</span><span class="hover:text-text-light-primary cursor-pointer">隐私权政策</span><span class="hover:text-text-light-primary cursor-pointer">粤ICP备2024098112号-1</span><span class="hover:text-text-light-primary cursor-pointer">公网安备 44030502008921号</span></div></div></div></footer></body></html>

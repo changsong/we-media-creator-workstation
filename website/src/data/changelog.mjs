@@ -1,0 +1,105 @@
+export const CHANGELOG = [
+  {
+    version: '2.0.1',
+    date: '2026-10-26',
+    current: true,
+    titleZh: '公众号发布与稳定性修复',
+    titleEn: 'Official Accounts publishing and stability fixes',
+    itemsZh: [
+      '公众号改用 Cookie 完成发布与数据监控，新增视频草稿流程。',
+      '发布窗口固定尺寸，并增加命中校验点击，减少误点与漏发。',
+      '发布中心支持按平台筛选与分页，队列更长也看得清。',
+      '微博发布后自动核验博文并改判状态。',
+      '修复知乎视频标记选择与大体积视频上传断连。',
+    ],
+    itemsEn: [
+      'Official Accounts publishing and analytics now run on cookies, with a new video draft flow.',
+      'The publish window uses a fixed size with hit-checked clicks to reduce mis-clicks.',
+      'The publish center can filter by platform and page through longer queues.',
+      'Weibo posts are verified after publishing and their status corrected automatically.',
+      'Fixed Zhihu video marking and disconnects when uploading large videos.',
+    ],
+  },
+  {
+    version: '2.0.0',
+    date: '2026-10-19',
+    titleZh: '八平台统一发布队列',
+    titleEn: 'One publish queue for eight platforms',
+    itemsZh: [
+      '发布中心合并八个平台的任务，按时间顺序执行。',
+      '失败任务保留在队列中，可随时重试。',
+      '图文、视频与多比例封面在同一个任务里准备。',
+      '抖音、小红书、视频号、公众号数据回流加入复盘表。',
+    ],
+    itemsEn: [
+      'The publish center merges tasks for all eight platforms and runs them in time order.',
+      'Failed tasks stay in the queue and can be retried at any time.',
+      'Image posts, video, and multi-ratio covers are prepared in one task.',
+      'Analytics from Douyin, Xiaohongshu, Channels, and Official Accounts feed the review table.',
+    ],
+  },
+  {
+    version: '1.9.0',
+    date: '2026-10-05',
+    titleZh: '数据复盘与 CSV 导出',
+    titleEn: 'Analytics review and CSV export',
+    itemsZh: [
+      '互动率、涨粉率、更新频率自动计算。',
+      '四张业务表支持 CSV 导出，带 BOM，Excel 打开不乱码。',
+      '每天自动生成数据快照，误删可找回。',
+    ],
+    itemsEn: [
+      'Engagement, follower growth, and posting cadence are calculated for you.',
+      'All four business tables export to CSV with a BOM, so Excel opens them cleanly.',
+      'Daily snapshots make an accidental deletion recoverable.',
+    ],
+  },
+  {
+    version: '1.8.0',
+    date: '2026-09-21',
+    titleZh: '一键扫码登录',
+    titleEn: 'One-click QR sign-in',
+    itemsZh: [
+      '每个平台使用独立浏览器窗口与登录态，Cookie 只保存在本机。',
+      '无需申请开发者 API，登录过期会提示重新扫码。',
+      '关闭窗口后客户端留在托盘，定时任务继续执行。',
+    ],
+    itemsEn: [
+      'Each platform gets its own browser window and session; cookies stay on your machine.',
+      'No developer API is required, and expired sessions prompt a new scan.',
+      'Closing the window keeps the app in the tray while scheduled tasks continue.',
+    ],
+  },
+  {
+    version: '1.7.0',
+    date: '2026-09-07',
+    titleZh: '内容日历与选题池',
+    titleEn: 'Content calendar and idea pool',
+    itemsZh: [
+      '九个制作阶段覆盖从文案到成片的全过程。',
+      '选题池记录平台、角度、标签与爆款潜力评分。',
+      '素材库归档成稿、配图说明、关键词与语音复盘。',
+    ],
+    itemsEn: [
+      'Nine production stages cover the path from copy to final cut.',
+      'The idea pool records platform, angle, tags, and potential score.',
+      'The asset library archives manuscripts, image notes, keywords, and voice memos.',
+    ],
+  },
+  {
+    version: '1.6.0',
+    date: '2026-08-24',
+    titleZh: '首个公开预览版',
+    titleEn: 'First public preview',
+    itemsZh: [
+      '本地 SQLite 存储与单机桌面应用。',
+      'Windows、macOS 与 Linux 安装包。',
+      '首批支持抖音、小红书、视频号与公众号发布。',
+    ],
+    itemsEn: [
+      'Local SQLite storage in a single desktop app.',
+      'Installers for Windows, macOS, and Linux.',
+      'First release supported Douyin, Xiaohongshu, Channels, and Official Accounts.',
+    ],
+  },
+];

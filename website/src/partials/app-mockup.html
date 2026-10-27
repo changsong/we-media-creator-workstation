@@ -1,0 +1,283 @@
+<div class="w-full max-w-[1240px] mt-space-2xl rounded-2xl bg-canvas-dark p-2 sm:p-3 shadow-2xl shadow-canvas-dark/20">
+<!-- Outer Shell Window Frame -->
+<div class="relative w-full rounded-xl bg-surface-bright overflow-hidden grid grid-cols-1 lg:grid-cols-[68px_1fr_310px] min-h-[640px]">
+<!-- LEFT DOCK: Client Sidebar (Dark Slate Theme from Reference) -->
+<aside class="bg-canvas-dark flex flex-row lg:flex-col items-center justify-between py-4 px-2 z-10">
+<div class="flex flex-row lg:flex-col items-center gap-4">
+<!-- App Monogram Logo -->
+<div class="w-11 h-11 rounded-full bg-surface-dark-elevated flex items-center justify-center text-text-light-primary shadow-sm font-headline-sm">
+<span class="material-symbols-outlined text-gold-accent text-[22px]">widgets</span>
+</div>
+<!-- Active Navigation Icons -->
+<nav class="flex flex-row lg:flex-col items-center gap-3">
+<button class="w-10 h-10 rounded-full bg-surface-white text-canvas-dark flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+</button>
+<button class="w-10 h-10 rounded-full text-text-light-secondary hover:text-text-light-primary hover:bg-surface-dark flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+</button>
+<button class="w-10 h-10 rounded-full text-text-light-secondary hover:text-text-light-primary hover:bg-surface-dark flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">send_time_extension</span>
+</button>
+<button class="w-10 h-10 rounded-full text-text-light-secondary hover:text-text-light-primary hover:bg-surface-dark flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+</button>
+<button class="w-10 h-10 rounded-full text-text-light-secondary hover:text-text-light-primary hover:bg-surface-dark flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">folder_special</span>
+</button>
+</nav>
+</div>
+<!-- Bottom Status Pill in Rail -->
+<div class="flex flex-row lg:flex-col items-center gap-3">
+<div class="w-3 h-3 rounded-full bg-status-success animate-ping" title="本地发布引擎服务就绪"></div>
+<button class="w-9 h-9 rounded-full text-text-light-secondary hover:text-text-light-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+</button>
+</div>
+</aside>
+<!-- CENTER WORKBENCH AREA -->
+<div class="flex flex-col p-4 lg:p-6 bg-surface overflow-y-auto">
+<!-- Top Row Header in Workstation -->
+<div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+<div>
+<div class="font-headline-md text-headline-md text-on-surface">Hi, 内容主理人</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">本地引擎常驻运行中 · 8个平台 Cookie 状态健康</p>
+</div>
+<!-- Search + Bell Header utility -->
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]">search</span>
+<input class="bg-transparent border-0 outline-none w-36 text-on-surface placeholder:text-outline" placeholder="搜索本地排期/选题..." readonly="" type="text" value="8月矩阵规划"/>
+<span class="px-1.5 py-0.5 rounded bg-surface-white text-[10px] text-on-surface-variant">⌘K</span>
+</div>
+<div class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[18px]">notifications</span>
+</div>
+</div>
+</div>
+<!-- 3 Colored Metric Highlight Cards (Direct Reference Styling) -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+<!-- Metric 1: Light Lavender / Purple card -->
+<div class="p-4 rounded-xl bg-secondary-fixed/50 flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-secondary-fixed-variant">今日自动发布任务</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-white text-on-surface text-[11px] font-label-capsule shadow-sm">查看队列</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-metric-large text-metric-large text-on-surface font-headline-lg">14</span>
+<span class="font-body-sm text-body-sm text-status-success font-medium">全平台排期中</span>
+</div>
+</div>
+<!-- Metric 2: Soft Sky / Blue card -->
+<div class="p-4 rounded-xl bg-tertiary-fixed/60 flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-tertiary-fixed-variant">自动核验成功率</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-white text-on-surface text-[11px] font-label-capsule shadow-sm">日志</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-metric-large text-metric-large text-on-surface font-headline-lg">99.4%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">本地重试机制</span>
+</div>
+</div>
+<!-- Metric 3: Warm Honey / Gold card (Reference Visual Highlight) -->
+<div class="p-4 rounded-xl bg-gold-accent flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-primary-fixed">数据自动回流平台</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-white text-canvas-dark text-[11px] font-label-capsule shadow-sm">4 / 4 已联通</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-metric-large text-metric-large text-canvas-dark font-headline-lg">3.8h</span>
+<span class="font-body-sm text-body-sm text-canvas-dark font-medium">今日预计节省</span>
+</div>
+</div>
+</div>
+<!-- Mid Section: Visual Flow Curve (Chart Stream Visual from Reference) -->
+<div class="p-5 rounded-2xl bg-surface-white shadow-sm mb-6 flex flex-col">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-3">
+<span class="font-headline-sm text-headline-sm text-on-surface">全网互动与分发流向</span>
+<span class="px-2 py-0.5 rounded-full bg-status-success/15 text-primary text-body-sm font-label-capsule font-bold">+128% 环比增长</span>
+</div>
+<div class="flex items-center gap-2 text-body-sm font-label-capsule text-on-surface-variant">
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low">8月发布周期</span>
+<span class="material-symbols-outlined text-[16px]">tune</span>
+</div>
+</div>
+<!-- SVG Flow lines recreating the Sankey-like curves from the image -->
+<div class="w-full h-36 relative flex items-center justify-between overflow-hidden">
+<svg class="w-full h-full" fill="none" preserveaspectratio="none" viewbox="0 0 680 140">
+<!-- Stream Paths -->
+<path d="M 0 70 C 180 70, 240 18, 420 18" opacity="0.95" stroke="#ffd975" stroke-linecap="round" stroke-width="14"></path>
+<path d="M 0 76 C 190 76, 260 52, 420 52" stroke="#e2e2e5" stroke-linecap="round" stroke-width="9"></path>
+<path d="M 0 82 C 210 82, 280 88, 420 88" stroke="#dbddde" stroke-linecap="round" stroke-width="6"></path>
+<path d="M 0 88 C 220 88, 300 118, 420 118" opacity="0.4" stroke="#ffd975" stroke-linecap="round" stroke-width="5"></path>
+<!-- Destination metric dots -->
+<circle cx="440" cy="18" fill="#ffd975" r="4"></circle>
+<circle cx="470" cy="24" fill="#ffd975" r="3"></circle>
+<circle cx="510" cy="15" fill="#ffd975" r="5"></circle>
+<circle cx="560" cy="30" fill="#ffd975" r="3"></circle>
+<circle cx="600" cy="18" fill="#ffd975" r="4"></circle>
+<circle cx="460" cy="54" fill="#c6c6c9" r="3"></circle>
+<circle cx="520" cy="60" fill="#c6c6c9" r="4"></circle>
+<circle cx="580" cy="50" fill="#c6c6c9" r="3"></circle>
+<circle cx="450" cy="90" fill="#dbddde" r="4"></circle>
+<circle cx="530" cy="85" fill="#dbddde" r="3"></circle>
+<circle cx="590" cy="95" fill="#dbddde" r="4"></circle>
+</svg>
+</div>
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant pt-2 border-0">
+<span class="font-label-capsule">1条主素材发布</span>
+<span class="font-label-capsule">抖音 · 视频号 · 小红书 · B站 4网同步裂变</span>
+<span class="text-on-surface font-semibold">总播放：124.6 万</span>
+</div>
+</div>
+<!-- Bottom Content Feed / Schedule Queue (Reference Table Component) -->
+<div class="rounded-2xl bg-surface-white shadow-sm overflow-hidden flex flex-col">
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-gold-accent"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface">排期与自动执行队列</span>
+</div>
+<span class="text-body-sm text-on-surface-variant font-label-capsule">今日 18:00 前将自动完成 4 项</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-body-sm">
+<thead>
+<tr class="text-text-dark-secondary bg-surface-container-low/60 font-label-capsule text-[11px] uppercase tracking-wider">
+<th class="py-2.5 px-4 w-10">状态</th>
+<th class="py-2.5 px-3">平台</th>
+<th class="py-2.5 px-3">内容标题</th>
+<th class="py-2.5 px-3">封面比例</th>
+<th class="py-2.5 px-3">排期设定</th>
+<th class="py-2.5 px-4 text-right">执行进程</th>
+</tr>
+</thead>
+<tbody class="divide-y-0">
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4"><span class="w-2 h-2 rounded-full bg-status-success inline-block"></span></td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-capsule text-[11px]">
+<span class="material-symbols-outlined text-[13px] text-red-500">play_circle</span>抖音短视频
+                      </span>
+</td>
+<td class="py-3 px-3 font-medium text-on-surface">《2026自由创作者年度软硬件清单》</td>
+<td class="py-3 px-3 text-on-surface-variant">9:16 (竖版裁切)</td>
+<td class="py-3 px-3 text-on-surface-variant">18:00 (自动触发)</td>
+<td class="py-3 px-4 text-right">
+<span class="px-2.5 py-1 rounded-full bg-status-success/15 text-status-success font-label-capsule text-[11px]">就绪待发</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4"><span class="w-2 h-2 rounded-full bg-status-success inline-block"></span></td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-capsule text-[11px]">
+<span class="material-symbols-outlined text-[13px] text-rose-500">photo_library</span>小红书图文
+                      </span>
+</td>
+<td class="py-3 px-3 font-medium text-on-surface">干货｜一个人如何用本地工具日更8大平台</td>
+<td class="py-3 px-3 text-on-surface-variant">3:4 (9图矩阵)</td>
+<td class="py-3 px-3 text-on-surface-variant">18:00 (自动触发)</td>
+<td class="py-3 px-4 text-right">
+<span class="px-2.5 py-1 rounded-full bg-status-success/15 text-status-success font-label-capsule text-[11px]">已自动核验</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4"><span class="w-2 h-2 rounded-full bg-gold-accent inline-block"></span></td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-capsule text-[11px]">
+<span class="material-symbols-outlined text-[13px] text-green-600">videocam</span>微信视频号
+                      </span>
+</td>
+<td class="py-3 px-3 font-medium text-on-surface">创作者私密电台第 14 期：安全与本地化</td>
+<td class="py-3 px-3 text-on-surface-variant">6:7 原生标准</td>
+<td class="py-3 px-3 text-on-surface-variant">19:30 (排队中)</td>
+<td class="py-3 px-4 text-right">
+<span class="px-2.5 py-1 rounded-full bg-gold-subtle text-primary font-label-capsule text-[11px]">定时队列中</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- RIGHT SIDEBAR DRAWER (Direct Reference: Profile, Summarize, Waveform Audio) -->
+<aside class="bg-surface-white p-5 flex flex-col justify-between shadow-[-1px_0_0_rgba(9,12,13,0.04)]">
+<!-- Profile Badge -->
+<div class="flex flex-col items-center text-center">
+<div class="relative w-16 h-16 rounded-full overflow-hidden mb-2 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A portrait photograph of a confident young digital media studio operator smiling at desk with gentle natural window light and warm ambient background" src="{{ASSET}}/img-4.png"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-status-success ring-2 ring-surface-white"></span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">林晓 / 个人创作者</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-status-success">lock</span> 本地 SQLite 凭证加密
+            </div>
+<!-- Quick Action Pills from Reference -->
+<div class="flex items-center gap-2 mt-4">
+<button class="w-9 h-9 rounded-full bg-gold-accent flex items-center justify-center text-canvas-dark">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[18px]">ios_share</span>
+</button>
+</div>
+</div>
+<!-- Summarize / Execution Notes -->
+<div class="my-5 p-3.5 rounded-xl bg-surface-container-low flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<span class="font-label-capsule text-label-capsule text-on-surface">发布引擎动态摘要</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_downward</span>
+</div>
+<div class="text-body-sm text-on-surface-variant space-y-2">
+<div class="flex items-start gap-2">
+<span class="font-mono text-[11px] text-primary">17:45</span>
+<span>Chrome 实例安全唤起，免密加载本地会话</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="font-mono text-[11px] text-status-success">17:50</span>
+<span>抖音后台封面与视频素材自动切片上传完毕</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="font-mono text-[11px] text-on-surface">18:00</span>
+<span>预备触发定时自动勾选并发布</span>
+</div>
+</div>
+</div>
+<!-- Call / Voice Recording Memo (Mirroring Reference Audio Module) -->
+<div class="rounded-xl bg-surface p-3.5 flex flex-col">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-capsule text-label-capsule text-on-surface">选题语音灵感备忘</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">00:32 / 01:45</span>
+</div>
+<!-- Waveform visual bars -->
+<div class="flex items-center justify-between gap-1 h-8 my-1 px-1">
+<span class="w-1 h-3 bg-outline-variant rounded-full"></span>
+<span class="w-1 h-5 bg-outline rounded-full"></span>
+<span class="w-1 h-7 bg-primary rounded-full"></span>
+<span class="w-1 h-4 bg-outline rounded-full"></span>
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+<span class="w-1 h-8 bg-gold-accent rounded-full"></span>
+<span class="w-1 h-5 bg-gold-accent rounded-full"></span>
+<span class="w-1 h-7 bg-primary rounded-full"></span>
+<span class="w-1 h-3 bg-outline-variant rounded-full"></span>
+<span class="w-1 h-5 bg-outline rounded-full"></span>
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+<span class="w-1 h-4 bg-outline-variant rounded-full"></span>
+<span class="w-1 h-2 bg-outline-variant rounded-full"></span>
+</div>
+<div class="flex items-center justify-between mt-2 pt-2 border-0">
+<span class="text-body-sm font-label-capsule text-on-surface-variant">1.0x 速</span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center text-[12px]"><span class="material-symbols-outlined text-[14px]">replay_10</span></button>
+<button class="w-7 h-7 rounded-full bg-canvas-dark text-text-light-primary flex items-center justify-center"><span class="material-symbols-outlined text-[14px]">pause</span></button>
+<button class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center text-[12px]"><span class="material-symbols-outlined text-[14px]">forward_10</span></button>
+</div>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">volume_up</span>
+</div>
+</div>
+</aside>
+</div>
+</div>

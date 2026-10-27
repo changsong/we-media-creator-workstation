@@ -1,0 +1,250 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  main > :first-child {
+    margin-top: 0 !important;
+  }
+
+  main > :last-child {
+    margin-bottom: 0 !important;
+  }
+
+  :target {
+    scroll-margin-top: 6rem;
+  }
+
+  ::selection {
+    background: #ffd975;
+    color: #090c0d;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  [hidden] {
+    display: none !important;
+  }
+
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-canvas-dark focus:px-5 focus:py-2.5 focus:font-label-capsule focus:text-label-capsule focus:text-text-light-primary;
+  }
+
+  .fill {
+    font-variation-settings: 'FILL' 1;
+  }
+
+  .os-card.is-detected {
+    @apply ring-2 ring-gold-accent ring-offset-2 ring-offset-background;
+  }
+
+  .os-card.is-detected .os-detected-badge {
+    @apply inline-flex;
+  }
+
+  .section-eyebrow {
+    @apply font-label-capsule text-label-capsule text-primary uppercase tracking-wider;
+  }
+
+  /* FAQ accordion */
+  .faq-item {
+    @apply rounded-2xl bg-surface-white shadow-sm transition-shadow;
+  }
+
+  .faq-item[open] {
+    @apply shadow-md;
+  }
+
+  .faq-item summary {
+    @apply flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-headline-sm text-headline-sm text-on-surface;
+  }
+
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-item summary .faq-chevron {
+    @apply shrink-0 text-on-surface-variant transition-transform duration-200;
+  }
+
+  .faq-item[open] summary .faq-chevron {
+    transform: rotate(180deg);
+  }
+
+  .faq-answer {
+    @apply px-5 pb-5 font-body-md text-body-md leading-relaxed text-on-surface-variant;
+  }
+
+  /* App mockup scrollbars */
+  .app-mockup ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .app-mockup ::-webkit-scrollbar-thumb {
+    background: rgba(9, 12, 13, 0.12);
+    border-radius: 9999px;
+  }
+
+  /* Video showcase */
+  .video-shell {
+    @apply relative aspect-video w-full overflow-hidden rounded-2xl bg-canvas-dark shadow-2xl shadow-canvas-dark/20;
+  }
+
+  .video-shell video {
+    @apply h-full w-full object-cover;
+  }
+
+  .video-poster {
+    @apply absolute inset-0 flex flex-col items-center justify-center gap-4 bg-canvas-dark text-center text-text-light-primary;
+    background-image: radial-gradient(circle at 50% 40%, rgba(255, 217, 117, 0.16), transparent 55%);
+  }
+
+  .video-play {
+    @apply flex h-16 w-16 items-center justify-center rounded-full bg-gold-accent text-canvas-dark shadow-lg transition-transform hover:scale-105;
+  }
+
+  /* Forms */
+  .field-label {
+    @apply mb-1.5 block font-label-capsule text-label-capsule text-on-surface;
+  }
+
+  .field-hint {
+    @apply mt-1.5 block font-body-sm text-body-sm text-on-surface-variant;
+  }
+
+  .field-input {
+    @apply w-full rounded-xl border border-border-light bg-white px-4 py-3 font-body-md text-body-md text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/70 focus:border-primary focus:ring-2 focus:ring-gold-accent/50;
+  }
+
+  select.field-input {
+    @apply appearance-none bg-[length:18px] bg-[right_1rem_center] bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%234d4637' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+
+  .field-error {
+    @apply mt-1.5 hidden font-body-sm text-body-sm text-error;
+  }
+
+  .field-invalid .field-input {
+    @apply border-error;
+  }
+
+  .field-invalid .field-error {
+    @apply block;
+  }
+
+  .feedback-success {
+    @apply flex flex-col items-center gap-4 rounded-3xl bg-surface-white px-6 py-12 text-center shadow-sm;
+  }
+
+  /* Pricing */
+  .price-card {
+    @apply flex flex-col justify-between rounded-2xl bg-surface-white p-8 shadow-sm;
+  }
+
+  .price-card-featured {
+    @apply relative shadow-xl shadow-canvas-dark/5 md:-translate-y-2;
+  }
+
+  .check-item {
+    @apply flex items-start gap-2 font-body-sm text-body-sm text-on-surface;
+  }
+
+  .check-item .material-symbols-outlined {
+    @apply mt-px shrink-0 text-[18px] text-status-success;
+  }
+
+  /* Content typography */
+  .prose-site {
+    @apply font-body-lg text-body-lg leading-relaxed text-on-surface-variant;
+  }
+
+  .prose-site h2 {
+    @apply mb-3 mt-10 font-headline-md text-headline-md text-on-surface;
+  }
+
+  .prose-site h3 {
+    @apply mb-2 mt-7 font-headline-sm text-headline-sm text-on-surface;
+  }
+
+  .prose-site p {
+    @apply my-4;
+  }
+
+  .prose-site ul,
+  .prose-site ol {
+    @apply my-4 space-y-2 pl-6;
+  }
+
+  .prose-site ul {
+    @apply list-disc;
+  }
+
+  .prose-site ol {
+    @apply list-decimal;
+  }
+
+  .prose-site a {
+    @apply text-primary underline decoration-gold-accent decoration-2 underline-offset-2 hover:text-on-surface;
+  }
+
+  .prose-site strong {
+    @apply font-semibold text-on-surface;
+  }
+
+  .prose-site blockquote {
+    @apply my-6 rounded-r-xl border-l-4 border-gold-accent bg-surface-container-low px-5 py-3 font-body-md text-body-md text-on-surface;
+  }
+
+  /* Comparison table */
+  .compare-table {
+    @apply w-full border-collapse text-left font-body-md text-body-md;
+  }
+
+  .compare-table th {
+    @apply bg-surface-container-low px-4 py-3 font-label-capsule text-label-capsule text-on-surface;
+  }
+
+  .compare-table td {
+    @apply border-t border-border-light px-4 py-3 align-top text-on-surface-variant;
+  }
+
+  .compare-table td:first-child {
+    @apply font-medium text-on-surface;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}

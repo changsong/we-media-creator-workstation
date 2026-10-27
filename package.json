@@ -14,6 +14,10 @@
     "dist:mac": "electron-builder --mac --x64 --arm64",
     "dist:linux": "electron-builder --linux --x64",
     "migrate": "node --disable-warning=ExperimentalWarning tools/migrate-json-to-sqlite.js",
+    "site:build": "node website/build.mjs",
+    "site:serve": "node website/server.mjs",
+    "site:deploy": "node website/scripts/deploy.mjs",
+    "site:releases": "node website/scripts/sync-releases.mjs",
     "check": "node --check server.js && node --check public/app.js && node --check lib/db.js && node --check lib/store.js && node --check lib/migrate.js && node --check desktop/main.js && node --check desktop/updater.js && node --check tools/upload-oss.js",
     "test": "node tools/smoke-test.js && node tools/sync-test.js"
   },
@@ -23,7 +27,8 @@
   "devDependencies": {
     "ali-oss": "^6.23.0",
     "electron": "^45.0.0",
-    "electron-builder": "^26.18.0"
+    "electron-builder": "^26.18.0",
+    "tailwindcss": "^3.4.17"
   },
   "dependencies": {
     "electron-updater": "^6.8.11"
