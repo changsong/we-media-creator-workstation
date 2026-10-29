@@ -402,6 +402,7 @@
   function syncKuaishou(btn){ syncChannel('/collectors/kuaishou/run', '快手', '条作品', btn); }
   function syncWeiboCollect(btn){ syncChannel('/collectors/weibo/run', '微博', '条作品', btn); }
   function syncChannels(btn){ syncChannel('/collectors/channels/run', '视频号', '条作品', btn); }
+  function syncBilibili(btn){ syncChannel('/collectors/bilibili/run', 'B站', '条作品', btn); }
   function syncWechat(btn){
     if(btn && btn.disabled) return;
     var old = btn ? btn.innerHTML : '';
@@ -1419,6 +1420,7 @@
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="douyinSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从抖音同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="kuaishouSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从快手同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="weiboCollectSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从微博同步</button>';
+    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="bilibiliSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从B站同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="channelsSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从视频号同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="wechatSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从公众号同步</button>';
     html += '</div></div>';
@@ -3992,6 +3994,7 @@
     if(act === 'douyinSync'){ e.preventDefault(); syncDouyin(actEl); return; }
     if(act === 'kuaishouSync'){ e.preventDefault(); syncKuaishou(actEl); return; }
     if(act === 'weiboCollectSync'){ e.preventDefault(); syncWeiboCollect(actEl); return; }
+    if(act === 'bilibiliSync'){ e.preventDefault(); syncBilibili(actEl); return; }
     if(act === 'channelsSync'){ e.preventDefault(); syncChannels(actEl); return; }
     if(act === 'wechatSync'){ e.preventDefault(); syncWechat(actEl); return; }
     if(act === 'goto'){

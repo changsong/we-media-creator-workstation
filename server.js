@@ -13,6 +13,7 @@ const douyinCollector = require('./lib/douyin-collector');
 const channelsCollector = require('./lib/channels-collector');
 const kuaishouCollector = require('./lib/kuaishou-collector');
 const weiboCollector = require('./lib/weibo-collector');
+const bilibiliCollector = require('./lib/bilibili-collector');
 const recordings = require('./lib/recordings');
 const media = require('./lib/media');
 const publishTasks = require('./lib/publish-tasks');
@@ -510,6 +511,21 @@ async function handleApi(req, res, url) {
   if (url.pathname === '/api/collectors/weibo/run' && method === 'POST') {
     try {
       const result = await weiboCollector.run();
+      touch('review', 'sync', '');
+      touch('calendar', 'sync', '');
+      return sendJSON(res, 200, result);
+    } catch (err) {
+      return sendJSON(res, err.status || 502, { error: err.message });
+    }
+  }
+
+  // B站个人稿件数据采集（复用一键登录保存的 Cookie）
+  if (url.pathname === '/api/collectors/bilibili/status' && method === 'GET') {
+    return sendJSON(res, 200, bilibiliCollector.getStatus());
+  }
+  if (url.pathname === '/api/collectors/bilibili/run' && method === 'POST') {
+    try {
+      const result = await bilibiliCollector.run();
       touch('review', 'sync', '');
       touch('calendar', 'sync', '');
       return sendJSON(res, 200, result);
