@@ -11,6 +11,8 @@ const channelConnections = require('./lib/channel-connections');
 const xhsCollector = require('./lib/xhs-collector');
 const douyinCollector = require('./lib/douyin-collector');
 const channelsCollector = require('./lib/channels-collector');
+const kuaishouCollector = require('./lib/kuaishou-collector');
+const weiboCollector = require('./lib/weibo-collector');
 const recordings = require('./lib/recordings');
 const media = require('./lib/media');
 const publishTasks = require('./lib/publish-tasks');
@@ -478,6 +480,36 @@ async function handleApi(req, res, url) {
   if (url.pathname === '/api/collectors/channels/run' && method === 'POST') {
     try {
       const result = await channelsCollector.run();
+      touch('review', 'sync', '');
+      touch('calendar', 'sync', '');
+      return sendJSON(res, 200, result);
+    } catch (err) {
+      return sendJSON(res, err.status || 502, { error: err.message });
+    }
+  }
+
+  // 快手个人作品数据采集（复用一键登录的浏览器会话）
+  if (url.pathname === '/api/collectors/kuaishou/status' && method === 'GET') {
+    return sendJSON(res, 200, kuaishouCollector.getStatus());
+  }
+  if (url.pathname === '/api/collectors/kuaishou/run' && method === 'POST') {
+    try {
+      const result = await kuaishouCollector.run();
+      touch('review', 'sync', '');
+      touch('calendar', 'sync', '');
+      return sendJSON(res, 200, result);
+    } catch (err) {
+      return sendJSON(res, err.status || 502, { error: err.message });
+    }
+  }
+
+  // 微博个人作品 + 账号涨粉数据采集（复用一键登录保存的 Cookie）
+  if (url.pathname === '/api/collectors/weibo/status' && method === 'GET') {
+    return sendJSON(res, 200, weiboCollector.getStatus());
+  }
+  if (url.pathname === '/api/collectors/weibo/run' && method === 'POST') {
+    try {
+      const result = await weiboCollector.run();
       touch('review', 'sync', '');
       touch('calendar', 'sync', '');
       return sendJSON(res, 200, result);

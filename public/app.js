@@ -52,6 +52,7 @@
   var DATA = { topic:[], calendar:[], review:[], asset:[] };
   var SCHEMAS = {};
   var PROFILE = { name:'Alexandra', role:'主理人', hasAvatar:false, avatarUrl:'/assets/img-4.png' };
+  var MON = null;
   var STAGES = ['选题确认','脚本撰写','待补素材','制作中','待审核','待发布','已发布','二次分发','已复盘'];
   var STATUS = ['待写','写作中','已发布','废弃'];
   var PLATFORMS = ['抖音','视频号','快手','微博','公众号','小红书','B站','知乎'];
@@ -327,6 +328,15 @@
       return PROFILE;
     });
   }
+  function loadMonitorStatus(){
+    return request('/monitor/wechat/status').then(function(s){
+      MON = s || null;
+      return MON;
+    }).catch(function(){
+      MON = null;
+      return null;
+    });
+  }
   function loadAllData(){
     if(loading) return Promise.resolve();
     loading = true;
@@ -337,7 +347,7 @@
       var k = keys[i];
       return loadSchema(k).then(function(){ return loadTable(k); }).then(function(){ return step(i + 1); });
     }
-    return step(0).then(function(){
+    return step(0).then(loadMonitorStatus).then(function(){
       loading = false;
       var n = DATA.topic.length + DATA.calendar.length + DATA.review.length + DATA.asset.length;
       setSync('已同步 · ' + n + ' 条记录', 'ok');
@@ -389,7 +399,37 @@
   }
   function syncXhs(btn){ syncChannel('/collectors/xiaohongshu/run', '小红书', '篇笔记', btn); }
   function syncDouyin(btn){ syncChannel('/collectors/douyin/run', '抖音', '条作品', btn); }
+  function syncKuaishou(btn){ syncChannel('/collectors/kuaishou/run', '快手', '条作品', btn); }
+  function syncWeiboCollect(btn){ syncChannel('/collectors/weibo/run', '微博', '条作品', btn); }
   function syncChannels(btn){ syncChannel('/collectors/channels/run', '视频号', '条作品', btn); }
+  function syncWechat(btn){
+    if(btn && btn.disabled) return;
+    var old = btn ? btn.innerHTML : '';
+    if(btn){
+      btn.disabled = true;
+      btn.classList.add('opacity-60','cursor-wait');
+      btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span>同步中…';
+    }
+    function restore(){
+      if(!btn) return;
+      btn.disabled = false;
+      btn.classList.remove('opacity-60','cursor-wait');
+      btn.innerHTML = old;
+    }
+    request('/monitor/wechat/run', { method: 'POST' }).then(function(res){
+      restore();
+      var msg = '公众号已同步 ' + (res.works || 0) + ' 篇作品 · 阅读 ' + fmtNum(res.worksReads || 0) + ' · 点赞 ' + fmtNum(res.worksLikes || 0);
+      if(res.schedulesCreated) msg += ' · 新增排期 ' + res.schedulesCreated;
+      if(res.rows) msg += ' · 账号日数据 ' + res.rows + ' 天';
+      if(res.warnings && res.warnings.length) msg += '；' + res.warnings.join('；');
+      toast(msg, 'ok');
+      return loadAllData();
+    }).catch(function(err){
+      restore();
+      toast('公众号同步失败：' + errMsg(err), 'err');
+      loadMonitorStatus().then(render);
+    });
+  }
 
   /* ---------- filters ---------- */
   function byPlatform(rows){
@@ -444,20 +484,26 @@
       var latest = g[g.length - 1];
       var cal = calendarByCode(code);
       var reads = g.map(function(r){ return num(r['阅读播放']); });
+      var isMonitor = code.indexOf('@monitor:') === 0;
+      var monPlatform = isMonitor ? code.slice('@monitor:'.length) : '';
       return {
         code: code,
-        platform: latest['平台'] || (cal ? platformList(cal['平台'])[0] || '' : ''),
-        title: cal ? (cal['标题'] || '（未命名）') : '(排期已删除)',
-        stage: cal ? cal['当前阶段'] : '—',
+        platform: latest['平台'] || (cal ? platformList(cal['平台'])[0] || '' : monPlatform),
+        title: isMonitor ? ((latest['平台'] || monPlatform || '') + '账号日数据') : (cal ? (cal['标题'] || '（未命名）') : '(排期已删除)'),
+        stage: isMonitor ? '账号级日汇总' : (cal ? cal['当前阶段'] : '—'),
         calExists: !!cal,
         calId: cal ? cal['_id'] : '',
+        isMonitor: isMonitor,
         count: g.length,
         latest: latest,
         reads: reads,
         snapshots: g
       };
     });
-    arr.sort(function(a,b){ return parseDate(b.latest['统计日期']) - parseDate(a.latest['统计日期']); });
+    arr.sort(function(a,b){
+      if(a.isMonitor !== b.isMonitor) return a.isMonitor ? -1 : 1;
+      return parseDate(b.latest['统计日期']) - parseDate(a.latest['统计日期']);
+    });
     return arr;
   }
   function filteredGroups(){
@@ -469,14 +515,27 @@
       return d && startOfDay(d) >= start;
     });
   }
+  function isMonitorRow(r){
+    return String(r['排期ID'] || '').indexOf('@monitor:') === 0;
+  }
+  /**
+   * 公众号既有账号级日汇总（@monitor），又有作品级快照：同一批阅读会被两边各记一次。
+   * 求和时若该平台存在作品级行，就忽略账号级行；涨粉只存在于账号级，始终全量相加。
+   */
+  function kpiRows(rows, kind){
+    if(kind === 'fans') return rows;
+    var workPlatforms = {};
+    rows.forEach(function(r){ if(!isMonitorRow(r)) workPlatforms[String(r['平台'] || '')] = true; });
+    return rows.filter(function(r){ return !isMonitorRow(r) || !workPlatforms[String(r['平台'] || '')]; });
+  }
   function last7Stats(){
     var d0 = addDays(startOfDay(new Date()), -6);
     var rr = byPlatform(DATA.review).filter(function(r){
       var d = parseDate(r['统计日期']);
       return d && startOfDay(d) >= d0;
     });
-    var read = rr.reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
-    var like = rr.reduce(function(a,b){ return a + num(b['点赞']); }, 0);
+    var read = kpiRows(rr, 'reads').reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
+    var like = kpiRows(rr, 'likes').reduce(function(a,b){ return a + num(b['点赞']); }, 0);
     var fans = rr.reduce(function(a,b){ return a + num(b['涨粉']); }, 0);
     return { read:read, like:like, fans:fans, rate: read ? like / read * 100 : 0 };
   }
@@ -1329,12 +1388,13 @@
     var start = reviewRangeStart();
 
     var last7 = last7Stats();
-    var rangeRead = rows.reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
-    var rangeLike = rows.reduce(function(a,b){ return a + num(b['点赞']); }, 0);
+    var rangeRead = kpiRows(rows, 'reads').reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
+    var rangeLike = kpiRows(rows, 'likes').reduce(function(a,b){ return a + num(b['点赞']); }, 0);
     var rangeFans = rows.reduce(function(a,b){ return a + num(b['涨粉']); }, 0);
     var rangeConv = rows.reduce(function(a,b){ return a + num(b['转化']); }, 0);
     var week = startOfWeek(new Date());
-    var newThisWeek = allGroups.filter(function(g){
+    var workGroups = allGroups.filter(function(g){ return !g.isMonitor; });
+    var newThisWeek = workGroups.filter(function(g){
       var d = parseDate(g.latest['统计日期']);
       return d && startOfDay(d) >= week;
     }).length;
@@ -1349,7 +1409,7 @@
     html += '<button class="' + (state.reviewMode === 'agg' ? 'on' : '') + '" data-act="rvMode" data-mode="agg" type="button">按排期聚合视图 (生命周期)</button>';
     html += '<button class="' + (state.reviewMode !== 'agg' ? 'on' : '') + '" data-act="rvMode" data-mode="list" type="button">日常流水账快照 (时间序)</button>';
     html += '</div>';
-    html += '<div class="flex items-center gap-space-sm">';
+    html += '<div class="flex flex-wrap items-center justify-end gap-space-sm">';
     html += '<div class="relative"><select id="reviewRange" class="appearance-none bg-surface-container-low text-label-md font-label-md text-on-surface pl-3 pr-8 py-2 rounded-full focus:outline-none cursor-pointer">';
     [['all','全部时间'],['7','近 7 天'],['14','近 14 天'],['30','近 30 天']].forEach(function(o){
       html += '<option value="' + o[0] + '"' + (state.reviewRange === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
@@ -1357,12 +1417,36 @@
     html += '</select><span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-base">expand_more</span></div>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="xhsSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从小红书同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="douyinSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从抖音同步</button>';
+    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="kuaishouSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从快手同步</button>';
+    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="weiboCollectSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从微博同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="channelsSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从视频号同步</button>';
+    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="wechatSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从公众号同步</button>';
     html += '</div></div>';
+
+    /* 公众号监控状态 */
+    if(MON && (MON.configured || MON.enabled || MON.lastError)){
+      html += '<div class="flex flex-wrap items-center gap-x-space-md gap-y-1.5 px-space-lg py-2.5 mb-space-lg rounded-xl bg-surface-container-low text-label-sm text-on-surface-variant">';
+      html += '<span class="inline-flex items-center gap-1.5 font-semibold text-on-surface"><span class="material-symbols-outlined text-base">monitoring</span>公众号数据监控</span>';
+      if(!MON.configured){
+        html += '<span class="chip chip-coral">未连接</span><span>请先在「连接设置」完成公众号一键登录</span>';
+      } else {
+        html += MON.enabled
+          ? '<span class="chip chip-mint">自动同步已开启</span>'
+          : '<span class="chip chip-line">自动同步未开启</span>';
+        html += '<span>每 ' + (MON.intervalMinutes || 60) + ' 分钟拉取近 7 天</span>';
+        html += '<span>上次成功：' + (MON.lastSuccessAt ? fmtDateTime(MON.lastSuccessAt) : '从未') + '</span>';
+        if(!MON.enabled) html += '<span>在「连接设置」重新保存公众号即可开启自动同步</span>';
+        if(MON.running) html += '<span class="text-[#785d00] font-semibold">正在同步…</span>';
+        else if(MON.nextRunAt) html += '<span>下次：' + fmtDateTime(MON.nextRunAt) + '</span>';
+      }
+      if(MON.lastError) html += '<span class="text-[#a13a2a] font-semibold">上次失败：' + esc(MON.lastError) + '</span>';
+      html += '<span class="w-full text-[11px] text-on-surface-variant/80">作品级阅读 / 点赞 / 分享取自「发表记录」实时人数；涨粉取「用户分析」；账号级日汇总保留作对照，汇总时优先作品级数据避免重复计数。</span>';
+      html += '</div>';
+    }
 
     /* KPI banners */
     html += '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-lg">';
-    html += kpiPastel('lilac', '监控中作品数', pad2(allGroups.length), '+' + newThisWeek + ' 本周 · 累计 ' + snapshotTotal + ' 批快照', '检查异常', 'checkMissing');
+    html += kpiPastel('lilac', '监控中作品数', pad2(workGroups.length), '+' + newThisWeek + ' 本周 · 累计 ' + snapshotTotal + ' 批快照', '检查异常', 'checkMissing');
     html += kpiPastel('sky', '7 日综合互动率', last7.rate.toFixed(2) + '%', '点赞 / 阅读播放 · ' + (last7.rate >= 5 ? '高于基准线' : '继续优化'), '算法拆解', 'explainRate');
     html += kpiPastel('butter', '累计全渠道增粉', (rangeFans >= 0 ? '+' : '') + fmtNum(rangeFans), '涨粉率 ' + pct(rangeFans, rangeRead) + ' · 转化 ' + fmtNum(rangeConv), '转化明细', 'explainFans');
     html += '</div>';
@@ -1375,7 +1459,9 @@
     if(state.inspectCode){
       groups.forEach(function(g){ if(g.code === state.inspectCode) focusGroup = g; });
     }
-    if(!focusGroup && groups.length) focusGroup = groups[0];
+    if(!focusGroup){
+      focusGroup = groups.filter(function(g){ return !g.isMonitor; })[0] || groups[0] || null;
+    }
     if(focusGroup && state.inspectCode !== focusGroup.code) state.inspectCode = focusGroup.code;
     var curveVals = focusGroup ? focusGroup.reads : rows.slice().reverse().map(function(r){ return num(r['阅读播放']); });
     if(!curveVals.length) curveVals = [0,0,0,0,0,0,0];
@@ -1387,7 +1473,7 @@
     html += '<div class="flex flex-wrap items-start justify-between gap-space-sm mb-space-md">';
     html += '<div><div class="flex items-center gap-2 mb-1"><span class="kicker-dot"></span><span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Lifecycle Pulse</span></div>';
     html += '<h3 class="text-headline-md font-headline-md text-on-surface">爆款成长爆发曲线 · 72 小时流速对照</h3>';
-    html += '<p class="text-label-sm text-on-surface-variant">' + (focusGroup ? '聚焦 ' + esc(focusGroup.code) + ' · ' + esc(focusGroup.title) : '全部快照按时间序聚合') + '</p></div>';
+    html += '<p class="text-label-sm text-on-surface-variant">' + (focusGroup ? '聚焦 ' + esc(focusGroup.isMonitor ? '账号级' : focusGroup.code) + ' · ' + esc(focusGroup.title) : '全部快照按时间序聚合') + '</p></div>';
     html += '<div class="flex items-center gap-4 text-right"><div><div class="text-label-sm text-on-surface-variant">最新阅读</div><div class="text-headline-md font-headline-md text-on-surface">' + fmtNum(curveLast) + '</div></div>';
     html += '<div><div class="text-label-sm text-on-surface-variant">峰值</div><div class="text-headline-md font-headline-md text-[#785d00]">' + fmtNum(curveMax) + '</div></div>';
     html += '<div><div class="text-label-sm text-on-surface-variant">快照批次</div><div class="text-headline-md font-headline-md text-on-surface">' + curveVals.length + '</div></div></div>';
@@ -1406,7 +1492,7 @@
       var pageEnd = pageStart + pageGroups.length;
 
       html += '<div class="soft-card overflow-hidden">';
-      html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">作品全生命周期看板</h3><p class="text-label-sm text-on-surface-variant">一篇一行，展示最新快照与发布以来走势</p></div><span class="chip chip-line">' + groups.length + ' 个排期</span></div>';
+      html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">作品全生命周期看板</h3><p class="text-label-sm text-on-surface-variant">一篇一行，展示最新快照与发布以来走势</p></div><span class="chip chip-line">' + groups.filter(function(g){ return !g.isMonitor; }).length + ' 个排期</span></div>';
       if(!groups.length){
         html += emptyState('还没有数据快照', '连接平台账号并同步后，这里会按天自动生成', 'monitoring');
       } else {
@@ -1424,16 +1510,18 @@
           var read = num(latest['阅读播放']), like = num(latest['点赞']);
           var sel = state.inspectCode === g.code;
           html += '<tr class="row-hover' + (sel ? ' bg-secondary-fixed/15' : '') + '">';
-          html += '<td class="py-3 pl-4 pr-2 max-w-[260px]"><div class="flex items-center gap-2"><span class="mono text-[11px] font-semibold text-on-surface-variant">' + esc(g.code) + '</span>';
-          if(!g.calExists) html += '<span class="chip chip-coral">排期已删</span>';
+          html += '<td class="py-3 pl-4 pr-2 max-w-[260px]"><div class="flex items-center gap-2"><span class="mono text-[11px] font-semibold text-on-surface-variant">' + esc(g.isMonitor ? '账号级' : g.code) + '</span>';
+          if(g.isMonitor) html += '<span class="chip chip-mint">账号汇总</span>';
+          else if(!g.calExists) html += '<span class="chip chip-coral">排期已删</span>';
           html += '</div><div class="font-semibold text-on-surface truncate" title="' + esc(g.title) + '">' + esc(g.title) + '</div></td>';
-          html += '<td class="py-3 px-2 whitespace-nowrap"><div class="mb-1">' + platformChip(g.platform) + '</div>' + (g.calExists ? '<span class="chip chip-line">' + esc(g.stage) + '</span>' : '<span class="text-outline">—</span>') + '</td>';
+          html += '<td class="py-3 px-2 whitespace-nowrap"><div class="mb-1">' + platformChip(g.platform) + '</div>' + ((g.isMonitor || g.calExists) ? '<span class="chip chip-line">' + esc(g.stage) + '</span>' : '<span class="text-outline">—</span>') + '</td>';
           html += '<td class="py-3 px-2 whitespace-nowrap"><div class="text-on-surface">' + g.count + ' 批</div><div class="text-label-sm text-on-surface-variant">' + esc(dayKey(latest['统计日期'])) + '</div></td>';
           html += '<td class="py-3 px-2 text-right whitespace-nowrap"><div class="font-semibold text-on-surface">' + fmtNum(read) + '</div><div class="text-label-sm text-on-surface-variant">涨粉 ' + fmtNum(latest['涨粉']) + '</div></td>';
           html += '<td class="py-3 px-2 text-right whitespace-nowrap"><span class="font-semibold text-[#785d00]">' + pct(like, read) + '</span></td>';
           html += '<td class="py-3 px-2">' + miniSpark(g.reads.slice(-7), '#6f66a8') + '</td>';
           html += '<td class="py-3 pr-4 pl-2"><div class="flex items-center justify-end gap-1">';
-          html += '<button class="px-2.5 py-1 rounded-full bg-tertiary-fixed text-[10px] font-semibold text-on-tertiary-fixed-variant hover:brightness-95" data-act="inspect" data-code="' + esc(g.code) + '" type="button">复盘</button></div></td></tr>';
+          html += '<button class="px-2.5 py-1 rounded-full ' + (g.isMonitor ? 'bg-secondary-fixed text-on-secondary-fixed-variant' : 'bg-tertiary-fixed text-on-tertiary-fixed-variant') + ' text-[10px] font-semibold hover:brightness-95" data-act="inspect" data-code="' + esc(g.code) + '" type="button">' + (g.isMonitor ? '查看' : '复盘') + '</button>';
+          html += '</div></td></tr>';
         });
         html += '</tbody></table></div>';
         html += pagerFooter('lifecycleSize', 'lifecyclePage', size, page, pageCount, pageStart, pageEnd, groups.length, '排期');
@@ -1468,9 +1556,12 @@
       html += '</tr></thead><tbody class="divide-y divide-surface-container-low">';
       pageRows.forEach(function(r){
         var read = num(r['阅读播放']), like = num(r['点赞']), fans = num(r['涨粉']);
+        var code = String(r['排期ID'] || '');
+        var isMonitor = code.indexOf('@monitor:') === 0;
         html += '<tr class="row-hover">';
         html += '<td class="py-2.5 pl-4 pr-2 whitespace-nowrap"><span class="font-medium">' + esc(dayKey(r['统计日期']) || '—') + '</span></td>';
-        html += '<td class="py-2.5 px-2 whitespace-nowrap"><button class="mono text-[11px] text-[#785d00] hover:underline" data-act="inspect" data-code="' + esc(r['排期ID'] || '') + '" type="button">' + esc(r['排期ID'] || '—') + '</button></td>';
+        if(isMonitor) html += '<td class="py-2.5 px-2 whitespace-nowrap"><span class="chip chip-mint">' + esc(r['平台'] || code.slice('@monitor:'.length)) + '账号</span></td>';
+        else html += '<td class="py-2.5 px-2 whitespace-nowrap"><button class="mono text-[11px] text-[#785d00] hover:underline" data-act="inspect" data-code="' + esc(code) + '" type="button">' + esc(code || '—') + '</button></td>';
         html += '<td class="py-2.5 px-2 text-right whitespace-nowrap">' + fmtNum(read) + '</td>';
         html += '<td class="py-2.5 px-2 text-right whitespace-nowrap">' + fmtNum(like) + ' <span class="text-label-sm text-on-surface-variant">(' + pct(like, read) + ')</span></td>';
         html += '<td class="py-2.5 px-2 text-right whitespace-nowrap">' + fmtNum(fans) + '</td>';
@@ -1492,28 +1583,36 @@
     /* inspect panel */
     html += '<div class="col-span-12 xl:col-span-4 flex flex-col gap-space-md">';
     html += '<div class="soft-card overflow-hidden">';
-    html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm border-b border-surface-container-low"><div class="flex items-center gap-2"><span class="kicker-dot"></span><div><h3 class="text-headline-sm font-headline-sm text-on-surface">复盘单篇深度解构</h3><p class="text-label-sm text-on-surface-variant">选中作品的数据切片</p></div></div>';
+    html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm border-b border-surface-container-low"><div class="flex items-center gap-2"><span class="kicker-dot"></span><div><h3 class="text-headline-sm font-headline-sm text-on-surface">' + (focusGroup && focusGroup.isMonitor ? '公众号账号数据解构' : '复盘单篇深度解构') + '</h3><p class="text-label-sm text-on-surface-variant">' + (focusGroup && focusGroup.isMonitor ? '账号级日汇总，不含单篇拆分' : '选中作品的数据切片') + '</p></div></div>';
     html += '<span class="material-symbols-outlined text-on-surface-variant text-lg">page_info</span></div>';
     if(!focusGroup){
       html += emptyState('还没有可复盘的作品', '同步平台作品数据后即可查看', 'query_stats');
     } else {
       var lr = num(focusGroup.latest['阅读播放']), ll = num(focusGroup.latest['点赞']), lf = num(focusGroup.latest['涨粉']);
       html += '<div class="px-space-lg py-space-md">';
-      html += '<div class="rounded-xl overflow-hidden relative mb-space-md"><img alt="作品封面" class="w-full h-32 object-cover" src="/assets/img-2.jpg">';
-      html += '<span class="absolute top-2 left-2 chip chip-dark mono">' + esc(focusGroup.code) + '</span>';
+      if(focusGroup.isMonitor){
+        html += '<div class="rounded-xl overflow-hidden relative mb-space-md h-32 flex items-center justify-center bg-gradient-to-br from-[#ffdf91] to-[#f2f3f6]"><span class="material-symbols-outlined text-[56px] text-[#785d00]">monitoring</span>';
+      } else {
+        html += '<div class="rounded-xl overflow-hidden relative mb-space-md"><img alt="作品封面" class="w-full h-32 object-cover" src="/assets/img-2.jpg">';
+      }
+      html += '<span class="absolute top-2 left-2 chip chip-dark mono">' + esc(focusGroup.isMonitor ? '账号级' : focusGroup.code) + '</span>';
       html += '<span class="absolute bottom-2 left-2 chip chip-honey">' + esc(focusGroup.stage) + '</span></div>';
       html += '<h4 class="text-headline-sm font-headline-sm text-on-surface leading-snug">' + esc(focusGroup.title) + '</h4>';
       html += '<p class="text-label-sm text-on-surface-variant mt-0.5">' + esc(platformText(focusGroup.platform)) + ' · ' + focusGroup.count + ' 批快照 · 最新 ' + esc(dayKey(focusGroup.latest['统计日期'])) + '</p>';
       html += '<div class="grid grid-cols-2 gap-2 mt-space-md">';
-      html += '<div class="rounded-lg bg-surface-container-low p-2.5"><div class="text-label-sm text-on-surface-variant">赞粉比</div><div class="text-headline-sm font-headline-md text-on-surface mt-0.5">' + (lf ? (ll / lf).toFixed(1) : '—') + '</div><div class="text-[10px] text-on-surface-variant">点赞 ' + fmtNum(ll) + ' / 涨粉 ' + fmtNum(lf) + '</div></div>';
+      html += '<div class="rounded-lg bg-surface-container-low p-2.5"><div class="text-label-sm text-on-surface-variant">' + (focusGroup.isMonitor ? '分享/涨粉比' : '赞粉比') + '</div><div class="text-headline-sm font-headline-md text-on-surface mt-0.5">' + (lf ? (ll / lf).toFixed(1) : '—') + '</div><div class="text-[10px] text-on-surface-variant">' + (focusGroup.isMonitor ? '分享 ' : '点赞 ') + fmtNum(ll) + ' / 涨粉 ' + fmtNum(lf) + '</div></div>';
       html += '<div class="rounded-lg bg-surface-container-low p-2.5"><div class="text-label-sm text-on-surface-variant">互动率</div><div class="text-headline-sm font-headline-md text-[#785d00] mt-0.5">' + pct(ll, lr) + '</div><div class="text-[10px] text-on-surface-variant">阅读 ' + fmtNum(lr) + '</div></div>';
       html += '</div>';
-      html += '<div class="mt-space-md"><div class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-2">核心流量抓手总结</div><ol class="flex flex-col gap-1.5 text-label-sm text-on-surface-variant">';
-      html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center text-[9px] font-bold shrink-0">1</span><span>标题与平台「' + esc(platformText(focusGroup.platform)) + '」的受众匹配度决定了首波点击。</span></li>';
-      html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center text-[9px] font-bold shrink-0">2</span><span>互动率 ' + pct(ll, lr) + '，' + (ll / Math.max(1, lr) >= 0.05 ? '内容共鸣度高于基准，可复用叙事结构。' : '建议强化观点冲突与评论区引导。') + '</span></li>';
-      html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-[#DCF3E5] text-[#23583A] flex items-center justify-center text-[9px] font-bold shrink-0">3</span><span>发布以来累计涨粉 ' + fmtNum(focusGroup.snapshots.reduce(function(a,b){ return a + num(b['涨粉']); }, 0)) + '，可持续追踪 72 小时曲线。</span></li>';
-      html += '</ol></div>';
-      html += '<button class="mt-space-md w-full inline-flex items-center justify-center gap-1 px-4 py-2.5 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="deriveTopic" data-code="' + esc(focusGroup.code) + '" type="button"><span class="material-symbols-outlined text-base">auto_awesome</span>一键派生下篇选题</button>';
+      if(focusGroup.isMonitor){
+        html += '<div class="rounded-lg bg-surface-container-low p-3 text-label-sm text-on-surface-variant leading-relaxed">近 ' + focusGroup.count + ' 天账号级日汇总：阅读 ' + fmtNum(focusGroup.reads.reduce(function(a,b){ return a + b; }, 0)) + ' · 涨粉 ' + fmtNum(focusGroup.snapshots.reduce(function(a,b){ return a + num(b['涨粉']); }, 0)) + ' · 互动（分享）' + fmtNum(focusGroup.snapshots.reduce(function(a,b){ return a + num(b['点赞']); }, 0)) + '。公众号后台不提供播放量与转化，单篇数据请在公众号后台查看。</div>';
+      } else {
+        html += '<div class="mt-space-md"><div class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-2">核心流量抓手总结</div><ol class="flex flex-col gap-1.5 text-label-sm text-on-surface-variant">';
+        html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center text-[9px] font-bold shrink-0">1</span><span>标题与平台「' + esc(platformText(focusGroup.platform)) + '」的受众匹配度决定了首波点击。</span></li>';
+        html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center text-[9px] font-bold shrink-0">2</span><span>互动率 ' + pct(ll, lr) + '，' + (ll / Math.max(1, lr) >= 0.05 ? '内容共鸣度高于基准，可复用叙事结构。' : '建议强化观点冲突与评论区引导。') + '</span></li>';
+        html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-[#DCF3E5] text-[#23583A] flex items-center justify-center text-[9px] font-bold shrink-0">3</span><span>发布以来累计涨粉 ' + fmtNum(focusGroup.snapshots.reduce(function(a,b){ return a + num(b['涨粉']); }, 0)) + '，可持续追踪 72 小时曲线。</span></li>';
+        html += '</ol></div>';
+        html += '<button class="mt-space-md w-full inline-flex items-center justify-center gap-1 px-4 py-2.5 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="deriveTopic" data-code="' + esc(focusGroup.code) + '" type="button"><span class="material-symbols-outlined text-base">auto_awesome</span>一键派生下篇选题</button>';
+      }
       html += '</div>';
     }
     html += '</div>';
@@ -3891,7 +3990,10 @@
     }
     if(act === 'xhsSync'){ e.preventDefault(); syncXhs(actEl); return; }
     if(act === 'douyinSync'){ e.preventDefault(); syncDouyin(actEl); return; }
+    if(act === 'kuaishouSync'){ e.preventDefault(); syncKuaishou(actEl); return; }
+    if(act === 'weiboCollectSync'){ e.preventDefault(); syncWeiboCollect(actEl); return; }
     if(act === 'channelsSync'){ e.preventDefault(); syncChannels(actEl); return; }
+    if(act === 'wechatSync'){ e.preventDefault(); syncWechat(actEl); return; }
     if(act === 'goto'){
       e.preventDefault();
       var target = actEl.getAttribute('data-view');
