@@ -1,11 +1,7 @@
 'use strict';
 
 /**
- * 聚焦验证：修复「录入选题」抽屉的平台默认值不跟随头部渠道的问题（Bug C）。
- *
- * 验证两条关键路径：
- *   1) 头部渠道选「抖音」后，点「录入选题」打开的抽屉，平台默认应为「抖音」；
- *   2) localStorage 中残留的「公众号」草稿，不应在头部已选「小红书」时覆盖它。
+ * 聚焦验证：选题与平台解绑后，「录入选题」弹窗不再出现平台控件，保存也不携带平台字段。
  *
  * 用法：NODE_PATH=<含 jsdom 的 node_modules> node tools/verify-platform-follow.js
  */
@@ -30,9 +26,6 @@ async function waitFor(fn, timeout = 8000, interval = 80) {
     await sleep(interval);
   }
   return null;
-}
-function key(el, type) {
-  el.dispatchEvent(new el.ownerDocument.defaultView.Event(type, { bubbles: true }));
 }
 function click(win, el) {
   el.dispatchEvent(new win.MouseEvent('click', { bubbles: true, cancelable: true }));
@@ -64,73 +57,39 @@ function click(win, el) {
   const synced = await waitFor(() => /已同步/.test(doc.getElementById('syncText').textContent), 8000);
   check('页面连上本地服务并完成首次加载', !!synced, doc.getElementById('syncText').textContent);
 
-  const pfH = doc.getElementById('pfFilter');
-  check('头部渠道选择器存在(pfFilter)', !!pfH);
-
-  // 基线清理：移除以前可能残留的草稿，避免干扰
   try { win.localStorage.removeItem('wb_workbench_draft_topic_new'); } catch (e) {}
 
-  // ---------- 场景 1：头部选「抖音」→ 新建默认平台跟随 ----------
-  pfH.value = '抖音';
-  key(pfH, 'change');
-  await sleep(80);
-
-  let newBtn = doc.querySelector('[data-act="new"][data-db="topic"]');
-  check('首页存在「录入选题」按钮', !!newBtn);
+  const newBtn = doc.querySelector('[data-act="new"][data-db="topic"]');
+  check('存在「录入选题」按钮', !!newBtn);
   click(win, newBtn);
-  const opened1 = await waitFor(() => doc.getElementById('drawer').classList.contains('on'), 6000);
-  check('点击录入选题抽屉打开', !!opened1);
-  let pf1 = doc.querySelector('[data-field="平台"]');
-  check('头部选「抖音」→ 新建默认平台=抖音', pf1 && pf1.value === '抖音', pf1 ? pf1.value : '缺字段');
+  const opened = await waitFor(() => doc.getElementById('drawer').classList.contains('on'), 6000);
+  check('点击录入选题抽屉打开', !!opened);
+  check('选题表单不再包含平台字段', !doc.querySelector('#drawerBody [data-field="平台"]'));
+  check('选题表单仍保留选题名称', !!doc.querySelector('#drawerBody [data-field="选题"]'));
   click(win, doc.getElementById('drawerCancel'));
   await sleep(60);
 
-  // ---------- 场景 2：残留「公众号」草稿不覆盖头部「小红书」 ----------
-  // 先打开抽屉，写一个「公众号」平台 + 标题，触发 saveDraft 防抖落盘
-  newBtn = doc.querySelector('[data-act="new"][data-db="topic"]');
-  click(win, newBtn);
-  await waitFor(() => doc.getElementById('drawer').classList.contains('on'), 6000);
-  let pfSeed = doc.querySelector('[data-field="平台"]');
-  pfSeed.value = '公众号';
-  key(pfSeed, 'change');
-  let tSeed = doc.querySelector('[data-field="选题"]');
-  if (tSeed) { tSeed.value = '草稿占位'; key(tSeed, 'input'); }
-  await sleep(450); // 等 saveDraft 的 300ms 防抖写盘
-  const draftSaved = (function () {
-    try { return !!win.localStorage.getItem('wb_workbench_draft_topic_new'); } catch (e) { return false; }
-  })();
-  check('草稿已写入 localStorage', draftSaved);
-  click(win, doc.getElementById('drawerCancel'));
-  await sleep(60);
+  // 选题池表格不再展示平台列
+  const topicTab = doc.querySelector('.nav-link[data-tab="topics"]');
+  if (topicTab) {
+    click(win, topicTab);
+    await sleep(120);
 
-  // 头部切到「小红书」再新建
-  pfH.value = '小红书';
-  key(pfH, 'change');
-  await sleep(80);
-  newBtn = doc.querySelector('[data-act="new"][data-db="topic"]');
-  click(win, newBtn);
-  const opened2 = await waitFor(() => doc.getElementById('drawer').classList.contains('on'), 6000);
-  let pf2 = doc.querySelector('[data-field="平台"]');
-  check('残留「公众号」草稿不覆盖头部「小红书」', pf2 && pf2.value === '小红书', pf2 ? pf2.value : '缺字段');
-  click(win, doc.getElementById('drawerCancel'));
-  await sleep(60);
+    // 选题池页的「录入新选题」应打开居中弹窗
+    const topicNewBtn = doc.querySelector('#view [data-act="topicNew"]');
+    check('选题池存在「录入新选题」按钮', !!topicNewBtn);
+    if (topicNewBtn) {
+      click(win, topicNewBtn);
+      const popped = await waitFor(() => doc.getElementById('drawer').classList.contains('on'), 4000);
+      check('选题池点「录入新选题」弹出居中弹窗', !!popped && doc.getElementById('drawer').classList.contains('center-popup'));
+      check('弹窗内仍无平台字段', !doc.querySelector('#drawerBody [data-field="平台"]'));
+      click(win, doc.getElementById('drawerCancel'));
+      await sleep(60);
+    }
 
-  // ---------- 场景 3：头部选「全部」时，新建默认回落到「公众号」 ----------
-  pfH.value = 'all';
-  key(pfH, 'change');
-  await sleep(80);
-  newBtn = doc.querySelector('[data-act="new"][data-db="topic"]');
-  click(win, newBtn);
-  await waitFor(() => doc.getElementById('drawer').classList.contains('on'), 6000);
-  let pf3 = doc.querySelector('[data-field="平台"]');
-  check('头部选「全部」→ 新建默认回落「公众号」', pf3 && (pf3.value === '' || pf3.value === '公众号'), pf3 ? pf3.value : '缺字段');
-  click(win, doc.getElementById('drawerCancel'));
-  await sleep(60);
-
-  // 清理：恢复基线
-  try { win.localStorage.removeItem('wb_workbench_draft_topic_new'); } catch (e) {}
-  pfH.value = 'all';
-  key(pfH, 'change');
+    const headText = Array.from(doc.querySelectorAll('#view table thead th')).map((th) => th.textContent.trim()).join('|');
+    check('选题池表头不含「目标平台」', headText.indexOf('目标平台') < 0, headText);
+  }
 
   win.close();
   const okCount = results.filter((r) => r.ok).length;

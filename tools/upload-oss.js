@@ -54,11 +54,19 @@ async function main() {
   });
 
   let uploaded = 0;
+  let platforms = 0;
   for (const target of TARGETS) {
     const dir = path.join(ROOT, target.dir);
-    if (!fs.existsSync(dir)) throw new Error('缺少构建产物目录：' + dir);
+    if (!fs.existsSync(dir)) {
+      console.log('skip', target.dir, '（本地未构建该平台）');
+      continue;
+    }
     const files = listFiles(dir, []);
-    if (!files.length) throw new Error('构建产物目录为空：' + dir);
+    if (!files.length) {
+      console.log('skip', target.dir, '（目录为空）');
+      continue;
+    }
+    platforms++;
     for (const file of files) {
       const key = target.prefix + '/' + path.basename(file);
       await client.put(key, file, {
@@ -68,6 +76,7 @@ async function main() {
       console.log('uploaded', key);
     }
   }
+  if (!platforms) throw new Error('没有任何可上传的构建产物');
   console.log('完成，共上传 ' + uploaded + ' 个文件');
 }
 

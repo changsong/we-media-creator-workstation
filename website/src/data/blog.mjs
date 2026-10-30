@@ -176,14 +176,14 @@ export const BLOG_POSTS = [
         ],
       },
       {
-        h2Zh: '四个平台自动回流，其余手动补',
-        h2En: 'Four platforms sync, the rest are manual',
+        h2Zh: '八个平台自动回流，手动补数变成例外',
+        h2En: 'Eight platforms sync; manual entry is the exception',
         psZh: [
-          '目前抖音、小红书、视频号、公众号的数据可以自动回流到本地复盘表；B 站、快手、微博、知乎暂未覆盖，需要手动补充。',
+          '抖音、视频号、小红书、快手、微博、B站、知乎与公众号的作品数据都能自动回流到本地复盘表；知乎目前只覆盖视频作品，回答与文章仍需手动补充。',
           '手动记录并不可耻，关键是固定字段和固定时间。哪怕是每周五下午花十分钟填一遍，也比完全不记要好。',
         ],
         psEn: [
-          'Today, Douyin, Xiaohongshu, WeChat Channels, and Official Accounts sync automatically into the local review table. Bilibili, Kuaishou, Weibo, and Zhihu are not covered yet and need manual entry.',
+          'Today, all eight platforms — Douyin, WeChat Channels, Xiaohongshu, Kuaishou, Weibo, Bilibili, Zhihu, and Official Accounts — sync into the local review table. For Zhihu, only video works are covered; answers and articles still need manual entry.',
           'Manual entry is fine if the fields and timing are consistent. Ten minutes every Friday is far better than not recording at all.',
         ],
       },
@@ -200,8 +200,8 @@ export const BLOG_POSTS = [
         ],
       },
     ],
-    takeawaysZh: ['先统一定义，再横向比较平台数字', '用发布后 24/72 小时对齐数据窗口', '四平台自动回流，其余固定字段手动补', '每次复盘只回答一个问题'],
-    takeawaysEn: ['Align definitions before comparing platforms', 'Compare at 24 or 72 hours after publishing', 'Four platforms sync automatically; fill the rest with fixed fields', 'Answer one question per review'],
+    takeawaysZh: ['先统一定义，再横向比较平台数字', '用发布后 24/72 小时对齐数据窗口', '八平台自动回流，知乎回答与文章仍手动补', '每次复盘只回答一个问题'],
+    takeawaysEn: ['Align definitions before comparing platforms', 'Compare at 24 or 72 hours after publishing', 'All eight platforms sync; Zhihu answers and articles stay manual', 'Answer one question per review'],
   },
   {
     slug: 'wechat-official-account-analytics',

@@ -93,10 +93,10 @@ const BAR_META = {
   channels: { dot: 'bg-emerald-600', barZh: '长短视频 · 回流', barEn: 'Video · analytics' },
   xiaohongshu: { dot: 'bg-red-500', barZh: '图文/视频 · 回流', barEn: 'Posts/video · analytics' },
   wechat: { dot: 'bg-green-700', barZh: '文章/草稿 · 回流', barEn: 'Articles · analytics' },
-  bilibili: { dot: 'bg-pink-500', barZh: '4K视频/动态', barEn: '4K video/feeds' },
-  kuaishou: { dot: 'bg-amber-500', barZh: '短视频/双封面', barEn: 'Short video/covers' },
-  weibo: { dot: 'bg-orange-600', barZh: '视频/9图长文', barEn: 'Video/photo posts' },
-  zhihu: { dot: 'bg-blue-600', barZh: '专栏/视频/想法', barEn: 'Columns/video/pins' },
+  bilibili: { dot: 'bg-pink-500', barZh: '视频投稿 · 回流', barEn: 'Video · analytics' },
+  kuaishou: { dot: 'bg-amber-500', barZh: '短视频/图文 · 回流', barEn: 'Video/posts · analytics' },
+  weibo: { dot: 'bg-orange-600', barZh: '图文/视频 · 回流', barEn: 'Posts/video · analytics' },
+  zhihu: { dot: 'bg-blue-600', barZh: '视频 · 回流', barEn: 'Video · analytics' },
 };
 
 export function platformBar({ lang }) {
@@ -113,7 +113,7 @@ export function platformBar({ lang }) {
   <div class="max-w-6xl mx-auto px-margin-mobile">
     <div class="text-center mb-space-md">
       <span class="section-eyebrow">${isEn ? 'Native support for major platforms' : '原生支持主流媒体生态'}</span>
-      <h2 class="font-headline-sm text-headline-sm text-on-surface mt-1">${isEn ? 'All eight platforms in one place · automatic analytics for four' : '八大平台一网打尽 · 4 平台独家数据自动回流'}</h2>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mt-1">${isEn ? 'All eight platforms in one place · automatic analytics for all' : '八大平台一网打尽 · 作品数据全部自动回流'}</h2>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">${cards}</div>
   </div>
@@ -209,17 +209,17 @@ export function painOutcome({ lang }) {
 
 const STEPS = {
   zh: [
-    ['选题池储备', '记录灵感、爆款潜力评分与目标发布平台标签，随时搜索筛选导出。', 'lightbulb'],
+    ['选题池储备', '先用爆款雷达看同题热度，再把角度和评分存进选题池，随时搜索筛选导出。', 'lightbulb'],
     ['内容日历甘特', '九个制作阶段（文案、粗剪、精剪、成片、审核），全月节奏一清二楚。', 'calendar_view_month'],
     ['发布中心执行', '八个平台排期队列，支持多比例封面自动适配，到点自动唤醒、发布后核验。', 'rocket_launch'],
-    ['自动数据复盘', '4大平台指标全自动写入本地报表，互动率、完播率、增粉率自动算妥。', 'monitoring'],
+    ['自动数据复盘', '8 大平台指标全自动写入本地报表，互动率、涨粉率与更新频率自动算妥。', 'monitoring'],
     ['永久素材沉淀', '成稿正文、语音复盘录音、关键词关联打通归档，优质资产可持续复用。', 'inventory_2'],
   ],
   en: [
-    ['Build an idea pool', 'Capture ideas, potential scores, and target platforms. Search, filter, and export whenever you need.', 'lightbulb'],
+    ['Build an idea pool', 'Check competitive heat with the viral radar, then store the angle and score. Search, filter, and export whenever you need.', 'lightbulb'],
     ['Plan the month', 'Nine production stages — copy, rough cut, fine cut, final, review — on one timeline.', 'calendar_view_month'],
     ['Run the publish queue', 'Schedule all eight platforms with multi-ratio covers. It wakes up on time and verifies the result.', 'rocket_launch'],
-    ['Review automatically', 'Metrics from four platforms land in your local reports, with engagement and growth rates calculated.', 'monitoring'],
+    ['Review automatically', 'Metrics from all eight platforms land in your local reports, with engagement, growth, and cadence calculated.', 'monitoring'],
     ['Archive and reuse', 'Final copy, image notes, keywords, and voice memos stay linked to ideas and schedules.', 'inventory_2'],
   ],
 };
@@ -253,20 +253,20 @@ export function workflow({ lang }) {
 
 const BENEFITS = {
   zh: [
-    ['选题池：灵感有处安放', '记录平台、角度、标签和爆款潜力评分，搜索、筛选、导出，下一条内容不再靠翻备忘录。', 'psychology'],
+    ['选题池：灵感有处安放', '先用爆款雷达看同题热度，再记录角度、标签和爆款潜力评分；搜索、筛选、导出，下一条内容不再靠翻备忘录。', 'psychology'],
     ['内容日历：整月节奏一眼看清', '九个制作阶段、负责人、内容形式和发布时间，一张时间轴排完整个月的生产节奏。', 'date_range'],
     ['发布中心：排好队，它自己发', '八个平台一次排期，视频、图文、多比例封面；失败可重试，发布后自动核验。', 'queue'],
-    ['数据复盘：不用再手抄', '抖音、小红书、视频号、公众号数据自动回流，互动率、涨粉率、更新频率实时算好。', 'insights'],
+    ['数据复盘：不用再手抄', '八个平台作品数据自动回流（知乎覆盖视频作品），互动率、涨粉率、更新频率实时算好。', 'insights'],
     ['素材库：好内容可以复用', '成稿、配图说明、关键词、语音复盘统一归档，和选题、排期互相打通。', 'library_books'],
     ['一键登录：不用申请 API', '独立浏览器窗口扫码登录，Cookie 只留在本机；过期了重新登录即可，无需开发者认证。', 'vpn_key'],
     ['本地优先：数据只属于你', 'SQLite 存储、每日快照、CSV 导出；不用注册云端账号，无任何隐私外泄顾虑。', 'database'],
     ['桌面常驻：关窗也在跑', '最小化到托盘，定时发布和数据同步继续；客户端自动更新，平台改版跟着适配。', 'laptop_mac'],
   ],
   en: [
-    ['A home for every idea', 'Capture platform, angle, tags, and potential score. Search, filter, export — never dig through notes again.', 'psychology'],
+    ['A home for every idea', 'Check competitive heat with the viral radar, then capture angle, tags, and potential score. Search, filter, export — never dig through notes again.', 'psychology'],
     ['See the whole month', 'Nine production stages, owners, formats, and publish times on one timeline.', 'date_range'],
     ['Queue it. It publishes', 'All eight platforms at once — video, image posts, multi-ratio covers. Retry failures, verify results.', 'queue'],
-    ['Stop copying numbers', 'Douyin, Xiaohongshu, Channels, and Official Accounts flow back automatically, with rates calculated.', 'insights'],
+    ['Stop copying numbers', 'All eight platforms flow back automatically (Zhihu currently covers video works), with engagement, growth, and cadence calculated.', 'insights'],
     ['Reuse what works', 'Manuscripts, image notes, keywords, and voice memos archived and linked to ideas and schedules.', 'library_books'],
     ['No API keys required', 'Sign in through an isolated browser window. Cookies stay local; sign in again when they expire.', 'vpn_key'],
     ['Local-first by design', 'SQLite storage, daily snapshots, CSV export. No cloud account and no privacy worries.', 'database'],
@@ -402,13 +402,13 @@ export function desktopSection({ lang, hasVideo = false }) {
 
 const PREVIEW_FEATURES = {
   zh: {
-    monthly: ['8 大平台定时自动发布', '4 大平台数据自动回流复盘', '授权激活 3 台个人设备', '订阅期内全功能更新与支持'],
-    yearly: ['<strong>包含全部功能与全平台发布</strong>', '4 大平台数据回流及导出 CSV', '授权同时激活 3 台设备', '1 年内版本自动升级与改版适配', '优先邮件与社群工单技术答疑'],
+    monthly: ['8 大平台定时自动发布', '8 大平台数据自动回流复盘', '授权激活 3 台个人设备', '订阅期内全功能更新与支持'],
+    yearly: ['<strong>包含全部功能与全平台发布</strong>', '8 大平台数据回流及导出 CSV', '授权同时激活 3 台设备', '1 年内版本自动升级与改版适配', '优先邮件与社群工单技术答疑'],
     lifetime: ['永久使用 WeMedia 全部核心模块', '终身常规适配补丁与故障修复', '3 台设备授权，支持自助换机解绑', '专属创作者交流内测渠道'],
   },
   en: {
-    monthly: ['Scheduled publishing to all 8 platforms', 'Automatic analytics for 4 platforms', 'Activate up to 3 personal devices', 'Every feature and update while subscribed'],
-    yearly: ['<strong>All features, every platform</strong>', 'Analytics for 4 platforms plus CSV export', 'Activate up to 3 devices', 'Version updates and platform fixes for a year', 'Priority email and community support'],
+    monthly: ['Scheduled publishing to all 8 platforms', 'Automatic analytics for all 8 platforms', 'Activate up to 3 personal devices', 'Every feature and update while subscribed'],
+    yearly: ['<strong>All features, every platform</strong>', 'Analytics for all 8 platforms plus CSV export', 'Activate up to 3 devices', 'Version updates and platform fixes for a year', 'Priority email and community support'],
     lifetime: ['Every core module, permanently', 'Lifetime compatibility patches and fixes', '3 devices with self-service transfer', 'Private creator channel for early builds'],
   },
 };

@@ -107,9 +107,7 @@ function click(win, el) {
   const title = doc.querySelector('[data-field="选题"]');
   title.value = '冒烟测试选题 ' + Date.now().toString().slice(-5);
   key(title, 'input');
-  const platform = doc.querySelector('[data-field="平台"]');
-  platform.value = '小红书';
-  key(platform, 'change');
+  check('选题表单不再包含平台字段', !doc.querySelector('[data-field="平台"]'));
   const score = doc.querySelector('[data-field="爆款潜力评分"]');
   score.value = '8.8';
   key(score, 'input');
@@ -137,52 +135,7 @@ function click(win, el) {
   click(win, doc.getElementById('drawerCancel'));
   await sleep(60);
 
-  // 平台筛选
-  const pf = doc.getElementById('pfFilter');
-  pf.value = '小红书';
-  key(pf, 'change');
-  await sleep(80);
-  const platforms = Array.from(doc.querySelectorAll('.tbl tbody tr .chip.pf')).map((c) => c.textContent.trim());
-  check('平台筛选只留小红书', platforms.length > 0 && platforms.every((p) => p === '小红书'), platforms.join(','));
-  pf.value = 'all';
-  key(pf, 'change');
-  await sleep(60);
-
-  // 痛点修复：头部渠道筛选应驱动新建记录的平台默认值
-  const pfNow = doc.getElementById('pfFilter');
-  pfNow.value = '小红书';
-  key(pfNow, 'change');
-  await sleep(60);
-  click(win, doc.querySelector('[data-act="new"][data-db="topic"]'));
-  await sleep(80);
-  const pfFollow = doc.querySelector('[data-field="平台"]');
-  check('头部选「小红书」后新建选题默认平台跟随', pfFollow && pfFollow.value === '小红书', pfFollow ? pfFollow.value : '缺字段');
-  click(win, doc.getElementById('drawerCancel'));
-  await sleep(60);
-
-  // 残留「公众号」草稿不应覆盖头部渠道默认值
-  click(win, doc.querySelector('[data-act="new"][data-db="topic"]'));
-  await sleep(60);
-  const pfSeed = doc.querySelector('[data-field="平台"]');
-  pfSeed.value = '公众号'; key(pfSeed, 'change');
-  const tSeed = doc.querySelector('[data-field="选题"]');
-  if (tSeed) { tSeed.value = '草稿占位'; key(tSeed, 'input'); }
-  await sleep(450); // 等待草稿防抖落盘（saveDraft 300ms）
-  click(win, doc.getElementById('drawerCancel'));
-  await sleep(60);
-  pfNow.value = '抖音';
-  key(pfNow, 'change');
-  await sleep(60);
-  click(win, doc.querySelector('[data-act="new"][data-db="topic"]'));
-  await sleep(80);
-  const pfStale = doc.querySelector('[data-field="平台"]');
-  check('残留「公众号」草稿不覆盖头部「抖音」', pfStale && pfStale.value === '抖音', pfStale ? pfStale.value : '缺字段');
-  click(win, doc.getElementById('drawerCancel'));
-  await sleep(60);
   try { win.localStorage.removeItem('wb_workbench_draft_topic_new'); } catch (e) {}
-  pfNow.value = 'all';
-  key(pfNow, 'change');
-  await sleep(60);
 
   // 一键排期：预填检查
   let schedRow = Array.from(doc.querySelectorAll('.tbl tbody tr')).find((tr) => /冒烟测试选题/.test(tr.textContent));
@@ -194,8 +147,7 @@ function click(win, el) {
     check('一键排期打开日历表单', doc.getElementById('drawer').classList.contains('on') && /内容日历/.test(doc.getElementById('drawerTitle').textContent));
     const fillId = doc.querySelector('[data-field="选题ID"]') ? doc.querySelector('[data-field="选题ID"]').value : '';
     const fillTitle = doc.querySelector('[data-field="标题"]') ? doc.querySelector('[data-field="标题"]').value : '';
-    const fillPf = doc.querySelector('[data-field="平台"]') ? doc.querySelector('[data-field="平台"]').value : '';
-    check('一键排期已带入选题ID/标题/平台', /TP\d{4}-\d{2}/.test(fillId) && /冒烟测试选题/.test(fillTitle) && fillPf === '小红书', `${fillId} / ${fillTitle} / ${fillPf}`);
+    check('一键排期已带入选题ID/标题', /TP\d{4}-\d{2}/.test(fillId) && /冒烟测试选题/.test(fillTitle), `${fillId} / ${fillTitle}`);
     click(win, doc.getElementById('drawerCancel'));
     await sleep(60);
   }

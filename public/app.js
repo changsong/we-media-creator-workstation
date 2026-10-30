@@ -3,6 +3,7 @@
   var suppressUntil = 0;
   var reloadTimer = null;
   var staleWhileEditing = false;
+  var trendTimer = null;
 
   function request(path, options){
     var opt = options || {};
@@ -61,6 +62,7 @@
     'B站':'#4a7fa5','知乎':'#5f5a9e','微博':'#b8863b','快手':'#d9531e'
   };
   var STAGE_COLORS = ['#82877e','#b8863b','#c25454','#6f66a8','#3b7ea1','#a07e00','#2f8f5b','#2c7465','#5f5a9e'];
+  var STATUS_COLOR = { '待写':'#82877e', '写作中':'#b8863b', '已发布':'#2f8f5b', '废弃':'#c25454' };
   var TAGS = ['干货','观点','故事','合集','热点','测评'];
   var ASSET_TAGS = TAGS.concat(['封面','标题','排版','转化']);
 
@@ -68,8 +70,9 @@
     view:'home', platform:'all', status:'all', stage:'all', q:'', month:null,
     assetId:null, assetEdit:null, reviewMode:'agg', reviewRange:'7',
     lifecyclePage:1, lifecycleSize:30, reviewListPage:1, reviewListSize:30,
-    inlineTopic:null, topicDraft:null, topicSort:'desc', assetKeyword:'all', inspectCode:null,
-    topicChecked:{}
+    topicSort:'desc', assetKeyword:'all', inspectCode:null,
+    topicChecked:{},
+    trend:{ keywords:'', sel:{ '小红书':true, '抖音':true, 'B站':true }, platforms:null, job:null, error:'' }
   };
   var editing = { dbKey:null, recordId:null, record:null };
   var loading = false;
@@ -403,6 +406,7 @@
   function syncWeiboCollect(btn){ syncChannel('/collectors/weibo/run', '微博', '条作品', btn); }
   function syncChannels(btn){ syncChannel('/collectors/channels/run', '视频号', '条作品', btn); }
   function syncBilibili(btn){ syncChannel('/collectors/bilibili/run', 'B站', '条作品', btn); }
+  function syncZhihu(btn){ syncChannel('/collectors/zhihu/run', '知乎', '条作品', btn); }
   function syncWechat(btn){
     if(btn && btn.disabled) return;
     var old = btn ? btn.innerHTML : '';
@@ -438,7 +442,7 @@
     return rows.filter(function(r){ return platformList(r['平台']).indexOf(state.platform) >= 0; });
   }
   function topicRows(){
-    var rows = byPlatform(DATA.topic);
+    var rows = DATA.topic.slice();
     if(state.status !== 'all') rows = rows.filter(function(r){ return r['状态'] === state.status; });
     if(state.q){
       var q = state.q.toLowerCase();
@@ -456,7 +460,7 @@
   }
   function reviewRows(){
     var start = reviewRangeStart();
-    var rows = byPlatform(DATA.review).filter(function(r){
+    var rows = byPlatform(DATA.review.filter(function(r){ return !isMonitorRow(r); })).filter(function(r){
       if(!start) return true;
       var d = parseDate(r['统计日期']);
       return d && startOfDay(d) >= start;
@@ -476,6 +480,7 @@
   function reviewGroups(){
     var groups = {};
     DATA.review.forEach(function(r){
+      if(isMonitorRow(r)) return;
       var code = r['排期ID'] || '—';
       if(!groups[code]) groups[code] = [];
       groups[code].push(r);
@@ -485,16 +490,13 @@
       var latest = g[g.length - 1];
       var cal = calendarByCode(code);
       var reads = g.map(function(r){ return num(r['阅读播放']); });
-      var isMonitor = code.indexOf('@monitor:') === 0;
-      var monPlatform = isMonitor ? code.slice('@monitor:'.length) : '';
       return {
         code: code,
-        platform: latest['平台'] || (cal ? platformList(cal['平台'])[0] || '' : monPlatform),
-        title: isMonitor ? ((latest['平台'] || monPlatform || '') + '账号日数据') : (cal ? (cal['标题'] || '（未命名）') : '(排期已删除)'),
-        stage: isMonitor ? '账号级日汇总' : (cal ? cal['当前阶段'] : '—'),
+        platform: latest['平台'] || (cal ? platformList(cal['平台'])[0] || '' : ''),
+        title: cal ? (cal['标题'] || '（未命名）') : '(排期已删除)',
+        stage: cal ? cal['当前阶段'] : '—',
         calExists: !!cal,
         calId: cal ? cal['_id'] : '',
-        isMonitor: isMonitor,
         count: g.length,
         latest: latest,
         reads: reads,
@@ -502,7 +504,6 @@
       };
     });
     arr.sort(function(a,b){
-      if(a.isMonitor !== b.isMonitor) return a.isMonitor ? -1 : 1;
       return parseDate(b.latest['统计日期']) - parseDate(a.latest['统计日期']);
     });
     return arr;
@@ -519,24 +520,14 @@
   function isMonitorRow(r){
     return String(r['排期ID'] || '').indexOf('@monitor:') === 0;
   }
-  /**
-   * 公众号既有账号级日汇总（@monitor），又有作品级快照：同一批阅读会被两边各记一次。
-   * 求和时若该平台存在作品级行，就忽略账号级行；涨粉只存在于账号级，始终全量相加。
-   */
-  function kpiRows(rows, kind){
-    if(kind === 'fans') return rows;
-    var workPlatforms = {};
-    rows.forEach(function(r){ if(!isMonitorRow(r)) workPlatforms[String(r['平台'] || '')] = true; });
-    return rows.filter(function(r){ return !isMonitorRow(r) || !workPlatforms[String(r['平台'] || '')]; });
-  }
   function last7Stats(){
     var d0 = addDays(startOfDay(new Date()), -6);
-    var rr = byPlatform(DATA.review).filter(function(r){
+    var rr = byPlatform(DATA.review.filter(function(r){ return !isMonitorRow(r); })).filter(function(r){
       var d = parseDate(r['统计日期']);
       return d && startOfDay(d) >= d0;
     });
-    var read = kpiRows(rr, 'reads').reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
-    var like = kpiRows(rr, 'likes').reduce(function(a,b){ return a + num(b['点赞']); }, 0);
+    var read = rr.reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
+    var like = rr.reduce(function(a,b){ return a + num(b['点赞']); }, 0);
     var fans = rr.reduce(function(a,b){ return a + num(b['涨粉']); }, 0);
     return { read:read, like:like, fans:fans, rate: read ? like / read * 100 : 0 };
   }
@@ -712,7 +703,7 @@
       return d && d >= ws && d < we;
     });
 
-    var pendingTopics = byPlatform(DATA.topic).filter(function(r){ return r['状态'] === '待写'; });
+    var pendingTopics = DATA.topic.filter(function(r){ return r['状态'] === '待写'; });
 
     var now0 = startOfDay(now);
     var overdue = cal.filter(function(r){
@@ -771,8 +762,8 @@
     html += '<p class="text-body-md font-body-md text-on-surface-variant">今天是 ' + now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日。本周内容规划已推进 ' + progress + '%，' + pending.length + ' 篇内容待最终确认发布。</p>';
     html += '</div>';
     html += '<div class="flex items-center gap-space-sm flex-wrap">';
-    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-primary text-on-primary rounded-full text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" data-act="new" data-db="calendar" type="button"><span class="material-symbols-outlined text-base">add_circle</span><span>新建排期</span></button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-surface-container-lowest text-on-surface rounded-full text-label-md font-label-md shadow-sm hover:bg-surface-container-high transition-all" data-act="new" data-db="topic" type="button"><span class="material-symbols-outlined text-base">auto_awesome</span><span>录入选题</span></button>';
+    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-primary text-on-primary rounded-full text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" data-act="new" data-db="calendar" type="button"><span class="material-symbols-outlined text-base">add_circle</span><span>新建排期</span></button>';
     html += '<div class="h-6 w-px bg-outline-variant/40 mx-1 hidden sm:block"></div>';
     html += '<button class="w-9 h-9 rounded-full bg-surface-container-lowest text-on-surface flex items-center justify-center shadow-sm hover:bg-surface-container-high transition-all" data-act="goto" data-view="review" type="button" title="去数据复盘"><span class="material-symbols-outlined text-base">tune</span></button>';
     html += '</div></div>';
@@ -949,7 +940,7 @@
 
   /* ---------- view: topics ---------- */
   function viewTopics(){
-    var base = byPlatform(DATA.topic);
+    var base = DATA.topic;
     var counts = { 'all': base.length };
     STATUS.forEach(function(s){ counts[s] = base.filter(function(r){ return r['状态'] === s; }).length; });
     var high = base.filter(function(r){ return num(r['爆款潜力评分']) >= 8.5; }).length;
@@ -1000,12 +991,12 @@
     /* table */
     html += '<div class="soft-card overflow-hidden">';
     if(!rows.length){
-      html += emptyState('还没有符合条件的选题', '点右上角「录入新选题」，或切换平台 / 状态筛选', 'lightbulb');
+      html += emptyState('还没有符合条件的选题', '点右上角「录入新选题」，或切换状态筛选', 'lightbulb');
     } else {
       html += '<div class="overflow-x-auto"><table class="w-full text-[12px]">';
       html += '<thead><tr class="text-label-sm text-on-surface-variant bg-surface-container-low/60">';
       html += '<th class="w-8 py-2.5 pl-4"><label class="inline-flex items-center justify-center w-5 h-5 -ml-1 cursor-pointer"><input id="topicCheckAll" type="checkbox" class="tbl-check" aria-label="全选当前列表" title="全选当前列表"></label></th>';
-      html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">选题 ID / 目标平台</th>';
+      html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">选题 ID</th>';
       html += '<th class="text-left font-semibold py-2.5 px-2">选题名称 &amp; 切入角度</th>';
       html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">爆款潜力</th>';
       html += '<th class="text-left font-semibold py-2.5 px-2 whitespace-nowrap">内容标签</th>';
@@ -1019,7 +1010,7 @@
         var checked = !!state.topicChecked[r['_id']];
         html += '<tr class="row-hover' + (checked ? ' topic-row-checked' : '') + '" data-row-topic="' + esc(r['_id']) + '">';
         html += '<td class="py-3 pl-4 align-top"><label class="inline-flex items-center justify-center w-5 h-5 -ml-1 mt-0.5 cursor-pointer"><input type="checkbox" class="tbl-check" data-topic-check="' + esc(r['_id']) + '"' + (checked ? ' checked' : '') + ' aria-label="选择该选题"></label></td>';
-        html += '<td class="py-3 px-2 align-top whitespace-nowrap"><div class="mono text-[11px] font-semibold text-on-surface">' + esc(r['选题ID'] || '—') + '</div><div class="mt-1">' + platformChip(r['平台']) + '</div></td>';
+        html += '<td class="py-3 px-2 align-top whitespace-nowrap"><div class="mono text-[11px] font-semibold text-on-surface">' + esc(r['选题ID'] || '—') + '</div></td>';
         html += '<td class="py-3 px-2 align-top min-w-[160px]"><div class="font-semibold text-on-surface leading-snug">' + esc(r['选题'] || '（未命名）') + '</div>';
         html += '<div class="text-label-sm text-on-surface-variant mt-0.5 line-clamp-2">' + esc(truncate(r['切入角度'], 46) || '待补充切入角度') + '</div></td>';
         html += '<td class="py-3 px-2 align-top whitespace-nowrap">' + starPill(r['爆款潜力评分']) + '</td>';
@@ -1028,7 +1019,7 @@
         html += '<td class="py-3 px-2 align-top">' + quickSelect('topic', r, '状态', STATUS, statusClass(r['状态'])) + '</td>';
         html += '<td class="py-3 pr-4 pl-2 align-top"><div class="flex items-center justify-end gap-1">';
         if(canSchedule) html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-tertiary-fixed text-[10px] font-semibold text-on-tertiary-fixed-variant hover:brightness-95 whitespace-nowrap" data-act="toSchedule" data-db="topic" data-id="' + esc(r['_id']) + '" type="button"><span class="material-symbols-outlined text-[13px]">calendar_add_on</span>排期</button>';
-        html += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" data-act="editInlineTopic" data-id="' + esc(r['_id']) + '" type="button" title="编辑"><span class="material-symbols-outlined text-base">edit</span></button>';
+        html += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" data-act="edit" data-db="topic" data-id="' + esc(r['_id']) + '" type="button" title="编辑"><span class="material-symbols-outlined text-base">edit</span></button>';
         html += '<button class="w-7 h-7 rounded-full hover:bg-error-container/60 flex items-center justify-center text-on-surface-variant hover:text-error" data-act="del" data-db="topic" data-id="' + esc(r['_id']) + '" data-name="' + esc(r['选题']) + '" type="button" title="删除"><span class="material-symbols-outlined text-base">delete</span></button>';
         html += '</div></td></tr>';
       });
@@ -1050,7 +1041,7 @@
     /* stream card */
     html += '<div class="soft-card p-space-lg">';
     html += '<div class="flex items-start justify-between mb-space-md"><div><div class="flex items-center gap-2 mb-1"><span class="kicker-dot"></span><span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Topic Stream &amp; Density</span></div>';
-    html += '<h3 class="text-headline-sm font-headline-sm text-on-surface">选题热度流向与爆款分布</h3><p class="text-label-sm text-on-surface-variant">评分越高越靠右；圆点越大代表该平台选题越密集。</p></div>';
+    html += '<h3 class="text-headline-sm font-headline-sm text-on-surface">选题热度流向与爆款分布</h3><p class="text-label-sm text-on-surface-variant">按状态归集选题数量；圆点越密代表该状态选题越多。</p></div>';
     html += '<span class="chip chip-line">' + base.length + ' 条在池</span></div>';
     html += topicStreamSvg(base);
     html += '</div>';
@@ -1058,8 +1049,8 @@
     html += '</div>'; /* left */
 
     /* inspector */
-    html += '<div class="col-span-12 xl:col-span-4"><div class="sticky-inspector soft-card overflow-hidden" id="inlineInspector">';
-    html += inlineTopicForm();
+    html += '<div class="col-span-12 xl:col-span-4"><div class="sticky-inspector soft-card overflow-hidden" id="trendInspector">';
+    html += trendPanel();
     html += '</div></div>';
     html += '</div></div>';
     return html;
@@ -1075,23 +1066,25 @@
   }
   function topicStreamSvg(rows){
     var w = 640, h = 150, pad = 24;
-    var byPlat = {};
+    var byStatus = {};
     rows.forEach(function(r){
-      var p = r['平台'] || '未标注';
-      if(!byPlat[p]) byPlat[p] = { count:0, score:0 };
-      byPlat[p].count++;
-      byPlat[p].score += num(r['爆款潜力评分']);
+      var p = r['状态'] || '未标注';
+      if(!byStatus[p]) byStatus[p] = { count:0, score:0 };
+      byStatus[p].count++;
+      byStatus[p].score += num(r['爆款潜力评分']);
     });
-    var plats = Object.keys(byPlat).sort(function(a,b){ return byPlat[b].count - byPlat[a].count; }).slice(0, 6);
+    var groups = Object.keys(byStatus).sort(function(a,b){ return byStatus[b].count - byStatus[a].count; }).slice(0, 6);
+    var maxCount = groups.length ? byStatus[groups[0]].count : 1;
     var s = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" class="w-full" style="height:148px;display:block">';
-    plats.forEach(function(p, i){
-      var y = pad + (h - pad * 2) * (i + 1) / (plats.length + 1);
-      var cnt = byPlat[p].count;
-      var x2 = pad + (cnt / Math.max(1, byPlat[plats[0]].count)) * (w - pad * 2);
-      s += '<path d="M' + pad + ',' + y + ' C' + (pad + (x2-pad)/2) + ',' + (y-16) + ' ' + (pad + (x2-pad)/2) + ',' + (y+16) + ' ' + x2 + ',' + y + '" fill="none" stroke="' + (PLATFORM_COLOR[p] || '#82877e') + '" stroke-width="' + (1.4 + cnt * .4) + '" opacity=".5" stroke-linecap="round"/>';
+    groups.forEach(function(p, i){
+      var y = pad + (h - pad * 2) * (i + 1) / (groups.length + 1);
+      var cnt = byStatus[p].count;
+      var color = STATUS_COLOR[p] || '#82877e';
+      var x2 = pad + (cnt / Math.max(1, maxCount)) * (w - pad * 2);
+      s += '<path d="M' + pad + ',' + y + ' C' + (pad + (x2-pad)/2) + ',' + (y-16) + ' ' + (pad + (x2-pad)/2) + ',' + (y+16) + ' ' + x2 + ',' + y + '" fill="none" stroke="' + color + '" stroke-width="' + (1.4 + cnt * .4) + '" opacity=".5" stroke-linecap="round"/>';
       for(var d = 0; d < Math.min(cnt, 9); d++){
         var dx = pad + ((d + 1) / (Math.min(cnt, 9) + 1)) * (x2 - pad);
-        s += '<circle cx="' + dx + '" cy="' + (y + Math.sin((d + i) * 1.7) * 4) + '" r="3.4" fill="' + (PLATFORM_COLOR[p] || '#82877e') + '" opacity=".75"/>';
+        s += '<circle cx="' + dx + '" cy="' + (y + Math.sin((d + i) * 1.7) * 4) + '" r="3.4" fill="' + color + '" opacity=".75"/>';
       }
       s += '<text x="' + (w - pad) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" fill="#75777a" font-family="Be Vietnam Pro, sans-serif">' + esc(p) + ' · ' + cnt + '</text>';
     });
@@ -1107,47 +1100,251 @@
     html += '</div>';
     return html;
   }
-  function inlineTopicForm(){
-    var rec = null;
-    if(state.inlineTopic){
-      DATA.topic.forEach(function(r){ if(r['_id'] === state.inlineTopic) rec = r; });
-    }
-    var d = state.topicDraft || {};
-    function val(key, fallback){
-      return d[key] != null ? d[key] : fallback;
-    }
-    var name = val('name', rec ? (rec['选题'] || '') : '');
-    var platform = rec ? (rec['平台'] || '') : (state.platform && state.platform !== 'all' ? state.platform : (d.platform != null ? d.platform : '公众号'));
-    var status = val('status', rec ? (rec['状态'] || '待写') : '待写');
-    var angle = val('angle', rec ? (rec['切入角度'] || '') : '');
-    var score = val('score', rec && rec['爆款潜力评分'] != null ? num(rec['爆款潜力评分']) : 7.5);
-    var ref = val('url', rec ? urlOf(rec['参考链接']) : '');
-    var tags = val('tags', rec && rec['标签'] ? rec['标签'].slice() : []);
+  /* ---------- view: topics · 爆款灵感雷达 ---------- */
+  var TREND_PLATFORMS = ['小红书', '抖音', 'B站'];
+  var TREND_DRAFT_KEY = 'wb-trend-keywords';
+
+  function trendPanel(){
+    var t = state.trend;
     var html = '';
     html += '<div class="flex items-start justify-between px-space-lg pt-space-lg pb-space-sm border-b border-surface-container-low">';
-    html += '<div class="flex items-center gap-2"><span class="kicker-dot"></span><div><h3 class="text-headline-sm font-headline-sm text-on-surface">' + (state.inlineTopic ? '编辑选题 / 快速录入' : '快速录入 / 编辑抽屉') + '</h3>';
-    html += '<p class="text-label-sm text-on-surface-variant">严格匹配 PRD 4.1 字段约束规范</p></div></div>';
-    html += '<button class="text-label-sm text-on-surface-variant inline-flex items-center gap-0.5 hover:text-on-surface" data-act="inlineReset" type="button"><span class="material-symbols-outlined text-base">restart_alt</span>重置</button>';
+    html += '<div class="flex items-center gap-2 min-w-0"><span class="kicker-dot"></span><div class="min-w-0"><h3 class="text-headline-sm font-headline-sm text-on-surface">爆款灵感雷达</h3>';
+    html += '<p class="text-label-sm text-on-surface-variant">输入关键词，抓取小红书 / 抖音 / B站 的高互动内容，一键转成选题</p></div></div>';
+    html += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0" data-act="trendConnect" type="button" title="连接设置"><span class="material-symbols-outlined text-base">settings</span></button>';
     html += '</div>';
-    html += '<div class="px-space-lg py-space-md max-h-[calc(100vh-14rem)] overflow-y-auto">';
-    html += '<div class="fld"><label class="lab">选题名称 <b>*</b></label><input id="inlineName" class="inp" maxlength="60" data-draft="name" placeholder="一句话说清选题，例如：AI 工具如何重构剪辑工作流" value="' + esc(name) + '"><span class="helper">最多 60 字，建议带对象 + 利益点</span></div>';
-    html += '<div class="form-grid">';
-    html += '<div class="fld"><label class="lab">目标平台 <b>*</b></label><select id="inlinePlatform" class="sel" data-draft="platform">' + PLATFORMS.map(function(p){ return '<option value="' + p + '"' + (p === platform ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></div>';
-    html += '<div class="fld"><label class="lab">当前状态</label><select id="inlineStatus" class="sel" data-draft="status">' + STATUS.map(function(p){ return '<option value="' + p + '"' + (p === status ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></div>';
+
+    html += '<div class="px-space-lg py-space-md border-b border-surface-container-low">';
+    html += '<div class="fld"><label class="lab">关键词 <b>*</b></label><input id="trendKeywords" class="inp" maxlength="120" placeholder="例如：AI剪辑 副业 小红书封面" value="' + esc(t.keywords) + '"><span class="helper">用空格或逗号分隔，最多 5 个；1 小时内复用缓存，搜索结果保留 30 天</span></div>';
+    html += '<div class="flex flex-wrap items-center gap-2 mt-1">';
+    TREND_PLATFORMS.forEach(function(p){
+      var info = trendPlatformInfo(p);
+      var checked = !!t.sel[p];
+      var dotColor = info.ready === false ? '#c25454' : info.mock ? '#b8863b' : '#2f8f5b';
+      var statusText = info.loading ? '检测中' : info.mock ? '演示' : info.ready === false ? '未登录' : (info.loginRequired ? '已登录' : '免登录');
+      html += '<label class="tag-opt"><input type="checkbox" data-trend-platform="' + esc(p) + '"' + (checked ? ' checked' : '') + '><span class="inline-flex items-center gap-1"><i style="width:6px;height:6px;border-radius:9999px;background:' + dotColor + ';display:inline-block"></i>' + esc(p) + ' · ' + statusText + '</span></label>';
+    });
     html += '</div>';
-    html += '<div class="fld"><label class="lab">切入角度</label><textarea id="inlineAngle" class="ta" rows="3" data-draft="angle" placeholder="目标读者是谁？用什么反常识角度切入？">' + esc(angle) + '</textarea></div>';
-    html += '<div class="fld"><label class="lab">爆款潜力评分</label><div class="score-row"><input id="inlineScore" type="range" min="0" max="10" step="0.1" value="' + score + '" data-draft="score"><span id="inlineScoreBadge" class="score-badge">' + Number(score).toFixed(1) + ' 分</span></div><span class="helper">≥ 8.5 会进入「高潜爆款储备」并置顶展示</span></div>';
-    html += '<div class="fld"><label class="lab">内容标签</label><div class="tag-cloud">' + TAGS.map(function(t){
-      return '<label class="tag-opt"><input type="checkbox" data-inline-tag="' + esc(t) + '"' + (tags.indexOf(t) >= 0 ? ' checked' : '') + '><span>#' + esc(t) + '</span></label>';
-    }).join('') + '</div></div>';
-    html += '<div class="fld"><label class="lab">参考来源</label><div class="input-wrap"><span class="material-symbols-outlined">link</span><input id="inlineUrl" class="inp" data-draft="url" placeholder="https://…" value="' + esc(ref) + '"></div><span id="inlineUrlHint" class="helper">粘贴完整的 http / https 链接</span></div>';
+    html += '<div class="flex items-center gap-2 mt-space-sm">';
+    html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="trendSearch" type="button"><span class="material-symbols-outlined text-base">travel_explore</span>搜索爆款</button>';
+    html += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="trendSearch" data-force="1" type="button" title="忽略 1 小时缓存，重新抓取"><span class="material-symbols-outlined text-base">refresh</span>刷新</button>';
     html += '</div>';
-    html += '<div class="px-space-lg py-space-md bg-surface-container-low/60 flex items-center justify-between gap-2">';
-    html += '<span class="text-label-sm text-on-surface-variant">' + (state.inlineTopic ? '修改后将直接写回数据库' : '保存后自动生成选题 ID') + '</span>';
-    html += '<div class="flex items-center gap-2"><button class="px-4 py-2 rounded-full bg-surface-container-lowest text-label-sm font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="inlineReset" type="button">清空</button>';
-    html += '<button class="inline-flex items-center gap-1 px-5 py-2 rounded-full bg-primary text-on-primary text-label-sm font-semibold shadow-sm hover:opacity-90" data-act="inlineSave" type="button"><span class="material-symbols-outlined text-base">save</span>' + (state.inlineTopic ? '保存修改' : '保存选题') + '</button></div></div>';
-    html += '<div class="mx-space-lg mb-space-lg mt-space-sm rounded-lg bg-tertiary-fixed/50 px-3 py-2 flex items-start gap-2"><span class="material-symbols-outlined text-base text-on-tertiary-fixed-variant mt-0.5">info</span><p class="text-label-sm text-on-tertiary-fixed-variant">从选题确认到复盘沉淀，状态会随内容日历的阶段自动联动；「废弃」状态不会被覆盖。</p></div>';
+    html += '<p id="trendError" class="mt-2 text-label-sm text-error"' + (t.error ? '' : ' style="display:none"') + '>' + esc(t.error || '') + '</p>';
+    html += '</div>';
+
+    html += '<div id="trendResults" class="max-h-[calc(100vh-22rem)] overflow-y-auto px-space-lg py-space-md">' + trendResultsHtml() + '</div>';
     return html;
+  }
+
+  function trendPlatformInfo(platform){
+    var list = state.trend.platforms;
+    if(!list) return { loading:true, ready:null };
+    for(var i = 0; i < list.length; i++) if(list[i].platform === platform) return list[i];
+    return { ready:null };
+  }
+
+  function trendResultsHtml(){
+    var job = state.trend.job;
+    if(!job || job.status === 'idle') return trendEmptyState();
+    var html = '';
+    var running = job.status === 'running';
+    var done = (job.progress && job.progress.done) || 0;
+    var total = (job.progress && job.progress.total) || 0;
+    var merged = [];
+    var errors = [];
+    var empties = [];
+    job.tasks.forEach(function(task){
+      (task.items || []).forEach(function(it){ merged.push(it); });
+      if(task.status === 'error') errors.push(task);
+      if(task.status === 'done' && !(task.items || []).length) empties.push(task);
+    });
+    merged.sort(function(a, b){
+      return (Number(b.heat) || 0) - (Number(a.heat) || 0) || (Number(b.likes) || 0) - (Number(a.likes) || 0);
+    });
+
+    var restored = !running && !!job.restored;
+    html += '<div class="flex items-center justify-between mb-2">';
+    html += '<span class="text-label-sm text-on-surface-variant">' + (running ? '搜索中 ' + done + '/' + total : (restored ? '上次搜索 · 共 ' : '共 ') + merged.length + ' 条结果 · 按热度排序') + '</span>';
+    if(running) html += '<span class="chip chip-honey inline-flex items-center gap-1"><span class="material-symbols-outlined text-[13px] animate-spin">progress_activity</span>抓取中</span>';
+    else if(restored) html += '<span class="chip chip-mint">上次结果</span>';
+    else html += '<span class="chip chip-mint">' + (job.tasks.some(function(t){ return t.cached; }) ? '含缓存结果' : '实时抓取') + '</span>';
+    html += '</div>';
+
+    if(running){
+      var currentTask = null;
+      job.tasks.forEach(function(t){ if(!currentTask && (t.status === 'running' || t.status === 'pending')) currentTask = t; });
+      if(currentTask) html += '<p class="text-label-sm text-on-surface-variant mb-3">正在抓取「' + esc(currentTask.platform) + ' · ' + esc(currentTask.keyword) + '」…</p>';
+    }
+
+    if(errors.length){
+      html += '<div class="rounded-lg bg-error-container/50 px-3 py-2 text-label-sm text-on-error-container mb-2">';
+      errors.forEach(function(task, i){
+        if(i) html += '<br>';
+        html += esc(task.platform + ' · ' + task.keyword + '：' + (task.error || '搜索失败'));
+      });
+      html += '</div>';
+    }
+    if(empties.length){
+      html += '<p class="text-label-sm text-on-surface-variant mb-2">' + esc(empties.map(function(t){ return t.platform + ' · ' + t.keyword; }).join('、')) + ' 没有搜到内容</p>';
+    }
+
+    merged.forEach(function(it){ html += trendItemCard(it); });
+    return html;
+  }
+
+  function trendEmptyState(){
+    return '<div class="rounded-xl border border-dashed border-surface-container-high px-4 py-8 text-center">' +
+      '<span class="material-symbols-outlined text-3xl text-outline">lightbulb</span>' +
+      '<p class="mt-2 text-label-md font-semibold text-on-surface">输入关键词，发现正在爆的内容</p>' +
+      '<p class="mt-1 text-label-sm text-on-surface-variant">结果按热度从高到低整体排序，点「转选题」即可带入标题、角度和参考链接。</p></div>';
+  }
+
+  function trendItemCard(it){
+    var metrics = [];
+    if(it.likes) metrics.push('赞 ' + compactNum(it.likes));
+    if(it.comments) metrics.push('评 ' + compactNum(it.comments));
+    if(it.collects) metrics.push('藏 ' + compactNum(it.collects));
+    if(it.reads) metrics.push('播 ' + compactNum(it.reads));
+    var heatColor = it.heat >= 80 ? '#c25454' : it.heat >= 55 ? '#b8863b' : '#82877e';
+    var html = '<div class="rounded-xl bg-surface-container-low px-3 py-2.5 mb-2">';
+    html += '<div class="flex items-start gap-2">';
+    html += '<div class="min-w-0 flex-1"><p class="text-[13px] font-semibold text-on-surface leading-snug line-clamp-2">' + esc(it.title) + '</p>';
+    var pColor = PLATFORM_COLOR[it.platform] || '#82877e';
+    html += '<div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[11px] text-on-surface-variant">';
+    html += '<span class="inline-flex items-center gap-1 font-semibold" style="color:' + pColor + '"><i style="width:5px;height:5px;border-radius:9999px;background:' + pColor + ';display:inline-block"></i>' + esc(it.platform) + '</span>';
+    html += '<span>' + (it.itemType === 'video' ? '视频' : '图文') + '</span>';
+    if(it.author) html += '<span>· ' + esc(it.author) + '</span>';
+    if(metrics.length) html += '<span>· ' + esc(metrics.join(' / ')) + '</span>';
+    html += '</div></div>';
+    html += '<span class="chip shrink-0" style="background:' + heatColor + '1a;color:' + heatColor + '">热度 ' + Number(it.heat).toFixed(0) + '</span>';
+    html += '</div>';
+    html += '<div class="flex items-center gap-2 mt-2">';
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold hover:opacity-90" data-act="trendToTopic" data-id="' + esc(it.id) + '" type="button"><span class="material-symbols-outlined text-[13px]">add_task</span>转选题</button>';
+    if(it.itemUrl) html += '<a href="' + esc(it.itemUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 text-[10px] text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[13px]">open_in_new</span>看原作</a>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function compactNum(n){
+    var v = num(n);
+    if(v >= 100000000) return (v / 100000000).toFixed(1) + '亿';
+    if(v >= 10000) return (v / 10000).toFixed(1) + '万';
+    return String(Math.round(v));
+  }
+
+  function parseTrendKeywords(raw){
+    return String(raw || '').split(/[\s,，、;；]+/).map(function(s){ return s.trim(); }).filter(function(s, i, arr){ return s && arr.indexOf(s) === i; }).slice(0, 5);
+  }
+
+  function trendItemById(id){
+    var job = state.trend.job;
+    if(!job || !job.tasks) return null;
+    for(var i = 0; i < job.tasks.length; i++){
+      var items = job.tasks[i].items || [];
+      for(var j = 0; j < items.length; j++) if(items[j].id === id) return items[j];
+    }
+    return null;
+  }
+
+  function renderTrendPanel(){
+    var box = $('trendResults');
+    if(box) box.innerHTML = trendResultsHtml();
+  }
+
+  function startTrendPoll(){
+    if(trendTimer) return;
+    trendTimer = setInterval(function(){
+      request('/trends/status').then(function(job){
+        state.trend.job = job;
+        if(job.status !== 'running'){
+          clearInterval(trendTimer);
+          trendTimer = null;
+          if(job.status === 'done'){
+            var n = 0;
+            job.tasks.forEach(function(t){ n += (t.items || []).length; });
+            toast('爆款搜索完成 · 共 ' + n + ' 条结果', 'ok');
+          } else if(job.status === 'error'){
+            toast('搜索失败：' + (job.error || '未知错误'), 'err');
+          }
+        }
+        renderTrendPanel();
+      }).catch(function(err){
+        clearInterval(trendTimer);
+        trendTimer = null;
+        toast('搜索状态读取失败：' + errMsg(err), 'err');
+      });
+    }, 1400);
+  }
+
+  function loadTrendPlatforms(){
+    return request('/trends/platforms').then(function(res){
+      state.trend.platforms = (res && res.platforms) || [];
+      if(state.view === 'topics'){
+        var box = $('trendInspector');
+        if(box) box.innerHTML = trendPanel();
+      }
+    }).catch(function(){ /* 旧服务没有该接口时保持默认状态 */ });
+  }
+
+  /* 刷新/重开页面后恢复上一次搜索的关键词和结果 */
+  function loadTrendLatest(){
+    return request('/trends/latest').then(function(res){
+      var job = res && res.job;
+      if(!job) return;
+      if(!state.trend.job) state.trend.job = job;
+      if(!state.trend.keywords && job.keywords && job.keywords.length){
+        state.trend.keywords = job.keywords.join(' ');
+        var input = $('trendKeywords');
+        if(input && !input.value) input.value = state.trend.keywords;
+      }
+      if(state.view === 'topics'){
+        var box = $('trendInspector');
+        if(box) box.innerHTML = trendPanel();
+      }
+    }).catch(function(){ /* 旧服务没有该接口时忽略 */ });
+  }
+
+  function setTrendError(msg){
+    state.trend.error = msg || '';
+    var el = $('trendError');
+    if(el){
+      el.textContent = state.trend.error;
+      el.style.display = state.trend.error ? '' : 'none';
+    }
+  }
+
+  function startTrendSearch(force){
+    var keywords = parseTrendKeywords(state.trend.keywords);
+    if(!keywords.length){
+      toast('请先输入关键词', 'err');
+      var input = $('trendKeywords');
+      if(input) input.focus();
+      return;
+    }
+    var platforms = TREND_PLATFORMS.filter(function(p){ return state.trend.sel[p]; });
+    if(!platforms.length){ toast('请至少选择一个平台', 'err'); return; }
+    setTrendError('');
+    var btn = document.querySelector('[data-act="trendSearch"]:not([data-force])');
+    if(btn) btn.disabled = true;
+    request('/trends/search', {
+      method: 'POST',
+      body: JSON.stringify({ keywords: keywords, platforms: platforms, force: !!force })
+    }).then(function(job){
+      state.trend.job = job;
+      renderTrendPanel();
+      startTrendPoll();
+    }).catch(function(err){
+      setTrendError(errMsg(err));
+      toast('发起搜索失败：' + errMsg(err), 'err');
+    }).finally(function(){
+      if(btn) btn.disabled = false;
+    });
+  }
+
+  function trendAngle(it){
+    var hot = it.heat >= 80 ? '高互动' : '互动表现稳定';
+    return '参考' + it.platform + '同关键词结果中的' + hot + '内容：原作者从「' + it.title + '」切入，' +
+      '收获 ' + compactNum(it.likes) + ' 赞、' + compactNum(it.comments) + ' 评论。' +
+      '可保留其反常识结论，换成本账号的实操步骤和真实案例。';
   }
 
   /* ---------- view: calendar ---------- */
@@ -1389,17 +1586,14 @@
     var start = reviewRangeStart();
 
     var last7 = last7Stats();
-    var rangeRead = kpiRows(rows, 'reads').reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
-    var rangeLike = kpiRows(rows, 'likes').reduce(function(a,b){ return a + num(b['点赞']); }, 0);
-    var rangeFans = rows.reduce(function(a,b){ return a + num(b['涨粉']); }, 0);
-    var rangeConv = rows.reduce(function(a,b){ return a + num(b['转化']); }, 0);
+    var rangeRead = rows.reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
+    var rangeLike = rows.reduce(function(a,b){ return a + num(b['点赞']); }, 0);
     var week = startOfWeek(new Date());
-    var workGroups = allGroups.filter(function(g){ return !g.isMonitor; });
-    var newThisWeek = workGroups.filter(function(g){
+    var newThisWeek = allGroups.filter(function(g){
       var d = parseDate(g.latest['统计日期']);
       return d && startOfDay(d) >= week;
     }).length;
-    var snapshotTotal = DATA.review.length;
+    var snapshotTotal = DATA.review.filter(function(r){ return !isMonitorRow(r); }).length;
 
     var html = '';
     html += '<div class="fade-in">';
@@ -1421,6 +1615,7 @@
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="kuaishouSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从快手同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="weiboCollectSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从微博同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="bilibiliSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从B站同步</button>';
+    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="zhihuSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从知乎同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="channelsSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从视频号同步</button>';
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-label-md font-label-md shadow-sm hover:brightness-95" data-act="wechatSync" type="button"><span class="material-symbols-outlined text-base">cloud_sync</span>从公众号同步</button>';
     html += '</div></div>';
@@ -1442,15 +1637,15 @@
         else if(MON.nextRunAt) html += '<span>下次：' + fmtDateTime(MON.nextRunAt) + '</span>';
       }
       if(MON.lastError) html += '<span class="text-[#a13a2a] font-semibold">上次失败：' + esc(MON.lastError) + '</span>';
-      html += '<span class="w-full text-[11px] text-on-surface-variant/80">作品级阅读 / 点赞 / 分享取自「发表记录」实时人数；涨粉取「用户分析」；账号级日汇总保留作对照，汇总时优先作品级数据避免重复计数。</span>';
+      html += '<span class="w-full text-[11px] text-on-surface-variant/80">作品级阅读 / 点赞 / 分享取自「发表记录」实时人数；涨粉取「用户分析」。账号级日汇总仅用于后台自动同步，不进入复盘统计。</span>';
       html += '</div>';
     }
 
     /* KPI banners */
     html += '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-lg">';
-    html += kpiPastel('lilac', '监控中作品数', pad2(workGroups.length), '+' + newThisWeek + ' 本周 · 累计 ' + snapshotTotal + ' 批快照', '检查异常', 'checkMissing');
+    html += kpiPastel('lilac', '监控中作品数', pad2(allGroups.length), '+' + newThisWeek + ' 本周 · 累计 ' + snapshotTotal + ' 批快照', '检查异常', 'checkMissing');
     html += kpiPastel('sky', '7 日综合互动率', last7.rate.toFixed(2) + '%', '点赞 / 阅读播放 · ' + (last7.rate >= 5 ? '高于基准线' : '继续优化'), '算法拆解', 'explainRate');
-    html += kpiPastel('butter', '累计全渠道增粉', (rangeFans >= 0 ? '+' : '') + fmtNum(rangeFans), '涨粉率 ' + pct(rangeFans, rangeRead) + ' · 转化 ' + fmtNum(rangeConv), '转化明细', 'explainFans');
+    html += kpiPastel('butter', '区间累计阅读/播放', fmtNum(rangeRead), '点赞 ' + fmtNum(rangeLike) + ' · 互动率 ' + pct(rangeLike, rangeRead), '作品明细', 'explainWorks');
     html += '</div>';
 
     html += '<div class="grid grid-cols-12 gap-space-md items-start">';
@@ -1462,7 +1657,7 @@
       groups.forEach(function(g){ if(g.code === state.inspectCode) focusGroup = g; });
     }
     if(!focusGroup){
-      focusGroup = groups.filter(function(g){ return !g.isMonitor; })[0] || groups[0] || null;
+      focusGroup = groups[0] || null;
     }
     if(focusGroup && state.inspectCode !== focusGroup.code) state.inspectCode = focusGroup.code;
     var curveVals = focusGroup ? focusGroup.reads : rows.slice().reverse().map(function(r){ return num(r['阅读播放']); });
@@ -1475,7 +1670,7 @@
     html += '<div class="flex flex-wrap items-start justify-between gap-space-sm mb-space-md">';
     html += '<div><div class="flex items-center gap-2 mb-1"><span class="kicker-dot"></span><span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Lifecycle Pulse</span></div>';
     html += '<h3 class="text-headline-md font-headline-md text-on-surface">爆款成长爆发曲线 · 72 小时流速对照</h3>';
-    html += '<p class="text-label-sm text-on-surface-variant">' + (focusGroup ? '聚焦 ' + esc(focusGroup.isMonitor ? '账号级' : focusGroup.code) + ' · ' + esc(focusGroup.title) : '全部快照按时间序聚合') + '</p></div>';
+    html += '<p class="text-label-sm text-on-surface-variant">' + (focusGroup ? '聚焦 ' + esc(focusGroup.code) + ' · ' + esc(focusGroup.title) : '全部快照按时间序聚合') + '</p></div>';
     html += '<div class="flex items-center gap-4 text-right"><div><div class="text-label-sm text-on-surface-variant">最新阅读</div><div class="text-headline-md font-headline-md text-on-surface">' + fmtNum(curveLast) + '</div></div>';
     html += '<div><div class="text-label-sm text-on-surface-variant">峰值</div><div class="text-headline-md font-headline-md text-[#785d00]">' + fmtNum(curveMax) + '</div></div>';
     html += '<div><div class="text-label-sm text-on-surface-variant">快照批次</div><div class="text-headline-md font-headline-md text-on-surface">' + curveVals.length + '</div></div></div>';
@@ -1494,7 +1689,7 @@
       var pageEnd = pageStart + pageGroups.length;
 
       html += '<div class="soft-card overflow-hidden">';
-      html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">作品全生命周期看板</h3><p class="text-label-sm text-on-surface-variant">一篇一行，展示最新快照与发布以来走势</p></div><span class="chip chip-line">' + groups.filter(function(g){ return !g.isMonitor; }).length + ' 个排期</span></div>';
+      html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm"><div><h3 class="text-headline-sm font-headline-sm text-on-surface">作品全生命周期看板</h3><p class="text-label-sm text-on-surface-variant">一篇一行，展示最新快照与发布以来走势</p></div><span class="chip chip-line">' + groups.length + ' 个排期</span></div>';
       if(!groups.length){
         html += emptyState('还没有数据快照', '连接平台账号并同步后，这里会按天自动生成', 'monitoring');
       } else {
@@ -1512,17 +1707,16 @@
           var read = num(latest['阅读播放']), like = num(latest['点赞']);
           var sel = state.inspectCode === g.code;
           html += '<tr class="row-hover' + (sel ? ' bg-secondary-fixed/15' : '') + '">';
-          html += '<td class="py-3 pl-4 pr-2 max-w-[260px]"><div class="flex items-center gap-2"><span class="mono text-[11px] font-semibold text-on-surface-variant">' + esc(g.isMonitor ? '账号级' : g.code) + '</span>';
-          if(g.isMonitor) html += '<span class="chip chip-mint">账号汇总</span>';
-          else if(!g.calExists) html += '<span class="chip chip-coral">排期已删</span>';
+          html += '<td class="py-3 pl-4 pr-2 max-w-[260px]"><div class="flex items-center gap-2"><span class="mono text-[11px] font-semibold text-on-surface-variant">' + esc(g.code) + '</span>';
+          if(!g.calExists) html += '<span class="chip chip-coral">排期已删</span>';
           html += '</div><div class="font-semibold text-on-surface truncate" title="' + esc(g.title) + '">' + esc(g.title) + '</div></td>';
-          html += '<td class="py-3 px-2 whitespace-nowrap"><div class="mb-1">' + platformChip(g.platform) + '</div>' + ((g.isMonitor || g.calExists) ? '<span class="chip chip-line">' + esc(g.stage) + '</span>' : '<span class="text-outline">—</span>') + '</td>';
+          html += '<td class="py-3 px-2 whitespace-nowrap"><div class="mb-1">' + platformChip(g.platform) + '</div>' + (g.calExists ? '<span class="chip chip-line">' + esc(g.stage) + '</span>' : '<span class="text-outline">—</span>') + '</td>';
           html += '<td class="py-3 px-2 whitespace-nowrap"><div class="text-on-surface">' + g.count + ' 批</div><div class="text-label-sm text-on-surface-variant">' + esc(dayKey(latest['统计日期'])) + '</div></td>';
           html += '<td class="py-3 px-2 text-right whitespace-nowrap"><div class="font-semibold text-on-surface">' + fmtNum(read) + '</div><div class="text-label-sm text-on-surface-variant">涨粉 ' + fmtNum(latest['涨粉']) + '</div></td>';
           html += '<td class="py-3 px-2 text-right whitespace-nowrap"><span class="font-semibold text-[#785d00]">' + pct(like, read) + '</span></td>';
           html += '<td class="py-3 px-2">' + miniSpark(g.reads.slice(-7), '#6f66a8') + '</td>';
           html += '<td class="py-3 pr-4 pl-2"><div class="flex items-center justify-end gap-1">';
-          html += '<button class="px-2.5 py-1 rounded-full ' + (g.isMonitor ? 'bg-secondary-fixed text-on-secondary-fixed-variant' : 'bg-tertiary-fixed text-on-tertiary-fixed-variant') + ' text-[10px] font-semibold hover:brightness-95" data-act="inspect" data-code="' + esc(g.code) + '" type="button">' + (g.isMonitor ? '查看' : '复盘') + '</button>';
+          html += '<button class="px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-semibold hover:brightness-95" data-act="inspect" data-code="' + esc(g.code) + '" type="button">复盘</button>';
           html += '</div></td></tr>';
         });
         html += '</tbody></table></div>';
@@ -1559,11 +1753,9 @@
       pageRows.forEach(function(r){
         var read = num(r['阅读播放']), like = num(r['点赞']), fans = num(r['涨粉']);
         var code = String(r['排期ID'] || '');
-        var isMonitor = code.indexOf('@monitor:') === 0;
         html += '<tr class="row-hover">';
         html += '<td class="py-2.5 pl-4 pr-2 whitespace-nowrap"><span class="font-medium">' + esc(dayKey(r['统计日期']) || '—') + '</span></td>';
-        if(isMonitor) html += '<td class="py-2.5 px-2 whitespace-nowrap"><span class="chip chip-mint">' + esc(r['平台'] || code.slice('@monitor:'.length)) + '账号</span></td>';
-        else html += '<td class="py-2.5 px-2 whitespace-nowrap"><button class="mono text-[11px] text-[#785d00] hover:underline" data-act="inspect" data-code="' + esc(code) + '" type="button">' + esc(code || '—') + '</button></td>';
+        html += '<td class="py-2.5 px-2 whitespace-nowrap"><button class="mono text-[11px] text-[#785d00] hover:underline" data-act="inspect" data-code="' + esc(code) + '" type="button">' + esc(code || '—') + '</button></td>';
         html += '<td class="py-2.5 px-2 text-right whitespace-nowrap">' + fmtNum(read) + '</td>';
         html += '<td class="py-2.5 px-2 text-right whitespace-nowrap">' + fmtNum(like) + ' <span class="text-label-sm text-on-surface-variant">(' + pct(like, read) + ')</span></td>';
         html += '<td class="py-2.5 px-2 text-right whitespace-nowrap">' + fmtNum(fans) + '</td>';
@@ -1585,36 +1777,28 @@
     /* inspect panel */
     html += '<div class="col-span-12 xl:col-span-4 flex flex-col gap-space-md">';
     html += '<div class="soft-card overflow-hidden">';
-    html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm border-b border-surface-container-low"><div class="flex items-center gap-2"><span class="kicker-dot"></span><div><h3 class="text-headline-sm font-headline-sm text-on-surface">' + (focusGroup && focusGroup.isMonitor ? '公众号账号数据解构' : '复盘单篇深度解构') + '</h3><p class="text-label-sm text-on-surface-variant">' + (focusGroup && focusGroup.isMonitor ? '账号级日汇总，不含单篇拆分' : '选中作品的数据切片') + '</p></div></div>';
+    html += '<div class="flex items-center justify-between px-space-lg pt-space-lg pb-space-sm border-b border-surface-container-low"><div class="flex items-center gap-2"><span class="kicker-dot"></span><div><h3 class="text-headline-sm font-headline-sm text-on-surface">复盘单篇深度解构</h3><p class="text-label-sm text-on-surface-variant">选中作品的数据切片</p></div></div>';
     html += '<span class="material-symbols-outlined text-on-surface-variant text-lg">page_info</span></div>';
     if(!focusGroup){
       html += emptyState('还没有可复盘的作品', '同步平台作品数据后即可查看', 'query_stats');
     } else {
       var lr = num(focusGroup.latest['阅读播放']), ll = num(focusGroup.latest['点赞']), lf = num(focusGroup.latest['涨粉']);
       html += '<div class="px-space-lg py-space-md">';
-      if(focusGroup.isMonitor){
-        html += '<div class="rounded-xl overflow-hidden relative mb-space-md h-32 flex items-center justify-center bg-gradient-to-br from-[#ffdf91] to-[#f2f3f6]"><span class="material-symbols-outlined text-[56px] text-[#785d00]">monitoring</span>';
-      } else {
-        html += '<div class="rounded-xl overflow-hidden relative mb-space-md"><img alt="作品封面" class="w-full h-32 object-cover" src="/assets/img-2.jpg">';
-      }
-      html += '<span class="absolute top-2 left-2 chip chip-dark mono">' + esc(focusGroup.isMonitor ? '账号级' : focusGroup.code) + '</span>';
+      html += '<div class="rounded-xl overflow-hidden relative mb-space-md"><img alt="作品封面" class="w-full h-32 object-cover" src="/assets/img-2.jpg">';
+      html += '<span class="absolute top-2 left-2 chip chip-dark mono">' + esc(focusGroup.code) + '</span>';
       html += '<span class="absolute bottom-2 left-2 chip chip-honey">' + esc(focusGroup.stage) + '</span></div>';
       html += '<h4 class="text-headline-sm font-headline-sm text-on-surface leading-snug">' + esc(focusGroup.title) + '</h4>';
       html += '<p class="text-label-sm text-on-surface-variant mt-0.5">' + esc(platformText(focusGroup.platform)) + ' · ' + focusGroup.count + ' 批快照 · 最新 ' + esc(dayKey(focusGroup.latest['统计日期'])) + '</p>';
       html += '<div class="grid grid-cols-2 gap-2 mt-space-md">';
-      html += '<div class="rounded-lg bg-surface-container-low p-2.5"><div class="text-label-sm text-on-surface-variant">' + (focusGroup.isMonitor ? '分享/涨粉比' : '赞粉比') + '</div><div class="text-headline-sm font-headline-md text-on-surface mt-0.5">' + (lf ? (ll / lf).toFixed(1) : '—') + '</div><div class="text-[10px] text-on-surface-variant">' + (focusGroup.isMonitor ? '分享 ' : '点赞 ') + fmtNum(ll) + ' / 涨粉 ' + fmtNum(lf) + '</div></div>';
+      html += '<div class="rounded-lg bg-surface-container-low p-2.5"><div class="text-label-sm text-on-surface-variant">赞粉比</div><div class="text-headline-sm font-headline-md text-on-surface mt-0.5">' + (lf ? (ll / lf).toFixed(1) : '—') + '</div><div class="text-[10px] text-on-surface-variant">点赞 ' + fmtNum(ll) + ' / 涨粉 ' + fmtNum(lf) + '</div></div>';
       html += '<div class="rounded-lg bg-surface-container-low p-2.5"><div class="text-label-sm text-on-surface-variant">互动率</div><div class="text-headline-sm font-headline-md text-[#785d00] mt-0.5">' + pct(ll, lr) + '</div><div class="text-[10px] text-on-surface-variant">阅读 ' + fmtNum(lr) + '</div></div>';
       html += '</div>';
-      if(focusGroup.isMonitor){
-        html += '<div class="rounded-lg bg-surface-container-low p-3 text-label-sm text-on-surface-variant leading-relaxed">近 ' + focusGroup.count + ' 天账号级日汇总：阅读 ' + fmtNum(focusGroup.reads.reduce(function(a,b){ return a + b; }, 0)) + ' · 涨粉 ' + fmtNum(focusGroup.snapshots.reduce(function(a,b){ return a + num(b['涨粉']); }, 0)) + ' · 互动（分享）' + fmtNum(focusGroup.snapshots.reduce(function(a,b){ return a + num(b['点赞']); }, 0)) + '。公众号后台不提供播放量与转化，单篇数据请在公众号后台查看。</div>';
-      } else {
-        html += '<div class="mt-space-md"><div class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-2">核心流量抓手总结</div><ol class="flex flex-col gap-1.5 text-label-sm text-on-surface-variant">';
-        html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center text-[9px] font-bold shrink-0">1</span><span>标题与平台「' + esc(platformText(focusGroup.platform)) + '」的受众匹配度决定了首波点击。</span></li>';
-        html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center text-[9px] font-bold shrink-0">2</span><span>互动率 ' + pct(ll, lr) + '，' + (ll / Math.max(1, lr) >= 0.05 ? '内容共鸣度高于基准，可复用叙事结构。' : '建议强化观点冲突与评论区引导。') + '</span></li>';
-        html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-[#DCF3E5] text-[#23583A] flex items-center justify-center text-[9px] font-bold shrink-0">3</span><span>发布以来累计涨粉 ' + fmtNum(focusGroup.snapshots.reduce(function(a,b){ return a + num(b['涨粉']); }, 0)) + '，可持续追踪 72 小时曲线。</span></li>';
-        html += '</ol></div>';
-        html += '<button class="mt-space-md w-full inline-flex items-center justify-center gap-1 px-4 py-2.5 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="deriveTopic" data-code="' + esc(focusGroup.code) + '" type="button"><span class="material-symbols-outlined text-base">auto_awesome</span>一键派生下篇选题</button>';
-      }
+      html += '<div class="mt-space-md"><div class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-2">核心流量抓手总结</div><ol class="flex flex-col gap-1.5 text-label-sm text-on-surface-variant">';
+      html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center text-[9px] font-bold shrink-0">1</span><span>标题与平台「' + esc(platformText(focusGroup.platform)) + '」的受众匹配度决定了首波点击。</span></li>';
+      html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center text-[9px] font-bold shrink-0">2</span><span>互动率 ' + pct(ll, lr) + '，' + (ll / Math.max(1, lr) >= 0.05 ? '内容共鸣度高于基准，可复用叙事结构。' : '建议强化观点冲突与评论区引导。') + '</span></li>';
+      html += '<li class="flex gap-1.5"><span class="w-4 h-4 rounded-full bg-[#DCF3E5] text-[#23583A] flex items-center justify-center text-[9px] font-bold shrink-0">3</span><span>发布以来累计涨粉 ' + fmtNum(focusGroup.snapshots.reduce(function(a,b){ return a + num(b['涨粉']); }, 0)) + '，可持续追踪 72 小时曲线。</span></li>';
+      html += '</ol></div>';
+      html += '<button class="mt-space-md w-full inline-flex items-center justify-center gap-1 px-4 py-2.5 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="deriveTopic" data-code="' + esc(focusGroup.code) + '" type="button"><span class="material-symbols-outlined text-base">auto_awesome</span>一键派生下篇选题</button>';
       html += '</div>';
     }
     html += '</div>';
@@ -3724,6 +3908,7 @@
     if(location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
     render();
     scrollTop();
+    if(view === 'topics') loadTrendPlatforms();
     if(view === 'publish'){
       loadPublishData().then(render).catch(function(err){
         toast('发布队列加载失败：' + errMsg(err), 'err');
@@ -3851,27 +4036,18 @@
       if(again){ again.focus(); again.setSelectionRange(pos, pos); }
       return;
     }
-    if(t.id === 'inlineScore'){
-      state.topicDraft = state.topicDraft || {};
-      state.topicDraft.score = t.value;
-      var badge = $('inlineScoreBadge');
-      if(badge) badge.textContent = Number(t.value).toFixed(1) + ' 分';
+    if(t.id === 'trendKeywords'){
+      state.trend.keywords = t.value;
+      try{ localStorage.setItem(TREND_DRAFT_KEY, t.value); }catch(err){ /* 隐私模式下忽略 */ }
       return;
-    }
-    var dk = t.getAttribute ? t.getAttribute('data-draft') : null;
-    if(dk){
-      state.topicDraft = state.topicDraft || {};
-      state.topicDraft[dk] = t.value;
     }
   });
   viewEl.addEventListener('change', function(e){
     var t = e.target;
-    if(t.getAttribute && t.getAttribute('data-inline-tag')){
-      state.topicDraft = state.topicDraft || {};
-      var tags = [];
-      var boxes = document.querySelectorAll('[data-inline-tag]:checked');
-      for(var i = 0; i < boxes.length; i++) tags.push(boxes[i].getAttribute('data-inline-tag'));
-      state.topicDraft.tags = tags;
+    var trendPlatform = t.getAttribute ? t.getAttribute('data-trend-platform') : null;
+    if(trendPlatform){
+      state.trend.sel[trendPlatform] = !!t.checked;
+      return;
     }
   });
 
@@ -3894,11 +4070,7 @@
     if(e.target.closest && e.target.closest('input,label,select,button,a')) return;
     var tr = e.target.closest ? e.target.closest('[data-row-topic]') : null;
     if(!tr) return;
-    state.inlineTopic = tr.getAttribute('data-row-topic');
-    state.topicDraft = null;
-    render();
-    var box = $('inlineInspector');
-    if(box) box.scrollIntoView({ behavior:'smooth', block:'start' });
+    openEditor('topic', tr.getAttribute('data-row-topic'));
   });
 
   viewEl.addEventListener('click', function(e){
@@ -3967,12 +4139,13 @@
       var topic = null;
       DATA.topic.forEach(function(r){ if(r['_id'] === id) topic = r; });
       if(!topic) return;
+      var fill = {
+        '选题ID': topic['选题ID'] || '',
+        '标题': topic['选题'] || ''
+      };
+      if(state.platform && state.platform !== 'all') fill['平台'] = state.platform;
       openEditor('calendar', null, {
-        fill: {
-          '选题ID': topic['选题ID'] || '',
-          '标题': topic['选题'] || '',
-          '平台': topic['平台'] || ''
-        },
+        fill: fill,
         subText: '选题 ' + (topic['选题ID'] || '') + ' 已带入，选好发布时间即可保存'
       });
       return;
@@ -3995,6 +4168,7 @@
     if(act === 'kuaishouSync'){ e.preventDefault(); syncKuaishou(actEl); return; }
     if(act === 'weiboCollectSync'){ e.preventDefault(); syncWeiboCollect(actEl); return; }
     if(act === 'bilibiliSync'){ e.preventDefault(); syncBilibili(actEl); return; }
+    if(act === 'zhihuSync'){ e.preventDefault(); syncZhihu(actEl); return; }
     if(act === 'channelsSync'){ e.preventDefault(); syncChannels(actEl); return; }
     if(act === 'wechatSync'){ e.preventDefault(); syncWechat(actEl); return; }
     if(act === 'goto'){
@@ -4033,29 +4207,38 @@
       return;
     }
     if(act === 'topicNew'){
-      state.inlineTopic = null;
-      state.topicDraft = null;
-      render();
-      var nameInput = $('inlineName');
-      if(nameInput){ nameInput.focus(); nameInput.scrollIntoView({ behavior:'smooth', block:'center' }); }
+      e.preventDefault();
+      openEditor('topic', null, null);
       return;
     }
-    if(act === 'editInlineTopic'){
-      state.inlineTopic = id;
-      state.topicDraft = null;
-      render();
-      var box2 = $('inlineInspector');
-      if(box2) box2.scrollIntoView({ behavior:'smooth', block:'start' });
+    if(act === 'trendConnect'){
+      e.preventDefault();
+      switchView('connections');
       return;
     }
-    if(act === 'inlineReset'){
-      state.inlineTopic = null;
-      state.topicDraft = null;
-      render();
+    if(act === 'trendSearch'){
+      e.preventDefault();
+      startTrendSearch(actEl.getAttribute('data-force') === '1');
       return;
     }
-    if(act === 'inlineSave'){
-      saveInlineTopic();
+    if(act === 'trendToTopic'){
+      e.preventDefault();
+      var trendItem = trendItemById(id);
+      if(!trendItem){ toast('结果已过期，请重新搜索', 'err'); return; }
+      var trendScore = Math.round(Math.min(9.6, Math.max(6.5, 5.5 + trendItem.heat / 25)) * 10) / 10;
+      var trendTagList = ['热点'];
+      if(trendItem.itemType === 'video') trendTagList.push('干货');
+      openEditor('topic', null, {
+        subText: '来自' + trendItem.platform + '爆款 · 确认后保存为选题',
+        fill: {
+          '选题': String(trendItem.title).slice(0, 60),
+          '状态': '待写',
+          '切入角度': trendAngle(trendItem),
+          '爆款潜力评分': trendScore,
+          '标签': trendTagList,
+          '参考链接': trendItem.itemUrl
+        }
+      });
       return;
     }
     if(act === 'editProfile'){
@@ -4139,19 +4322,18 @@
       state.view = 'topics';
       state.q = '';
       state.status = 'all';
-      state.inlineTopic = null;
-      state.topicDraft = {
-        name: g.title + ' · 续篇',
-        platform: g.platform || '公众号',
-        status: '待写',
-        angle: '承接《' + g.title + '》的复盘结论，补足评论区高频问题与可执行清单。',
-        score: 8.0,
-        tags: ['干货','观点'],
-        url: ''
-      };
       render();
       scrollTop();
-      toast('已在选题面板生成「续篇」草稿，确认后保存');
+      openEditor('topic', null, {
+        subText: '由复盘结论生成「续篇」草稿 · 确认后保存',
+        fill: {
+          '选题': g.title + ' · 续篇',
+          '状态': '待写',
+          '切入角度': '承接《' + g.title + '》的复盘结论，补足评论区高频问题与可执行清单。',
+          '爆款潜力评分': 8,
+          '标签': ['干货', '观点']
+        }
+      });
       return;
     }
     if(act === 'linkSchedule'){
@@ -4177,12 +4359,12 @@
       openInfo('互动率算法拆解', '互动率 = 近 7 天点赞 ÷ 近 7 天阅读播放。\n当前样本：点赞 ' + fmtNum(l7.like) + ' / 阅读 ' + fmtNum(l7.read) + ' = ' + l7.rate.toFixed(2) + '%。');
       return;
     }
-    if(act === 'explainFans'){
-      var rRows = reviewRows();
-      var rRead = rRows.reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
-      var rFans = rRows.reduce(function(a,b){ return a + num(b['涨粉']); }, 0);
-      var rConv = rRows.reduce(function(a,b){ return a + num(b['转化']); }, 0);
-      openInfo('转化与涨粉明细', '当前区间累计增粉 ' + fmtNum(rFans) + '，涨粉率 ' + pct(rFans, rRead) + '。\n转化合计 ' + fmtNum(rConv) + '，共 ' + rRows.length + ' 条快照。');
+    if(act === 'explainWorks'){
+      var wRows = reviewRows();
+      var wRead = wRows.reduce(function(a,b){ return a + num(b['阅读播放']); }, 0);
+      var wLike = wRows.reduce(function(a,b){ return a + num(b['点赞']); }, 0);
+      var wGroups = reviewGroups();
+      openInfo('区间作品明细', '当前区间共 ' + wGroups.length + ' 个作品、' + wRows.length + ' 条快照。\n累计阅读/播放 ' + fmtNum(wRead) + '，点赞 ' + fmtNum(wLike) + '，互动率 ' + pct(wLike, wRead) + '。\n仅统计作品级数据，账号级日汇总不计入。');
       return;
     }
     if(act === 'voiceMemo'){ e.preventDefault(); openVoiceMemo(); return; }
@@ -4274,7 +4456,7 @@
   function applyDefaults(dbKey, recordId){
     if(recordId) return;
     var defaults = {
-      topic: { '状态': '待写', '创建日期': todayISO(), '平台': state.platform !== 'all' ? state.platform : '公众号' },
+      topic: { '状态': '待写', '创建日期': todayISO() },
       calendar: { '当前阶段': '选题确认', '内容形式': '图文', '平台': state.platform !== 'all' ? state.platform : '公众号' },
       review: { '统计日期': todayISO(), '平台': state.platform !== 'all' ? state.platform : '公众号' },
       asset: { '归档日期': todayISO(), '平台': state.platform !== 'all' ? state.platform : '公众号' }
@@ -4357,6 +4539,14 @@
           var want = platformList(val);
           var boxes = document.querySelectorAll('[data-field="平台"]');
           for(var b = 0; b < boxes.length; b++) boxes[b].checked = want.indexOf(boxes[b].value) >= 0;
+          return;
+        }
+        var propType = '';
+        (SCHEMAS[dbKey] || []).forEach(function(p){ if(p.name === name) propType = p.type; });
+        if(propType === 'multi_select'){
+          var wantList = Array.isArray(val) ? val : [val];
+          var mboxes = document.querySelectorAll('[data-field="' + name + '"]');
+          for(var bi = 0; bi < mboxes.length; bi++) mboxes[bi].checked = wantList.indexOf(mboxes[bi].value) >= 0;
           return;
         }
         var el = document.querySelector('[data-field="' + name + '"]');
@@ -4581,57 +4771,6 @@
       if(!known[k]) throw new Error('字段「' + k + '」不在表结构里');
     });
     return out;
-  }
-
-  /* ---------- inline topic save ---------- */
-  function saveInlineTopic(){
-    var nameEl = $('inlineName');
-    var platformEl = $('inlinePlatform');
-    var statusEl = $('inlineStatus');
-    var angleEl = $('inlineAngle');
-    var scoreEl = $('inlineScore');
-    var urlEl = $('inlineUrl');
-    if(!nameEl || !platformEl){ return; }
-    var name = String(nameEl.value || '').trim();
-    var platform = String(platformEl.value || '').trim();
-    if(!name){ toast('「选题名称」不能为空', 'err'); nameEl.classList.add('err'); nameEl.focus(); return; }
-    nameEl.classList.remove('err');
-    if(!platform){ toast('请选择目标平台', 'err'); return; }
-    var ref = String(urlEl && urlEl.value || '').trim();
-    if(ref){
-      var low = ref.toLowerCase();
-      if(low.indexOf('http:') !== 0 && low.indexOf('https:') !== 0){
-        toast('参考来源需要以 http 或 https 开头', 'err');
-        if(urlEl) urlEl.classList.add('err');
-        return;
-      }
-      if(urlEl) urlEl.classList.remove('err');
-    }
-    var tags = [];
-    var boxes = document.querySelectorAll('[data-inline-tag]:checked');
-    for(var i = 0; i < boxes.length; i++) tags.push(boxes[i].getAttribute('data-inline-tag'));
-    var props = {
-      '选题': { text: name },
-      '平台': { select: platform },
-      '状态': { select: String(statusEl && statusEl.value || '待写') },
-      '爆款潜力评分': { number: Number(scoreEl && scoreEl.value || 0) }
-    };
-    var angle = String(angleEl && angleEl.value || '').trim();
-    if(angle) props['切入角度'] = { text: angle };
-    if(tags.length) props['标签'] = { multi_select: tags };
-    if(ref) props['参考链接'] = { url: { text: ref, link: ref } };
-    if(!state.inlineTopic) props['创建日期'] = { date: todayISO() };
-    suppressUntil = Date.now() + 1500;
-    var op = state.inlineTopic ? OPS.topic.upd(state.inlineTopic, props) : OPS.topic.add(props);
-    op.then(function(){ return loadTable('topic'); }).then(function(){
-      var wasEdit = !!state.inlineTopic;
-      state.inlineTopic = null;
-      state.topicDraft = null;
-      render();
-      toast((wasEdit ? '选题已更新' : '选题已保存，ID 已自动生成') + ' · ' + hhmm(), 'ok');
-    }).catch(function(err){
-      toast('保存失败：' + errMsg(err), 'err');
-    });
   }
 
   /* ---------- review live rates ---------- */
@@ -5772,9 +5911,15 @@
     if(['home','topics','calendar','publish','review','assets','connections'].indexOf(initial) >= 0) state.view = initial;
     setSync('正在连接…', '');
     subscribe();
+    try{
+      var draft = localStorage.getItem(TREND_DRAFT_KEY);
+      if(draft) state.trend.keywords = draft;
+    }catch(err){ /* 隐私模式下忽略 */ }
     Promise.all([
       loadProfile().catch(function(){ /* 旧服务没有 profile 接口时保持默认资料 */ }),
       loadVoiceRecordings(),
+      loadTrendPlatforms(),
+      loadTrendLatest(),
       loadPublishData().catch(function(){ /* 发布服务不可用时不影响其它页面 */ })
     ]).then(loadAllData);
   }

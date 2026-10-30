@@ -1,15 +1,27 @@
 export const FEATURE_BLOCKS = [
   {
+    id: 'radar',
+    icon: 'travel_explore',
+    titleZh: '爆款灵感雷达：先看热度，再动笔',
+    titleEn: 'Viral radar: check the heat before you write',
+    bodyZh:
+      '输入关键词，一次搜索小红书、抖音、B站的同题内容，按互动热度跨平台统一排序。看到合适的作品点「转选题」，标题、切入角度和参考链接会直接带进选题弹窗。结果保存在本地，刷新页面仍能看到上一次搜索，历史保留 30 天。',
+    bodyEn:
+      'Enter a keyword and search Xiaohongshu, Douyin, and Bilibili at once, with results ranked by engagement across platforms. Turn any result into a topic with one click, prefilled with the title, angle, and reference link. Searches are saved locally, so a refresh keeps your last results, with 30 days of history.',
+    bulletsZh: ['一次搜索覆盖小红书、抖音、B站', '跨平台按热度统一排序，高互动的排在前面', '一键转选题，自动带入标题、角度与参考链接', '结果本地保存，刷新后仍保留上次搜索'],
+    bulletsEn: ['Search Xiaohongshu, Douyin, and Bilibili in one job', 'One heat ranking across platforms, hottest first', 'One-click topic conversion with title, angle, and link prefilled', 'Results stay local, so a refresh keeps your last search'],
+  },
+  {
     id: 'ideas',
     icon: 'psychology',
     titleZh: '选题池：灵感有处安放',
     titleEn: 'Idea pool: a home for every idea',
     bodyZh:
-      '记录平台、角度、标签和爆款潜力评分，搜索、筛选、导出，下一条内容不再靠翻备忘录。选题池和日历、素材库互相关联，一个想法可以从灵感阶段一直走到复盘。',
+      '记录切入角度、标签和爆款潜力评分，搜索、筛选、导出，下一条内容不再靠翻备忘录。选题池和日历、素材库互相关联，一个想法可以从灵感阶段一直走到复盘。',
     bodyEn:
-      'Capture platform, angle, tags, and potential score. Search, filter, and export so the next idea is not buried in a notes app. Ideas stay linked to the calendar and asset library from first thought to review.',
-    bulletsZh: ['按平台和标签筛选，快速找到能复用的旧选题', '潜力评分帮你决定先做哪一条', '一键导出 CSV，选题会也能离线讨论'],
-    bulletsEn: ['Filter by platform and tag to reuse older ideas', 'A potential score helps you choose what to make next', 'Export CSV for offline planning sessions'],
+      'Capture the angle, tags, and potential score. Search, filter, and export so the next idea is not buried in a notes app. Ideas stay linked to the calendar and asset library from first thought to review.',
+    bulletsZh: ['按标签和状态筛选，快速找到能复用的旧选题', '潜力评分帮你决定先做哪一条', '一键导出 CSV，选题会也能离线讨论'],
+    bulletsEn: ['Filter by tag and status to reuse older ideas', 'A potential score helps you choose what to make next', 'Export CSV for offline planning sessions'],
   },
   {
     id: 'calendar',
@@ -29,9 +41,9 @@ export const FEATURE_BLOCKS = [
     titleZh: '发布中心：排好队，它自己发',
     titleEn: 'Publish center: queue it and walk away',
     bodyZh:
-      '八个平台一次排期，视频、图文、多比例封面；失败可重试，发布后自动核验。任务按时间顺序执行，本机浏览器窗口固定尺寸，减少误点与漏发。',
+      '八个平台一次排期，视频、图文、多比例封面；失败可重试，发布后自动核验。公众号支持自动发表，B站投稿失败会自动重试。任务按时间顺序执行，本机浏览器窗口固定尺寸，减少误点与漏发。',
     bodyEn:
-      'Schedule all eight platforms at once — video, image posts, multi-ratio covers. Retry failures and verify results automatically. Tasks run in time order with a fixed browser window to reduce mis-clicks and missed posts.',
+      'Schedule all eight platforms at once — video, image posts, multi-ratio covers. Retry failures and verify results automatically, with automated Official Account publishing and automatic retries for Bilibili uploads. Tasks run in time order with a fixed browser window to reduce mis-clicks and missed posts.',
     bulletsZh: ['八个平台统一队列，按平台筛选与分页', '发布后核验作品状态，失败保留可重试', '固定窗口尺寸与命中校验，减少误操作'],
     bulletsEn: ['One queue for eight platforms with filters and paging', 'Verify each post and retry failures safely', 'Fixed window size and hit-checking reduce mis-clicks'],
   },
@@ -41,11 +53,11 @@ export const FEATURE_BLOCKS = [
     titleZh: '数据复盘：不用再手抄',
     titleEn: 'Analytics review: stop copying numbers',
     bodyZh:
-      '抖音、小红书、视频号、公众号数据自动回流，互动率、涨粉率、更新频率实时算好。四张业务表都支持 CSV 导出，Excel 直接打开，复盘结论能落地。',
+      '抖音、视频号、小红书、快手、微博、B站、知乎与公众号的作品数据自动回流，互动率、涨粉率、更新频率实时算好。四张业务表都支持 CSV 导出，Excel 直接打开，复盘结论能落地。',
     bodyEn:
-      'Data from Douyin, Xiaohongshu, WeChat Channels, and Official Accounts flows back automatically, with engagement, follower growth, and posting frequency calculated. All four business tables export to CSV that Excel opens correctly.',
-    bulletsZh: ['四个平台自动回流，其余平台可手动补充', '互动率、涨粉率、更新频率自动计算', 'CSV 带 BOM，中文在 Excel 中不乱码'],
-    bulletsEn: ['Four platforms sync automatically; others can be filled in manually', 'Engagement, growth, and cadence calculated for you', 'CSV exports open cleanly in Excel'],
+      'Data from Douyin, WeChat Channels, Xiaohongshu, Kuaishou, Weibo, Bilibili, Zhihu, and Official Accounts flows back automatically, with engagement, follower growth, and posting frequency calculated. All four business tables export to CSV that Excel opens correctly.',
+    bulletsZh: ['八个平台自动回流，发布后的数据自动归档', '互动率、涨粉率、更新频率自动计算', 'CSV 带 BOM，中文在 Excel 中不乱码'],
+    bulletsEn: ['All eight platforms sync automatically after publishing', 'Engagement, growth, and cadence calculated for you', 'CSV exports open cleanly in Excel'],
   },
   {
     id: 'library',

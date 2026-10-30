@@ -187,12 +187,12 @@ export const PLATFORM_DETAILS = {
     zh: {
       h1: 'B 站视频投稿进统一队列，省下重复填写',
       intro:
-        'B 站视频投稿也能进统一队列。标题、分区、封面一次排好，到点自动提交，省下重复填写的时间。数据回流暂未覆盖。',
+        'B 站视频投稿也能进统一队列。标题、分区、封面一次排好，到点自动提交；投稿失败自动重试，稿件数据随后回流复盘表。',
       capabilities: [
         ['视频投稿', '支持常规视频投稿流程，标题、分区、标签与封面提前准备。'],
         ['定时执行', '与其它平台共用发布队列，按时间顺序执行。'],
-        ['结果核验', '提交后确认投稿是否成功，失败可重试。'],
-        ['手动复盘', '数据回流暂未覆盖，可在复盘表中手动补充播放与互动数据。'],
+        ['失败自动重试', '投稿失败会自动重试；分区与创作声明在发布前确认，减少因选项遗漏导致的重传。'],
+        ['数据自动回流', '稿件发布后，播放、点赞、评论、收藏、投币、转发与弹幕数据自动写入复盘表。'],
       ],
       manual: [
         ['重复上传大体积视频', '约 6 分钟'],
@@ -201,20 +201,20 @@ export const PLATFORM_DETAILS = {
         ['发布后手动记录数据', '约 3 分钟'],
       ],
       faq: [
-        ['B 站数据会自动回流吗？', '目前不会。发布可以自动化，播放与互动数据需要在复盘表中手动记录。'],
+        ['B 站数据会自动回流吗？', '会。稿件发布后，播放、点赞、评论、收藏、投币、转发与弹幕数据会自动写入复盘表。'],
         ['支持定时投稿吗？', '支持。电脑需保持开机，到点后本地浏览器执行提交流程。'],
-        ['大文件上传稳定吗？', '上传依赖本机网络与浏览器。建议预留充足时间，避免在发布前一刻才开始上传。'],
+        ['大文件上传稳定吗？', '上传失败会自动重试，但仍建议预留充足时间，避免在发布前一刻才开始上传。'],
       ],
     },
     en: {
       h1: 'Bilibili uploads join the same queue',
       intro:
-        'Bilibili video submissions can be scheduled too. Set the title, category, cover, and tags once, then let the queue submit them at the right time. Automatic analytics is not covered yet.',
+        'Bilibili video submissions can be scheduled too. Set the title, category, and cover once, let the queue submit at the right time, and get failed uploads retried automatically. Submission analytics then flows back into your review table.',
       capabilities: [
         ['Video submission', 'Prepare title, category, tags, and cover ahead of the regular submission flow.'],
         ['Scheduled execution', 'Runs in the same queue as other platforms, in time order.'],
-        ['Result verification', 'Confirm whether the submission succeeded; retry on failure.'],
-        ['Manual review', 'Automatic analytics is not covered; add views and engagement to the review table manually.'],
+        ['Automatic retries', 'Failed submissions retry automatically; category and content declarations are confirmed before publishing.'],
+        ['Automatic analytics', 'Views, likes, comments, saves, coins, shares, and danmaku flow into your review table after publishing.'],
       ],
       manual: [
         ['Re-upload a large video', '~6 min'],
@@ -223,9 +223,9 @@ export const PLATFORM_DETAILS = {
         ['Record metrics after publishing', '~3 min'],
       ],
       faq: [
-        ['Does Bilibili sync analytics?', 'Not yet. Publishing can be automated; views and engagement need manual entry in the review table.'],
+        ['Does Bilibili sync analytics?', 'Yes. After publishing, views, likes, comments, saves, coins, shares, and danmaku flow into the review table.'],
         ['Can uploads be scheduled?', 'Yes. Keep the computer on; the local browser submits at the scheduled time.'],
-        ['Are large uploads reliable?', 'Uploads depend on your connection and browser. Leave enough lead time before the scheduled publish.'],
+        ['Are large uploads reliable?', 'Failed uploads retry automatically, but leave enough lead time before the scheduled publish.'],
       ],
     },
   },
@@ -233,12 +233,12 @@ export const PLATFORM_DETAILS = {
     zh: {
       h1: '快手视频与图文，排进同一张日历',
       intro:
-        '快手内容排进同一张表，发布任务按顺序执行，失败可重试，结果自动核验，不用逐个后台确认。数据回流暂未覆盖。',
+        '快手内容排进同一张表，发布任务按顺序执行，失败可重试，结果自动核验；播放、点赞、评论、收藏与涨粉数据自动回流复盘表。',
       capabilities: [
         ['视频与图文', '支持短视频与图文作品，封面比例可在发布前预设。'],
         ['顺序队列', '与其它平台一起排队执行，避免同时打开过多浏览器窗口。'],
         ['结果核验', '发布后核对作品状态，异常时提示重试。'],
-        ['本地记录', '发布记录保存在本机，复盘数据可手动补充。'],
+        ['数据自动回流', '播放、点赞、评论、收藏与涨粉数据自动写入本地复盘表。'],
       ],
       manual: [
         ['分平台重传素材', '约 5 分钟'],
@@ -247,7 +247,7 @@ export const PLATFORM_DETAILS = {
         ['逐个后台确认结果', '约 3 分钟'],
       ],
       faq: [
-        ['快手数据会自动回流吗？', '目前不会。发布结果会自动核验，播放与互动数据需要手动记录。'],
+        ['快手数据会自动回流吗？', '会。发布成功后，播放、点赞、评论、收藏与涨粉数据会自动写入复盘表。'],
         ['支持双封面吗？', '可以准备多张封面，具体以快手当前发布页面支持的比例为准。'],
         ['失败会怎样？', '任务保留在队列中并标记失败，可以重试，不会影响其它平台的排期。'],
       ],
@@ -255,12 +255,12 @@ export const PLATFORM_DETAILS = {
     en: {
       h1: 'Kuaishou video and image posts on the same calendar',
       intro:
-        'Kuaishou posts join the same table. Tasks run in order, can be retried on failure, and are verified automatically. Automatic analytics is not covered yet.',
+        'Kuaishou posts join the same table. Tasks run in order, can be retried on failure, and are verified automatically. Views, likes, comments, saves, and follower growth flow back into your review table.',
       capabilities: [
         ['Video and image posts', 'Short video and image posts with cover ratios prepared before publishing.'],
         ['Ordered queue', 'Runs alongside other platforms without opening too many browser windows at once.'],
         ['Result verification', 'Check the post status after publishing and retry when something goes wrong.'],
-        ['Local records', 'Publishing history stays on your machine; add review metrics manually.'],
+        ['Automatic analytics', 'Views, likes, comments, saves, and follower growth are written to the local review table.'],
       ],
       manual: [
         ['Re-upload per platform', '~5 min'],
@@ -269,7 +269,7 @@ export const PLATFORM_DETAILS = {
         ['Check each dashboard', '~3 min'],
       ],
       faq: [
-        ['Does Kuaishou sync analytics?', 'Not yet. Publishing is verified automatically; views and engagement need manual entry.'],
+        ['Does Kuaishou sync analytics?', 'Yes. After publishing, views, likes, comments, saves, and follower growth flow into the review table.'],
         ['Are multiple covers supported?', 'You can prepare several covers; the available ratios follow the current Kuaishou publish page.'],
         ['What happens on failure?', 'The task is marked failed in the queue and can be retried without affecting other platforms.'],
       ],
@@ -277,92 +277,92 @@ export const PLATFORM_DETAILS = {
   },
   weibo: {
     zh: {
-      h1: '微博图文与视频，发完自动核验是否真的上线',
+      h1: '微博图文与视频，发完自动核验并回流数据',
       intro:
-        '微博发布后自动核验是否成功，避免「以为发了其实没发」。适合把热点内容和其他平台一起排期。数据回流暂未覆盖。',
+        '微博发布后自动核验是否成功，避免「以为发了其实没发」。阅读、点赞、评论、转发与视频播放量自动回流，账号涨粉按天归档，热点内容也能和其他平台一起排期。',
       capabilities: [
         ['图文与视频', '支持文字、图片与视频微博，多条内容可一起排期。'],
         ['发布后核验', '发布完成后检查博文是否存在，自动改判发布状态。'],
-        ['热点排期', '把时效性内容放进日历，到点自动执行。'],
-        ['失败重试', '核验失败时保留任务，可重新发布或手动处理。'],
+        ['数据自动回流', '阅读、点赞、评论、转发自动写入复盘表，视频播放量按作品合并。'],
+        ['账号涨粉归档', '数据中心按天返回的新增/减少粉丝写入账号日汇总。'],
       ],
       manual: [
         ['复制文案与图片', '约 3 分钟'],
         ['逐条发布并确认', '约 4 分钟'],
         ['核对是否发出', '约 2 分钟'],
-        ['手动记录互动数据', '约 2 分钟'],
+        ['逐条抄录阅读与互动数据', '约 3 分钟'],
       ],
       faq: [
         ['怎么确认微博真的发出去了？', '客户端在发布后检查博文是否存在，并据此更新任务状态。核验失败会保留任务供你处理。'],
         ['支持图片数量限制吗？', '以微博当前上传限制为准，超过限制时会在发布前提示。'],
-        ['数据会自动回流吗？', '目前不会。发布结果可自动核验，阅读与互动数据需要手动记录。'],
+        ['数据会自动回流吗？', '会。阅读、点赞、评论、转发与视频播放量自动写入复盘表，账号涨粉按天归档到 30 天窗口。'],
       ],
     },
     en: {
-      h1: 'Weibo posts verified after publishing',
+      h1: 'Weibo posts verified after publishing, with analytics',
       intro:
-        'Every Weibo post is verified after publishing, so you know it actually went live. Schedule timely posts alongside your other platforms. Automatic analytics is not covered yet.',
+        'Every Weibo post is verified after publishing, so you know it actually went live. Reads, likes, comments, reposts, and video plays flow back automatically, with follower growth archived daily.',
       capabilities: [
         ['Text, images, and video', 'Schedule Weibo posts with text, images, or video, including multiple posts at once.'],
         ['Post verification', 'After publishing, the app checks that the post exists and updates its status.'],
-        ['Timely scheduling', 'Put time-sensitive posts on the calendar and let them run on schedule.'],
-        ['Retry on failure', 'Keep failed tasks in the queue and retry or handle them manually.'],
+        ['Automatic analytics', 'Reads, likes, comments, and reposts are written to the review table; video plays are merged per post.'],
+        ['Follower growth archive', 'Daily follower gains and losses from the data center are stored as an account summary.'],
       ],
       manual: [
         ['Copy copy and images', '~3 min'],
         ['Publish one by one', '~4 min'],
         ['Check that each went live', '~2 min'],
-        ['Record engagement manually', '~2 min'],
+        ['Copy reads and engagement by hand', '~3 min'],
       ],
       faq: [
         ['How do I know a Weibo post went live?', 'After publishing, the app checks that the post exists and updates the task status. Failures stay in the queue.'],
         ['Is there an image limit?', 'The app follows the current Weibo upload limit and warns before publishing when exceeded.'],
-        ['Is analytics synced?', 'Not yet. Publishing is verified automatically; reads and engagement need manual entry.'],
+        ['Is analytics synced?', 'Yes. Reads, likes, comments, reposts, and video plays are written to the review table, with follower growth archived over a 30-day window.'],
       ],
     },
   },
   zhihu: {
     zh: {
-      h1: '知乎长文与视频排期，深度内容也能按时上线',
+      h1: '知乎视频排期并自动回流数据，深度内容也该有复盘',
       intro:
-        '知乎长文和视频也能排期。把深度内容和其他平台一起安排好，发布后统一记录，节省重复操作。数据回流暂未覆盖。',
+        '知乎视频也能排期，发布后播放、点赞、评论、收藏与转发数据自动回流。回答与文章仍按原流程发布，暂不计入复盘。',
       capabilities: [
-        ['文章与视频', '支持知乎文章与视频内容的发布流程。'],
-        ['统一排期', '与其它平台共享同一张发布日历。'],
+        ['视频排期', '支持知乎视频内容的发布流程，与其它平台共享同一张发布日历。'],
         ['结果核验', '提交后确认内容状态，失败可重试。'],
-        ['手动复盘', '阅读、赞同与收藏等数据可在复盘表中手动补充。'],
+        ['数据自动回流', '视频作品的播放、点赞、评论、收藏与转发写入复盘表。'],
+        ['采集范围清晰', '只采集近 30 天发布的视频作品；回答与文章不计入复盘。'],
       ],
       manual: [
         ['重新排版长文', '约 6 分钟'],
         ['上传视频与封面', '约 5 分钟'],
         ['选择话题与发布设置', '约 3 分钟'],
-        ['记录阅读与赞同', '约 3 分钟'],
+        ['记录播放、点赞与收藏', '约 3 分钟'],
       ],
       faq: [
         ['知乎视频发布稳定吗？', '客户端已针对大体积视频做规避处理，但仍建议预留上传时间，并保证本机网络稳定。'],
-        ['数据会自动回流吗？', '目前不会。发布可以自动化，阅读与赞同数据需要手动记录。'],
+        ['数据会自动回流吗？', '会，但目前只覆盖视频作品：播放、点赞、评论、收藏与转发自动写入复盘表，回答和文章暂不计入。'],
         ['支持定时发布吗？', '支持。电脑保持开机即可，窗口可以最小化到托盘。'],
       ],
     },
     en: {
-      h1: 'Zhihu articles and videos, scheduled with everything else',
+      h1: 'Zhihu video publishing with automatic analytics',
       intro:
-        'Long-form Zhihu articles and videos can be scheduled too. Plan deep content alongside other platforms and log it in one place. Automatic analytics is not covered yet.',
+        'Schedule Zhihu videos alongside other platforms, and get plays, likes, comments, saves, and reposts written to your review table. Answers and articles still publish as before and are not counted yet.',
       capabilities: [
-        ['Articles and video', 'Supports Zhihu article and video publishing flows.'],
-        ['Shared schedule', 'Uses the same publishing calendar as every other platform.'],
+        ['Video scheduling', 'Publish Zhihu videos on the same calendar as every other platform.'],
         ['Result verification', 'Confirm the content status after submission and retry on failure.'],
-        ['Manual review', 'Add reads, upvotes, and saves to the review table yourself.'],
+        ['Automatic analytics', 'Plays, likes, comments, saves, and reposts for video works are written to the review table.'],
+        ['Clear scope', 'Only videos from the last 30 days are collected; answers and articles are not included.'],
       ],
       manual: [
         ['Reformat long-form copy', '~6 min'],
         ['Upload video and cover', '~5 min'],
         ['Pick topics and publish settings', '~3 min'],
-        ['Record reads and upvotes', '~3 min'],
+        ['Record plays, likes, and saves', '~3 min'],
       ],
       faq: [
         ['Are large Zhihu videos reliable?', 'The client mitigates large-upload disconnects, but leave lead time and keep your connection stable.'],
-        ['Is analytics synced?', 'Not yet. Publishing can be automated; reads and upvotes need manual entry.'],
+        ['Is analytics synced?', 'Yes, for videos only: plays, likes, comments, saves, and reposts are written to the review table. Answers and articles are not counted yet.'],
         ['Can it publish on a schedule?', 'Yes. Keep the computer on; the window can be minimized to the tray.'],
       ],
     },

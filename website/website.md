@@ -80,7 +80,7 @@
 | 多平台自动发布 | 抖音、视频号、快手、B 站、微博、小红书、知乎、公众号，共 8 个平台 | "八个平台，一次排期" |
 | 内容形态 | 各平台支持视频 / 图文（按平台能力）、多比例封面裁切 | "视频、图文、封面，一次准备好" |
 | 定时与队列 | 到点自动执行，任务排队，失败可重试，发布后自动核验 | "到点自己发，发完自己核对" |
-| 数据回流 | 抖音、小红书、视频号、公众号数据自动写入复盘 | "四个平台的数据，自动回到同一张表" |
+| 数据回流 | 八个平台作品数据自动写入复盘（知乎覆盖视频作品） | "八个平台的数据，自动回到同一张表" |
 | 数据复盘 | 阅读播放、点赞、涨粉、转化；互动率、涨粉率、更新频率实时计算 | "不用再手抄后台数字" |
 | 选题与排期 | 选题池、内容日历、九个制作阶段、负责人、平台多选 | "从灵感到上线，一条线走完" |
 | 素材沉淀 | 成稿、配图说明、关键词、语音复盘、关联选题与排期 | "好内容不再用完就丢" |
@@ -93,7 +93,7 @@
 
 - 需要本机安装 Chrome 或 Edge；发布与部分数据采集依赖它。
 - 首次使用需在独立窗口登录自己的平台账号；Cookie 过期后重新登录即可。
-- 自动发布覆盖 8 个平台；自动数据回流目前覆盖 4 个平台（抖音、小红书、视频号、公众号）。
+- 自动发布覆盖 8 个平台；自动数据回流也覆盖 8 个平台，但知乎目前只采集视频作品，回答与文章不计入。
 - 单机单用户，暂不支持多人协作或云端同步。
 - 桌面应用界面目前为简体中文；英文站为营销与购买入口，需在 FAQ 注明。
 - macOS 版本暂未签名，首次打开需右键"打开"，且不支持自动更新。
@@ -225,10 +225,10 @@
 
 | 中文标题 + 描述 | English |
 |---|---|
-| **选题池：灵感有处安放** 记录平台、角度、标签和爆款潜力评分，搜索、筛选、导出，下一条内容不再靠翻备忘录。 | **A home for every idea.** Capture platform, angle, tags, and potential score. Search, filter, export — never dig through notes again. |
+| **选题池：灵感有处安放** 先用爆款雷达看同题热度，再记录角度、标签和爆款潜力评分，搜索、筛选、导出，下一条内容不再靠翻备忘录。 | **A home for every idea.** Check competitive heat with the viral radar, then capture angle, tags, and potential score. Search, filter, export — never dig through notes again. |
 | **内容日历：整月节奏一眼看清** 九个制作阶段、负责人、内容形式和发布时间，一张时间轴排完整个月。 | **See the whole month at a glance.** Nine production stages, owners, formats, and publish times on one timeline. |
 | **发布中心：排好队，它自己发** 八个平台一次排期，视频、图文、多比例封面；失败可重试，发布后自动核验。 | **Queue it. It publishes.** Schedule all eight platforms at once — video, image posts, multi-ratio covers. Retry on failure, verify after publishing. |
-| **数据复盘：不用再手抄** 抖音、小红书、视频号、公众号数据自动回流，互动率、涨粉率、更新频率实时算好。 | **Stop copying numbers by hand.** Performance from four platforms flows back automatically, with engagement and growth rates calculated for you. |
+| **数据复盘：不用再手抄** 八个平台作品数据自动回流（知乎覆盖视频作品），互动率、涨粉率、更新频率实时算好。 | **Stop copying numbers by hand.** Performance from all eight platforms flows back automatically, with engagement and growth rates calculated for you. |
 | **素材库：好内容可以复用** 成稿、配图说明、关键词、语音复盘统一归档，和选题、排期互相打通。 | **Reuse what works.** Manuscripts, image notes, keywords, and voice memos archived and linked to topics and schedules. |
 | **一键登录：不用申请 API** 独立浏览器窗口扫码登录，Cookie 只留在本机；过期了重新登录即可。 | **No API keys. No developer account.** Sign in through an isolated browser window. Cookies stay on your machine. |
 | **本地优先：数据只属于你** SQLite 存储、每日快照、CSV 导出；不用注册云端账号。 | **Local-first by design.** SQLite storage, daily snapshots, CSV export. No cloud account required. |
@@ -567,7 +567,7 @@ website/
 ### 13.2 做法
 
 1. **答案先行**：每个页面开头用 40–60 字给出可被直接引用的定义。
-   - 示例："自媒体内容运营工作台是一款本地优先的桌面应用，支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台的内容排期与自动发布，并把 4 个平台的数据自动汇总到本地复盘表。"
+   - 示例："自媒体内容运营工作台是一款本地优先的桌面应用，支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台的内容排期与自动发布，并把 8 个平台的作品数据自动汇总到本地复盘表（知乎目前覆盖视频作品）。"
 2. **实体一致性**：产品名、一句话介绍、价格、平台列表在官网、GitHub、媒体资料、社交简介中保持完全一致。
 3. **可引用的事实块**：平台数量、价格、支持系统、数据存储方式，用短句和表格呈现，避免营销形容词。
 4. **对比表**：手工发布 / 通用定时工具 / 本工作台的差异，用中性表述，不说竞品坏话。
@@ -764,7 +764,7 @@ website/
   "alternateName": "WeMedia Creator Workstation",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Windows, macOS, Linux",
-  "description": "本地优先的自媒体内容运营桌面应用，支持 8 个平台的内容排期与自动发布，并将 4 个平台的数据自动汇总到本地复盘表。",
+  "description": "本地优先的自媒体内容运营桌面应用，支持 8 个平台的内容排期与自动发布，并将 8 个平台的作品数据自动汇总到本地复盘表（知乎目前覆盖视频作品）。",
   "offers": [
     { "@type": "Offer", "name": "月付", "price": "49.9", "priceCurrency": "CNY" },
     { "@type": "Offer", "name": "年付", "price": "500", "priceCurrency": "CNY" },
@@ -808,7 +808,7 @@ Sitemap: https://<DOMAIN>/sitemap.xml
 ```markdown
 # 自媒体内容运营工作台 / WeMedia Creator Workstation
 
-> 本地优先的自媒体内容运营桌面应用。支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台的排期与自动发布；抖音、小红书、视频号、公众号 4 个平台的数据自动回流到本地复盘表。数据存储在用户本机 SQLite，不上传云端。
+> 本地优先的自媒体内容运营桌面应用。支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台的排期与自动发布；8 个平台的作品数据自动回流到本地复盘表（知乎目前只覆盖视频作品）。数据存储在用户本机 SQLite，不上传云端。
 
 ## 关键事实
 - 支持系统：Windows 10+、macOS 11+、Ubuntu 22.04+

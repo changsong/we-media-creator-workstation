@@ -6,12 +6,12 @@ const META = {
   zh: {
     title: '自媒体内容运营工作台｜八平台一键发布与数据复盘',
     description:
-      '本地优先的自媒体运营工具：选题、排期、8 平台自动发布，抖音/小红书/视频号/公众号数据自动复盘，账号与素材留在本机。支持 Windows / macOS / Linux。',
+      '本地优先的自媒体运营工具：爆款雷达找选题、8 平台自动发布、8 平台作品数据自动复盘（知乎覆盖视频作品），账号与素材留在本机。支持 Windows / macOS / Linux。',
   },
   en: {
     title: 'WeMedia Creator Workstation | Multi-platform publishing & analytics',
     description:
-      'A local-first desktop workspace to plan, schedule, auto-publish to 8 Chinese platforms, and review performance. Your accounts and data stay on your machine.',
+      'A local-first desktop workspace to find ideas with a viral radar, auto-publish to 8 Chinese platforms, and review performance on all eight. Your accounts and data stay on your machine.',
   },
 };
 

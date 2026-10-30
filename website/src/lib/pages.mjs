@@ -89,9 +89,13 @@ const FEATURE_HERO = {
 };
 
 const FEATURE_STATS = {
+  radar: {
+    zh: [['3', '个平台一次搜索'], ['热度', '跨平台统一排序'], ['30 天', '搜索结果保留']],
+    en: [['3', 'platforms per search'], ['Heat', 'one cross-platform ranking'], ['30 days', 'results kept']],
+  },
   ideas: {
-    zh: [['0–10', '爆款潜力评分'], ['标签', '平台与角度'], ['CSV', '随时导出']],
-    en: [['0–10', 'potential score'], ['Tags', 'platform and angle'], ['CSV', 'export anytime']],
+    zh: [['0–10', '爆款潜力评分'], ['标签', '角度与状态'], ['CSV', '随时导出']],
+    en: [['0–10', 'potential score'], ['Tags', 'angle and status'], ['CSV', 'export anytime']],
   },
   calendar: {
     zh: [['9', '个制作阶段'], ['1', '张月度时间轴'], ['多选', '负责人与平台']],
@@ -102,8 +106,8 @@ const FEATURE_STATS = {
     en: [['8', 'platforms in one queue'], ['Fixed', 'browser window size'], ['Verify', 'results checked for you']],
   },
   analytics: {
-    zh: [['4', '个平台自动回流'], ['3', '种比率自动计算'], ['CSV', 'Excel 直接打开']],
-    en: [['4', 'platforms sync automatically'], ['3', 'rates calculated'], ['CSV', 'opens in Excel']],
+    zh: [['8', '个平台自动回流'], ['3', '种比率自动计算'], ['CSV', 'Excel 直接打开']],
+    en: [['8', 'platforms sync automatically'], ['3', 'rates calculated'], ['CSV', 'opens in Excel']],
   },
   library: {
     zh: [['成稿', '与配图说明'], ['关键词', '串联选题与复盘'], ['语音', '复盘直接归档']],
@@ -128,7 +132,7 @@ function featuresPage(lang) {
     const bullets = isEn ? b.bulletsEn : b.bulletsZh;
     const stats = (FEATURE_STATS[b.id][lang] || FEATURE_STATS[b.id].zh);
     const copy = `<div>
-      <span class="section-eyebrow">0${i + 1} / 06</span>
+      <span class="section-eyebrow">0${i + 1} / 0${FEATURE_BLOCKS.length}</span>
       <h2 class="font-headline-lg text-headline-lg text-on-surface mt-2 mb-3">${esc(title)}</h2>
       <p class="font-body-md text-body-md text-on-surface-variant mb-5">${esc(body)}</p>
       <ul class="space-y-3">
@@ -184,8 +188,8 @@ function featuresPage(lang) {
     route: '/features/',
     title: isEn ? 'Features — planning, scheduling, publishing, analytics' : '功能特性｜选题、排期、八平台发布与数据复盘',
     description: isEn
-      ? 'Explore the idea pool, content calendar, publish queue, automatic analytics, asset library, and one-click sign-in in WeMedia Creator Workstation.'
-      : '了解 WeMedia 工作台的选题池、内容日历、八平台发布队列、自动数据复盘、素材库与一键登录能力。',
+      ? 'Explore the viral idea radar, idea pool, content calendar, publish queue, automatic analytics for eight platforms, asset library, and one-click sign-in.'
+      : '了解 WeMedia 工作台的爆款灵感雷达、选题池、内容日历、八平台发布队列、八平台自动数据复盘、素材库与一键登录能力。',
     body,
     priority: 0.9,
   });
@@ -197,12 +201,12 @@ const PLATFORM_HERO = {
   zh: {
     eyebrow: '支持平台',
     title: '八个平台，一套发布流程',
-    desc: '自动发布覆盖八个平台，自动数据回流覆盖四个。每个平台的规则、封面比例与限制，都在各自的指南里写清楚。',
+    desc: '八个平台都能自动发布，作品数据也都自动回流（知乎目前覆盖视频作品）。每个平台的规则、封面比例与限制，都在各自的指南里写清楚。',
   },
   en: {
     eyebrow: 'Platforms',
     title: 'Eight platforms, one publishing flow',
-    desc: 'Publishing covers eight platforms; automatic analytics covers four. Each guide spells out formats, cover ratios, and limits.',
+    desc: 'All eight platforms publish and sync analytics automatically (Zhihu currently covers video works). Each guide spells out formats, cover ratios, and limits.',
   },
 };
 
@@ -247,7 +251,7 @@ function platformsPage(lang) {
     }),
     contentSection({
       body: `<div class="max-w-6xl mx-auto">
-        ${sectionHeading({ lang, eyebrow: isEn ? 'Coverage at a glance' : '支持矩阵', title: isEn ? 'What is automatic, and what is manual' : '哪些是自动的，哪些需要手动', desc: isEn ? 'Publishing is automatic on all eight. Analytics is automatic on four; the rest can be entered manually in the review table.' : '八个平台都能自动发布；数据自动回流覆盖四个平台，其余平台可在复盘表中手动记录。' })}
+        ${sectionHeading({ lang, eyebrow: isEn ? 'Coverage at a glance' : '支持矩阵', title: isEn ? 'What is automatic, and what is manual' : '哪些是自动的，哪些需要手动', desc: isEn ? 'Publishing and analytics are automatic on all eight. Zhihu analytics currently covers video works only; answers and articles can still be logged by hand.' : '八个平台都能自动发布，作品数据也都自动回流；知乎目前只覆盖视频作品，回答与文章可在复盘表中手动补充。' })}
         ${table({ head: [isEn ? 'Platform' : '平台', isEn ? 'Formats' : '内容形式', isEn ? 'Publishing' : '自动发布', isEn ? 'Analytics' : '数据回流'], rows })}
       </div>`,
     }),
@@ -265,8 +269,8 @@ function platformsPage(lang) {
     route: '/platforms/',
     title: isEn ? 'Supported platforms — eight Chinese social networks' : '支持平台｜抖音、视频号、小红书、公众号等 8 个平台',
     description: isEn
-      ? 'Publishing support for Douyin, WeChat Channels, Xiaohongshu, Official Accounts, Bilibili, Kuaishou, Weibo, and Zhihu, with automatic analytics on four.'
-      : '支持抖音、视频号、小红书、公众号、B站、快手、微博、知乎八个平台发布，其中四个平台支持数据自动回流。',
+      ? 'Publishing support for Douyin, WeChat Channels, Xiaohongshu, Official Accounts, Bilibili, Kuaishou, Weibo, and Zhihu, with automatic analytics on all eight.'
+      : '支持抖音、视频号、小红书、公众号、B站、快手、微博、知乎八个平台发布与作品数据自动回流，知乎目前覆盖视频作品。',
     body,
     priority: 0.9,
   });
@@ -295,7 +299,7 @@ function platformPage(lang, slug) {
     ['event', isEn ? 'Schedule the post once' : '排一次期', isEn ? 'Set the platform, time, and pre-cropped cover.' : '选好平台、时间和提前裁好的封面。'],
     ['rocket_launch', isEn ? 'It publishes on time' : '到点自动发布', isEn ? 'The local browser wakes up and publishes with your session.' : '本机浏览器唤起，用你的登录态发布。'],
     ['fact_check', isEn ? 'The result is verified' : '发布后自动核验', isEn ? 'Failures stay in the queue and can be retried.' : '失败任务留在队列里，可安全重试。'],
-    [p.dataBack ? 'insights' : 'edit_note', p.dataBack ? (isEn ? 'Analytics flow back' : '数据自动回流') : (isEn ? 'Log key numbers' : '手动记录关键数据'), p.dataBack ? (isEn ? 'Views, likes, and growth land in your review table.' : '播放、点赞与涨粉回到复盘表。') : (isEn ? 'Automatic analytics is not covered yet; add key numbers manually.' : '该平台暂未覆盖自动回流，可在复盘表手动补充。')],
+    ['insights', isEn ? 'Analytics flow back' : '数据自动回流', isEn ? 'Views, likes, and engagement land in your review table.' : '播放、点赞与互动数据回到复盘表。'],
   ].map(([ic, title, desc]) => `<li class="flex items-start gap-3"><div class="w-9 h-9 shrink-0 rounded-full bg-surface-dark flex items-center justify-center text-gold-accent">${icon(ic, 'text-[18px]')}</div><div><div class="font-label-capsule text-label-capsule text-text-light-primary">${esc(title)}</div><p class="font-body-sm text-body-sm text-text-light-secondary mt-0.5">${esc(desc)}</p></div></li>`).join('');
 
   const faqLd = {
@@ -437,7 +441,7 @@ function pricingPage(lang, checkout = '') {
     name: isEn ? 'WeMedia Creator Workstation' : '自媒体内容运营工作台',
     description: isEn
       ? 'Local-first desktop workspace for publishing to eight Chinese platforms with automatic analytics.'
-      : '本地优先的自媒体桌面工作台，支持八个平台发布与四个平台数据自动回流。',
+      : '本地优先的自媒体桌面工作台，支持八个平台发布与八个平台数据自动回流。',
     brand: { '@type': 'Brand', name: 'WeMedia Studio' },
     offers: PLANS.map((plan) => ({
       '@type': 'Offer',
@@ -1130,7 +1134,7 @@ function aboutPage(lang) {
   ]);
   const principles = [
     ['lock', isEn ? 'Local first, not cloud first' : '本地优先，而不是云端优先', isEn ? 'Cookies, media, and analytics stay in a local SQLite database. No relay servers and no uploaded passwords.' : 'Cookie、素材与复盘数据保存在本机 SQLite，不经过中转服务器，也不上传账号密码。'],
-    ['visibility', isEn ? 'Say what it cannot do' : '把不能做的说清楚', isEn ? 'Four platforms sync analytics automatically, not eight. macOS does not auto-update yet. The site repeats those limits instead of hiding them.' : '自动数据回流覆盖四个平台而不是八个；macOS 暂不自动更新。这些限制会反复写明，而不是藏起来。'],
+    ['visibility', isEn ? 'Say what it cannot do' : '把不能做的说清楚', isEn ? 'Zhihu analytics covers video works only — answers and articles are not counted yet. macOS does not auto-update yet. The site repeats those limits instead of hiding them.' : '知乎的数据回流只覆盖视频作品，回答与文章暂不计入；macOS 暂不自动更新。这些限制会反复写明，而不是藏起来。'],
     ['tune', isEn ? 'Built around a real workflow' : '围绕真实工作流打磨', isEn ? 'The app follows the actual sequence of planning, making, publishing, and reviewing — not an idealized dashboard.' : '应用按真实顺序组织：选题、制作、发布、复盘，而不是拼一个好看的仪表盘。'],
   ].map(([ic, title, desc]) => `<div class="rounded-2xl bg-surface-white p-6 shadow-sm">
     <div class="w-11 h-11 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-4">${icon(ic, 'text-[22px]')}</div>
@@ -1171,7 +1175,7 @@ function aboutPage(lang) {
     contentSection({
       body: `<div class="max-w-6xl mx-auto rounded-3xl bg-canvas-dark p-8 sm:p-10 text-text-light-secondary grid grid-cols-1 md:grid-cols-3 gap-6">
         <div><div class="font-metric-large text-metric-large text-text-light-primary">8</div><div class="font-body-sm text-body-sm">${isEn ? 'platforms supported for publishing' : '个平台支持自动发布'}</div></div>
-        <div><div class="font-metric-large text-metric-large text-text-light-primary">4</div><div class="font-body-sm text-body-sm">${isEn ? 'platforms with automatic analytics' : '个平台数据自动回流'}</div></div>
+        <div><div class="font-metric-large text-metric-large text-text-light-primary">8</div><div class="font-body-sm text-body-sm">${isEn ? 'platforms with automatic analytics' : '个平台数据自动回流'}</div></div>
         <div><div class="font-metric-large text-metric-large text-text-light-primary">0</div><div class="font-body-sm text-body-sm">${isEn ? 'cloud accounts or relay servers' : '个云账号与中转服务器'}</div></div>
       </div>`,
     }),
@@ -1210,8 +1214,8 @@ function changelogPage(lang) {
   const entries = CHANGELOG.map((entry) => `<article class="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-4 md:gap-8 py-space-lg border-t border-border-light first:border-0">
     <div>
       <div class="flex items-center gap-2">
-        <span class="rounded-full ${entry.current ? 'bg-gold-accent text-canvas-dark' : 'bg-surface-container-low text-on-surface'} px-3 py-1 font-label-capsule text-body-sm">v${esc(entry.version)}</span>
-        ${entry.current ? `<span class="font-body-sm text-body-sm text-status-success">${isEn ? 'Current' : '当前版本'}</span>` : ''}
+        <span class="rounded-full ${entry.upcoming ? 'border border-gold-accent text-on-surface' : entry.current ? 'bg-gold-accent text-canvas-dark' : 'bg-surface-container-low text-on-surface'} px-3 py-1 font-label-capsule text-body-sm">v${esc(entry.version)}</span>
+        ${entry.upcoming ? `<span class="font-body-sm text-body-sm text-primary">${isEn ? 'In development' : '开发中'}</span>` : entry.current ? `<span class="font-body-sm text-body-sm text-status-success">${isEn ? 'Current' : '当前版本'}</span>` : ''}
       </div>
       <div class="mt-2 font-body-sm text-body-sm text-on-surface-variant">${formatDate(entry.date, lang)}</div>
     </div>
@@ -1413,7 +1417,7 @@ export function renderLlms() {
   const full = `${short}
 ## Detailed capabilities
 
-The app covers five stages: idea pool, content calendar, publish center, analytics review, and asset archive. It publishes through the user's own browser session, verifies each result, retries failed tasks, and stores everything locally. Automatic analytics currently covers four platforms; other platforms require manual entry.
+The app covers five stages: viral idea radar and idea pool, content calendar, publish center, analytics review, and asset archive. The radar searches Xiaohongshu, Douyin, and Bilibili at once and ranks results by cross-platform heat; searches and results are kept locally for 30 days. It publishes through the user's own browser session, verifies each result, retries failed tasks, and stores everything locally. Automatic analytics covers all eight platforms; for Zhihu it currently covers video works only, so answers and articles require manual entry.
 
 ## Pricing
 

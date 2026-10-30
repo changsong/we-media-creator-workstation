@@ -1,8 +1,30 @@
 export const CHANGELOG = [
   {
+    version: '2.0.2',
+    date: '2026-10-30',
+    current: true,
+    titleZh: '爆款灵感雷达与八平台数据复盘',
+    titleEn: 'Viral idea radar and eight-platform analytics',
+    itemsZh: [
+      '新增「爆款灵感雷达」：一次搜索小红书、抖音、B站，按跨平台互动热度统一排序。',
+      '搜索结果可一键转选题，标题、切入角度与参考链接自动带入弹窗；上次关键词与结果本地保留 30 天。',
+      '选题池不再绑定平台，改为记录角度、标签与爆款潜力评分。',
+      '快手、微博、B站、知乎数据回流加入复盘表，至此八个平台作品数据均可自动复盘。',
+      '公众号支持自动发表，并采集文章作品数据。',
+      'B 站投稿失败自动重试，修正分区与创作声明选择，减少重传。',
+    ],
+    itemsEn: [
+      'New viral idea radar: search Xiaohongshu, Douyin, and Bilibili at once, ranked by cross-platform engagement heat.',
+      'Turn any result into a topic with title, angle, and reference link prefilled; keywords and results stay local for 30 days.',
+      'The idea pool no longer binds to a platform — it records angle, tags, and potential score instead.',
+      'Kuaishou, Weibo, Bilibili, and Zhihu analytics now feed the review table, so all eight platforms sync works data automatically.',
+      'Official Accounts can publish automatically and collect article analytics.',
+      'Failed Bilibili uploads retry automatically, with corrected category and content declaration selection.',
+    ],
+  },
+  {
     version: '2.0.1',
     date: '2026-10-26',
-    current: true,
     titleZh: '公众号发布与稳定性修复',
     titleEn: 'Official Accounts publishing and stability fixes',
     itemsZh: [

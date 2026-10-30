@@ -14,6 +14,8 @@ const channelsCollector = require('./lib/channels-collector');
 const kuaishouCollector = require('./lib/kuaishou-collector');
 const weiboCollector = require('./lib/weibo-collector');
 const bilibiliCollector = require('./lib/bilibili-collector');
+const zhihuCollector = require('./lib/zhihu-collector');
+const trends = require('./lib/trends');
 const recordings = require('./lib/recordings');
 const media = require('./lib/media');
 const publishTasks = require('./lib/publish-tasks');
@@ -444,6 +446,39 @@ async function handleApi(req, res, url) {
     return res.end();
   }
 
+  // 爆款灵感：关键词搜索小红书 / 抖音 / B站
+  if (url.pathname === '/api/trends/platforms' && method === 'GET') {
+    return sendJSON(res, 200, {
+      platforms: trends.platformStatuses(),
+      mock: process.env.WB_TRENDS_MOCK === '1'
+    });
+  }
+  if (url.pathname === '/api/trends/search' && method === 'POST') {
+    try {
+      const body = await readBody(req);
+      return sendJSON(res, 202, trends.search(body));
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+  if (url.pathname === '/api/trends/status' && method === 'GET') {
+    return sendJSON(res, 200, trends.status());
+  }
+  if (url.pathname === '/api/trends/items' && method === 'GET') {
+    try {
+      return sendJSON(res, 200, trends.cached(url.searchParams.get('keyword'), url.searchParams.get('platform')));
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+  if (url.pathname === '/api/trends/latest' && method === 'GET') {
+    try {
+      return sendJSON(res, 200, { job: trends.latest() });
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+
   // 小红书笔记数据采集（复用一键登录的浏览器 profile）
   if (url.pathname === '/api/collectors/xiaohongshu/status' && method === 'GET') {
     return sendJSON(res, 200, xhsCollector.getStatus());
@@ -526,6 +561,21 @@ async function handleApi(req, res, url) {
   if (url.pathname === '/api/collectors/bilibili/run' && method === 'POST') {
     try {
       const result = await bilibiliCollector.run();
+      touch('review', 'sync', '');
+      touch('calendar', 'sync', '');
+      return sendJSON(res, 200, result);
+    } catch (err) {
+      return sendJSON(res, err.status || 502, { error: err.message });
+    }
+  }
+
+  // 知乎个人视频作品数据采集（复用一键登录保存的 Cookie）
+  if (url.pathname === '/api/collectors/zhihu/status' && method === 'GET') {
+    return sendJSON(res, 200, zhihuCollector.getStatus());
+  }
+  if (url.pathname === '/api/collectors/zhihu/run' && method === 'POST') {
+    try {
+      const result = await zhihuCollector.run();
       touch('review', 'sync', '');
       touch('calendar', 'sync', '');
       return sendJSON(res, 200, result);

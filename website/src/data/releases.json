@@ -1,16 +1,16 @@
 {
   "base": "https://we-media-creator.oss-cn-beijing.aliyuncs.com",
-  "version": "2.0.1",
-  "releaseDate": "2026-10-26T12:46:34.636Z",
-  "generatedAt": "2026-10-26T14:54:06.805Z",
+  "version": "2.0.2",
+  "releaseDate": "2026-10-30T08:50:50.994Z",
+  "generatedAt": "2026-10-30T09:01:36.113Z",
   "platforms": {
     "win": {
       "x64": {
         "exe": {
-          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/win/x64/WeMedia-Workstation-Setup-2.0.1.exe",
-          "name": "WeMedia-Workstation-Setup-2.0.1.exe",
-          "size": 127383517,
-          "sha512": "a6HWLiMEeYdzD72ewqyS8FD8gZOpSqpaAnNMVZc3yPwrY6nV+tAY4D03aHtuGCmJq9FkA60FVUNZmuhY47MwRg=="
+          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/win/x64/WeMedia-Workstation-Setup-2.0.2.exe",
+          "name": "WeMedia-Workstation-Setup-2.0.2.exe",
+          "size": 127425679,
+          "sha512": "61F5hdRASV2KMm6Tzh8z4Htcn1JkGgd9vxICVxNqOQ8E8029dIy8rLNGnSwJgSiWx3Eu83CPpguzQwB8SY+jOw=="
         }
       }
     },

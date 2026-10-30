@@ -10,16 +10,16 @@ export const USE_CASES = {
     introEn:
       'Your day is split between filming, editing, and client calls. The bottleneck is not the creative work — it is re-uploading, resizing covers, and copying numbers. One person running eight platforms needs a schedule, not more hustle.',
     storyZh: [
-      ['09:30', '在选题池里把本周的三个想法标好平台和潜力评分，内容日历自动留出制作时间。'],
+      ['09:30', '先在爆款雷达里看一眼同题热度，再把本周的三个想法标好角度和潜力评分，内容日历自动留出制作时间。'],
       ['14:00', '素材剪完直接放进发布中心，八个平台一次排好，封面比例提前裁切。'],
       ['18:00', '电脑合上也没关系，桌面端在托盘里按顺序发布，发完自动核验。'],
-      ['次日 09:00', '打开复盘表，四个平台的播放、互动和涨粉已经回来，决定下一条做什么。'],
+      ['次日 09:00', '打开复盘表，八个平台的播放、互动和涨粉已经回来，决定下一条做什么。'],
     ],
     storyEn: [
-      ['09:30', 'Tag three ideas by platform and potential score; the calendar reserves production time.'],
+      ['09:30', 'Check competitive heat with the viral radar, then tag three ideas with angle and potential score; the calendar reserves production time.'],
       ['14:00', 'Drop the finished asset into the publish center and schedule all eight platforms with pre-cropped covers.'],
       ['18:00', 'Close the laptop. The desktop app keeps publishing from the tray and verifies each result.'],
-      ['Next 09:00', 'Open the review table: views, engagement, and follower growth from four platforms are already there.'],
+      ['Next 09:00', 'Open the review table: views, engagement, and follower growth from all eight platforms are already there.'],
     ],
     scenariosZh: [
       ['副业博主', '下班后只有两三个小时，靠排期把周更变成稳定的节奏。'],
@@ -31,8 +31,8 @@ export const USE_CASES = {
       ['Multi-platform distribution', 'One asset becomes image and video posts with covers prepared once.'],
       ['Solo review', 'No operations teammate, so analytics must come back on their own.'],
     ],
-    metricsZh: [['每天 2–3 小时', '少做重复上传与手抄'], ['8 个平台', '共用一张发布日历'], ['4 个平台', '数据自动回流复盘']],
-    metricsEn: [['2–3 hours a day', 'less repetitive uploading and copying'], ['8 platforms', 'on one publishing calendar'], ['4 platforms', 'with automatic analytics']],
+    metricsZh: [['每天 2–3 小时', '少做重复上传与手抄'], ['8 个平台', '共用一张发布日历'], ['8 个平台', '数据自动回流复盘']],
+    metricsEn: [['2–3 hours a day', 'less repetitive uploading and copying'], ['8 platforms', 'on one publishing calendar'], ['8 platforms', 'with automatic analytics']],
   },
   team: {
     icon: 'groups',
@@ -82,13 +82,13 @@ export const USE_CASES = {
     storyZh: [
       ['当地上午', '国内已是下午，选题和文案在本地准备好，排进对应的国内发布时间。'],
       ['当地中午', '发布任务在北京时间准点执行，不需要你熬夜守着。'],
-      ['当地傍晚', '查看复盘表，四个平台的互动数据已经回流。'],
+      ['当地傍晚', '查看复盘表，八个平台的互动数据已经回流。'],
       ['周末', '把成稿和关键词归档，下一轮选题直接复用。'],
     ],
     storyEn: [
       ['Local morning', 'It is already afternoon in China. Prepare ideas and copy locally and schedule the right China-time slot.'],
       ['Local noon', 'Publishing runs on Beijing time without you staying up.'],
-      ['Local evening', 'Check the review table: engagement from four platforms is already back.'],
+      ['Local evening', 'Check the review table: engagement from all eight platforms is already back.'],
       ['Weekend', 'Archive final copy and keywords to reuse next cycle.'],
     ],
     scenariosZh: [

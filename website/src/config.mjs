@@ -54,7 +54,7 @@ export const PLANS = [
 
 export const PLAN_FEATURES_ZH = [
   '8 大平台定时自动发布',
-  '4 大平台数据自动回流复盘',
+  '8 大平台数据自动回流复盘',
   '全部功能，无低配版',
   '授权同时激活 3 台设备',
   '订阅期内版本更新与平台适配',
@@ -63,7 +63,7 @@ export const PLAN_FEATURES_ZH = [
 
 export const PLAN_FEATURES_EN = [
   'Scheduled publishing to all 8 platforms',
-  'Automatic analytics for 4 platforms',
+  'Automatic analytics for all 8 platforms',
   'Every feature included — no cut-down tiers',
   'Activate up to 3 devices',
   'Updates and platform fixes while subscribed',
@@ -141,11 +141,11 @@ export const PLATFORMS = [
     dot: 'bg-sky-500',
     formatsZh: '视频投稿',
     formatsEn: 'Video uploads',
-    dataBack: false,
-    noteZh: '支持视频投稿流程；数据回流暂未覆盖，可在发布后手动记录关键数据。',
-    noteEn: 'Supports the video submission flow. Automatic analytics is not available yet; record key numbers manually if needed.',
-    introZh: 'B 站视频投稿也能进统一队列。标题、分区、封面一次排好，到点自动提交，省下重复填写的时间。',
-    introEn: 'Bilibili uploads join the same queue. Set the title, category, and cover once, then let the schedule submit it for you.',
+    dataBack: true,
+    noteZh: '支持视频投稿，失败自动重试；稿件发布后回流播放、点赞、评论、收藏、投币、转发与弹幕数据。',
+    noteEn: 'Submit videos with automatic retries on failure. Views, likes, comments, saves, coins, shares, and danmaku flow back after publishing.',
+    introZh: 'B 站视频投稿也能进统一队列。标题、分区、封面一次排好，到点自动提交，投稿失败自动重试，稿件数据随后回流复盘表。',
+    introEn: 'Bilibili uploads join the same queue. Set the title, category, and cover once, let the schedule submit it, retry failures automatically, and review submission analytics afterward.',
   },
   {
     id: 'kuaishou',
@@ -156,11 +156,11 @@ export const PLATFORMS = [
     dot: 'bg-orange-500',
     formatsZh: '视频 / 图文',
     formatsEn: 'Video / image posts',
-    dataBack: false,
-    noteZh: '支持视频与图文发布；数据回流暂未覆盖，发布结果会自动核验。',
-    noteEn: 'Publish video and image posts with automatic result verification. Analytics is not covered yet.',
-    introZh: '快手内容排进同一张表，发布任务按顺序执行，失败可重试，结果自动核验，不用逐个后台确认。',
-    introEn: 'Kuaishou posts join the same table. Tasks run in order, can be retried on failure, and are verified automatically.',
+    dataBack: true,
+    noteZh: '支持视频与图文发布，发布结果自动核验；回流播放、点赞、评论、收藏与涨粉数据。',
+    noteEn: 'Publish video and image posts with automatic verification. Views, likes, comments, saves, and follower growth flow back.',
+    introZh: '快手内容排进同一张表，发布任务按顺序执行，失败可重试，结果自动核验；播放、点赞、评论、收藏与涨粉数据自动回流复盘表。',
+    introEn: 'Kuaishou posts join the same table. Tasks run in order, retry on failure, and verify automatically, with views, likes, comments, saves, and follower growth flowing back into your review table.',
   },
   {
     id: 'weibo',
@@ -171,11 +171,11 @@ export const PLATFORMS = [
     dot: 'bg-amber-500',
     formatsZh: '图文 / 视频',
     formatsEn: 'Image posts / video',
-    dataBack: false,
-    noteZh: '支持图文与视频微博发布，发布后会核验博文是否存在；数据回流暂未覆盖。',
-    noteEn: 'Publish text, image, and video posts, then verify the post exists. Analytics is not covered yet.',
-    introZh: '微博发布后自动核验是否成功，避免"以为发了其实没发"。适合把热点内容和其他平台一起排期。',
-    introEn: 'Every Weibo post is verified after publishing, so you know it actually went live. Schedule hot takes alongside your other platforms.',
+    dataBack: true,
+    noteZh: '支持图文与视频微博发布，发布后核验博文是否存在；回流阅读、点赞、评论、转发、视频播放与账号涨粉。',
+    noteEn: 'Publish text, image, and video posts with post verification. Reads, likes, comments, reposts, video plays, and follower growth flow back.',
+    introZh: '微博发布后自动核验是否成功，避免"以为发了其实没发"。阅读、点赞、评论、转发与视频播放量自动回流，账号涨粉按天归档。',
+    introEn: 'Every Weibo post is verified after publishing. Reads, likes, comments, reposts, and video plays sync automatically, with follower growth archived daily.',
   },
   {
     id: 'zhihu',
@@ -186,11 +186,11 @@ export const PLATFORMS = [
     dot: 'bg-blue-600',
     formatsZh: '文章 / 视频',
     formatsEn: 'Articles / video',
-    dataBack: false,
-    noteZh: '支持知乎文章与视频发布；数据回流暂未覆盖，可在复盘表手动补充。',
-    noteEn: 'Publish Zhihu articles and videos. Analytics is not covered yet; add key numbers to the review table manually.',
-    introZh: '知乎长文和视频也能排期。把深度内容和其他平台一起安排好，发布后统一记录，节省重复操作。',
-    introEn: 'Long-form Zhihu articles and videos can be scheduled too. Plan deep content alongside other platforms and log it all in one place.',
+    dataBack: true,
+    noteZh: '支持知乎视频发布；视频作品的播放、点赞、评论、收藏与转发自动回流（回答与文章暂不计入）。',
+    noteEn: 'Publish Zhihu videos. Plays, likes, comments, saves, and reposts sync automatically (answers and articles are not counted yet).',
+    introZh: '知乎视频也能排期，发布后播放、点赞、评论、收藏与转发数据自动回流。回答与文章仍按原流程发布，暂不计入复盘。',
+    introEn: 'Schedule Zhihu videos and get plays, likes, comments, saves, and reposts written to your review table. Answers and articles publish as before and are not counted yet.',
   },
 ];
 
@@ -203,7 +203,7 @@ export const faqTopics = {
       items: [
         { q: '它到底是什么？', a: '自媒体内容运营工作台是一款本地优先的桌面应用。它把选题、排期、发布、数据复盘和素材归档放在同一张工作台里，支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台。' },
         { q: '和浏览器插件、定时工具有什么不同？', a: '插件通常只能操作单个平台，通用定时工具又依赖平台开放 API。我们通过本机浏览器完成发布，不需要开发者资质；同时把数据回流和复盘做进了同一个应用。' },
-        { q: '支持哪些平台？', a: '自动发布覆盖抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台。自动数据回流目前覆盖抖音、小红书、视频号、公众号 4 个平台。' },
+        { q: '支持哪些平台？', a: '自动发布覆盖抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台，8 个平台的作品数据都能自动回流复盘表（知乎目前只覆盖视频作品，回答与文章不计入）。' },
       ],
     },
     {
@@ -221,7 +221,7 @@ export const faqTopics = {
         { q: '数据存在哪里？', a: '全部存在你电脑上的 SQLite 数据库文件中，默认位于系统的用户数据目录。不会上传云端，断网也能查看历史排期和复盘。' },
         { q: '能导出吗？', a: '可以。四张业务表都支持导出 CSV（带 BOM，Excel 可直接打开）。' },
         { q: '换电脑怎么办？', a: '停止应用后，把数据目录复制到新电脑对应的位置即可。升级或重装不会删除数据。' },
-        { q: '会自动同步哪些平台的数据？', a: '目前自动回流抖音、小红书、视频号、公众号 4 个平台的数据；其他平台可在复盘表中手动记录。' },
+        { q: '会自动同步哪些平台的数据？', a: '抖音、视频号、小红书、快手、微博、B 站、知乎与公众号的数据都会自动回流；其中知乎只采集视频作品，回答和文章暂不计入。' },
       ],
     },
     {
