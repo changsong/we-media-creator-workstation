@@ -1,7 +1,7 @@
 export const UI = {
   zh: {
     brand: '自媒体内容运营工作台',
-    brandShort: '/ WeMedia',
+    brandShort: '/ WeMediaCreator',
     nav: [
       { key: 'features', label: '功能特性', route: '/features/' },
       { key: 'platforms', label: '支持平台', route: '/platforms/' },
@@ -133,7 +133,7 @@ export const UI = {
   },
   en: {
     brand: 'WeMedia Creator Workstation',
-    brandShort: '/ WeMedia',
+    brandShort: '/ WeMediaCreator',
     nav: [
       { key: 'features', label: 'Features', route: '/features/' },
       { key: 'platforms', label: 'Platforms', route: '/platforms/' },
