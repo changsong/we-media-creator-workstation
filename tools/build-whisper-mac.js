@@ -17,7 +17,10 @@ const ROOT = path.join(__dirname, '..');
 const BUILD = process.env.WB_WHISPER_BUILD || 'b5454';
 const ARCHIVE_URL = `https://github.com/ggml-org/whisper.cpp/archive/refs/tags/${BUILD}.tar.gz`;
 const DEPLOYMENT_TARGET = process.env.WB_MACOS_DEPLOYMENT_TARGET || '11.0';
-const OUT_DIRS = ['darwin-arm64', 'darwin-x64'];
+// CI 每个架构单独构建，避免 universal 交叉编译；本地不指定时仍产出 universal。
+const TARGET_ARCH = process.env.WB_WHISPER_ARCH || '';
+const OUT_DIRS = TARGET_ARCH ? [`darwin-${TARGET_ARCH}`] : ['darwin-arm64', 'darwin-x64'];
+const CMAKE_ARCHS = TARGET_ARCH === 'x64' ? 'x86_64' : TARGET_ARCH === 'arm64' ? 'arm64' : 'arm64;x86_64';
 
 function run(cmd, args, opts) {
   const res = spawnSync(cmd, args, Object.assign({ stdio: 'inherit' }, opts));
@@ -100,7 +103,7 @@ async function main() {
     const threads = String(Math.max(2, Math.min(16, (os.cpus().length || 4) - 1)));
     const buildWith = (metal) => {
       fs.rmSync(buildDir, { recursive: true, force: true });
-      console.log('[whisper] 配置 universal 构建（arm64 + x86_64，' + (metal ? 'Metal' : 'CPU') + '）');
+      console.log('[whisper] 配置构建（' + CMAKE_ARCHS + '，' + (metal ? 'Metal' : 'CPU') + '）');
       run('cmake', [
         '-S', srcDir,
         '-B', buildDir,
@@ -112,14 +115,15 @@ async function main() {
         '-DGGML_NATIVE=OFF',
         metal ? '-DGGML_METAL=ON' : '-DGGML_METAL=OFF',
         metal ? '-DGGML_METAL_EMBED_LIBRARY=ON' : '-DGGML_METAL_EMBED_LIBRARY=OFF',
-        '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64',
+        '-DCMAKE_OSX_ARCHITECTURES=' + CMAKE_ARCHS,
         '-DCMAKE_OSX_DEPLOYMENT_TARGET=' + DEPLOYMENT_TARGET
       ]);
       console.log('[whisper] 编译 whisper-cli');
       run('cmake', ['--build', buildDir, '--config', 'Release', '--target', 'whisper-cli', '-j', threads]);
     };
 
-    const useMetal = process.env.WB_WHISPER_MAC_METAL !== '0';
+    // x64 目标在 Apple Silicon 构建机上交叉编译，Metal 容易失败，保持纯 CPU
+    const useMetal = process.env.WB_WHISPER_MAC_METAL !== '0' && TARGET_ARCH !== 'x64';
     try {
       buildWith(useMetal);
     } catch (err) {

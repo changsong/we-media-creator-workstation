@@ -42,7 +42,7 @@ jobs:
           - os: windows-latest
             name: win-x64
             install: npm ci --arch=x64
-            vendor: npm run vendor:ffmpeg && node tools/fetch-whisper.js --platform win32 --arch x64
+            vendor: node tools/ci-vendor.js win32 x64
             build: npx electron-builder --win --x64 --publish never
             paths: |
               dist/*.exe
@@ -51,7 +51,7 @@ jobs:
           - os: ubuntu-22.04
             name: linux-x64
             install: npm ci --arch=x64
-            vendor: npm run vendor:ffmpeg && node tools/fetch-whisper.js --platform linux --arch x64
+            vendor: node tools/ci-vendor.js linux x64
             build: npx electron-builder --linux --x64 --publish never
             paths: |
               dist/*.AppImage
@@ -61,7 +61,7 @@ jobs:
           - os: macos-latest
             name: mac-x64
             install: npm ci --arch=x64
-            vendor: npm run vendor:ffmpeg && node tools/fetch-whisper.js --platform darwin --arch x64
+            vendor: node tools/ci-vendor.js darwin x64
             build: npx electron-builder --mac --x64 --publish never --config.directories.output=dist-mac-x64
             paths: |
               dist-mac-x64/*.dmg
@@ -71,7 +71,7 @@ jobs:
           - os: macos-latest
             name: mac-arm64
             install: npm ci --arch=arm64
-            vendor: npm run vendor:ffmpeg && node tools/fetch-whisper.js --platform darwin --arch arm64
+            vendor: node tools/ci-vendor.js darwin arm64
             build: npx electron-builder --mac --arm64 --publish never --config.directories.output=dist-mac-arm64
             paths: |
               dist-mac-arm64/*.dmg

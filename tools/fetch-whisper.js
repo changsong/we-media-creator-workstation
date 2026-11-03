@@ -78,7 +78,8 @@ async function main() {
     if (platform === 'darwin') {
       // macOS 没有官方 CLI 预编译包，改为在 Mac 构建机上从源码编译
       const res = spawnSync(process.execPath, [path.join(__dirname, 'build-whisper-mac.js')], {
-        stdio: 'inherit'
+        stdio: 'inherit',
+        env: { ...process.env, WB_WHISPER_ARCH: arch }
       });
       process.exit(res.status == null ? 1 : res.status);
     }
