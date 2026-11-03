@@ -11,9 +11,8 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     overflow-x: hidden;
-  }
-
-  body {
+    /* Must sit on the root scroller. On <body> it turns body into a wheel-swallowing
+       scroll container (body also has overflow-x:hidden) and the page won't scroll. */
     overscroll-behavior-y: none;
   }
 
