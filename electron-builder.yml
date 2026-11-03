@@ -29,6 +29,11 @@ extraResources:
     to: app-server/lib
   - from: public
     to: app-server/public
+  # 本地语音识别依赖：ffmpeg 与 whisper.cpp（由 npm run vendor 生成）
+  - from: vendor/ffmpeg
+    to: app-server/vendor/ffmpeg
+  - from: vendor/whisper
+    to: app-server/vendor/whisper
 
 publish:
   provider: generic

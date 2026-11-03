@@ -17,7 +17,7 @@ export const PLATFORM_DETAILS = {
         ['后台抄录播放与互动数据', '约 4 分钟'],
       ],
       faq: [
-        ['抖音发布会被判定为异常吗？', '客户端使用你本机的 IP 与登录态，按正常节奏操作，并内置执行间隔与温和重试。平台风控策略会变化，我们无法承诺零风险，但不会使用共享账号或中转节点。'],
+        ['抖音发布会被判定为异常吗？', '客户端使用你本机的 IP 与登录态，按正常节奏操作，并内置执行间隔与温和重试。平台访问限制会变化，我们无法承诺零风险，但不会使用共享账号或中转节点。'],
         ['支持定时发布吗？', '可以。把作品放进发布中心并设定时间，到点后本地浏览器会被唤起执行。电脑需要开机，客户端可以最小化到托盘。'],
         ['数据多久回流一次？', '发布成功后会先核验结果，随后按客户端的同步周期抓取播放、点赞与涨粉数据，写入本地 SQLite。'],
       ],
@@ -39,7 +39,7 @@ export const PLATFORM_DETAILS = {
         ['Copy views and engagement', '~4 min'],
       ],
       faq: [
-        ['Could publishing look suspicious to Douyin?', 'The app uses your own IP and session at a normal pace, with pacing and gentle retries. Platform risk controls change, so we cannot promise zero risk, but we never use shared accounts or relay nodes.'],
+        ['Could publishing look suspicious to Douyin?', 'The app uses your own IP and session at a normal pace, with pacing and gentle retries. Platform access restrictions change, so we cannot promise zero risk, but we never use shared accounts or relay nodes.'],
         ['Does it support scheduled publishing?', 'Yes. Queue the post and set a time; the local browser wakes up and publishes. Your computer needs to be on, and the app can stay in the tray.'],
         ['How often does analytics sync?', 'After publishing, the app verifies the result, then pulls views, likes, and follower growth on its sync cycle into local SQLite.'],
       ],

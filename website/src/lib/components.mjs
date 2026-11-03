@@ -143,7 +143,7 @@ const PAIN = {
       title: '数据留在电脑，不用注册云账号',
       body: '基于 Local-First 本地优先架构设计。所有登录 Cookie、素材、复盘数据库均存在你电脑的 SQLite 中，零云端托管。',
       icon: 'encrypted',
-      win: '绝对掌控资产，远离平台风控',
+      win: '内容资产完全归你，不依赖云端账号',
     },
   ],
   en: [
@@ -166,7 +166,7 @@ const PAIN = {
       title: 'Your data stays on your computer.',
       body: 'Built local-first. Login cookies, assets, and review databases live in SQLite on your machine, with no cloud hosting.',
       icon: 'encrypted',
-      win: 'Full control of your assets and risk',
+      win: 'Your assets stay fully in your hands',
     },
   ],
 };
@@ -301,7 +301,7 @@ const LIMITS = {
   zh: [
     ['devices', '依赖本机浏览器', '发布与部分数据采集依赖本机安装的 Chrome 或 Edge 浏览器环境驱动。'],
     ['verified_user', '扫码授权登录态', '首次需在独立窗口登录平台账号，会话 Cookie 仅保存在本机，过期需轻点重登。'],
-    ['update', '平台风控与改版响应', '平台更新前端时可能出现短暂异常，开发团队会持续发布热更新补丁进行适配。'],
+    ['update', '平台改版响应', '平台更新前端时可能出现短暂异常，开发团队会持续发布热更新补丁进行适配。'],
     ['person', '单机单人专注设计', '当前版本专为独立创作者设计，暂不支持云端跨团队协同或多人远程共享。'],
   ],
   en: [
@@ -523,7 +523,7 @@ export function personasPreview({ lang }) {
 
 export const FAQ_PREVIEW = {
   zh: [
-    ['会不会把我账号封了？安全吗？', '工作台通过您本机的 Chrome/Edge 环境直接与平台交互，使用您自身的 IP 与 Cookie 登录态，绝不共享中转。同时内置防风控执行间隔与失败温和重试机制。自动化仍受平台风控策略影响，我们不能承诺 100% 不受影响。'],
+    ['会不会把我账号封了？安全吗？', '工作台通过您本机的 Chrome/Edge 环境直接与平台交互，使用您自身的 IP 与 Cookie 登录态，绝不共享中转。同时内置执行间隔与失败温和重试机制。自动化仍受平台访问限制影响，我们不能承诺 100% 不受影响。'],
     ['我的内容素材和数据保存在哪里？', '全部存储在您自己电脑本地的 SQLite 数据库文件中。不向任何云端上传，即使断网也能完全浏览历史排期、素材与本地复盘报表，支持随时一键导出为通用 CSV。'],
     ['我需要申请各平台的开发者 API 资质吗？', '完全不需要。普通个人作者根本拿不到各平台的官方企业开发者资质。WeMedia 采用桌面原生一键扫码登录，扫码成功后登录态自动保存在本机，零门槛开箱即用。'],
     ['平台界面改版导致自动化失败怎么办？', '维护团队持续监测各平台的结构变动。一旦检测到改版，会推送桌面端热适配更新；发布任务会自动核验，失败可安全重试，不会因为一次失败丢失排期。'],
@@ -531,7 +531,7 @@ export const FAQ_PREVIEW = {
     ['月付、年付与终身买断的功能有差异吗？', '功能完全一致，不设功能墙或低价阉割。唯一的差异是付费周期与授权期限：年付最具性价比，终身买断一次付费、终身免续费。'],
   ],
   en: [
-    ['Could my account get banned?', 'The app talks to platforms through Chrome or Edge on your own machine, using your own IP and signed-in session — never a shared relay. We add pacing and gentle retries. Automation is still subject to platform risk controls, so we cannot promise zero risk.'],
+    ['Could my account get banned?', 'The app talks to platforms through Chrome or Edge on your own machine, using your own IP and signed-in session — never a shared relay. We add pacing and gentle retries. Automation is still subject to platform access restrictions, so we cannot promise zero risk.'],
     ['Where are my assets and data stored?', 'In a local SQLite database on your computer. Nothing is uploaded. You can browse schedules and reviews offline, and export CSV at any time.'],
     ['Do I need developer API credentials?', 'No. Individual creators cannot usually obtain enterprise API access anyway. Sign in with a QR code in an isolated browser window; the session stays on your machine.'],
     ['What if a platform redesign breaks automation?', 'We monitor platform changes and ship compatibility updates. Every publish is verified, and failed tasks can be retried safely without losing the schedule.'],

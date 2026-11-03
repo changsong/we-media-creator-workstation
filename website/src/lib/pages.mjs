@@ -1412,7 +1412,7 @@ export function renderLlms() {
 - No team collaboration or cloud sync.
 - Desktop UI is Simplified Chinese.
 - macOS build is unsigned and does not auto-update.
-- Automation is subject to platform risk controls.
+- Automation is subject to platform access restrictions.
 `;
   const full = `${short}
 ## Detailed capabilities

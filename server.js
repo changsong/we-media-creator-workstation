@@ -3,6 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { URL } = require('url');
 const store = require('./lib/store');
 const { tables, tableOrder, publicSchema } = require('./lib/schemas');
@@ -16,6 +17,11 @@ const weiboCollector = require('./lib/weibo-collector');
 const bilibiliCollector = require('./lib/bilibili-collector');
 const zhihuCollector = require('./lib/zhihu-collector');
 const trends = require('./lib/trends');
+const trendsBrowser = require('./lib/trends/browser');
+const transcript = require('./lib/trends/transcript');
+const asr = require('./lib/asr');
+const proxyConfig = require('./lib/proxy-config');
+const browserLogin = require('./lib/browser-login');
 const recordings = require('./lib/recordings');
 const media = require('./lib/media');
 const publishTasks = require('./lib/publish-tasks');
@@ -115,6 +121,69 @@ function readRawBody(req, limit) {
     req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
+}
+
+const UPLOAD_MAX_BYTES = 2 * 1024 * 1024 * 1024;
+const UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
+
+// 视频文件直接流式落盘，不经过内存，避免大文件打爆服务端。
+function saveUpload(req, target, limit) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    let settled = false;
+    const out = fs.createWriteStream(target);
+    const cleanup = (err) => {
+      if (settled) return;
+      settled = true;
+      out.destroy();
+      fs.promises.rm(target, { force: true }).catch(() => {}).then(() => reject(err));
+    };
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > limit) {
+        cleanup(Object.assign(new Error('视频文件不能超过 2GB'), { status: 413 }));
+        req.destroy();
+        return;
+      }
+      if (!out.write(chunk)) {
+        req.pause();
+        out.once('drain', () => req.resume());
+      }
+    });
+    req.on('end', () => {
+      if (settled) return;
+      out.end(() => {
+        if (settled) return;
+        settled = true;
+        resolve(size);
+      });
+    });
+    req.on('error', cleanup);
+    req.on('aborted', () => cleanup(Object.assign(new Error('上传已取消'), { status: 400 })));
+    req.on('close', () => {
+      if (!settled && !req.complete) cleanup(Object.assign(new Error('上传已取消'), { status: 400 }));
+    });
+    out.on('error', cleanup);
+  });
+}
+
+function cleanupUploads() {
+  fs.promises
+    .readdir(transcript.UPLOAD_DIR)
+    .then((names) => {
+      const cutoff = Date.now() - UPLOAD_TTL_MS;
+      return Promise.all(
+        names.map(async (name) => {
+          if (!/^[0-9a-f-]{36}\.[a-z0-9]{1,8}$/i.test(name)) return;
+          const file = path.join(transcript.UPLOAD_DIR, name);
+          const stat = await fs.promises.stat(file).catch(() => null);
+          if (stat && stat.isFile() && stat.mtimeMs < cutoff) {
+            await fs.promises.rm(file, { force: true }).catch(() => {});
+          }
+        })
+      );
+    })
+    .catch(() => {});
 }
 
 const MIME = {
@@ -478,6 +547,97 @@ async function handleApi(req, res, url) {
       return sendError(res, err);
     }
   }
+  // 视频文案提取：B站 / 抖音平台字幕（小红书、快手友好降级）
+  if (url.pathname === '/api/trends/transcript' && method === 'POST') {
+    try {
+      const body = await readBody(req);
+      return sendJSON(res, 202, transcript.start(body));
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+  const transcriptMatch = url.pathname.match(/^\/api\/trends\/transcript\/([\w-]+)$/);
+  if (transcriptMatch && method === 'GET') {
+    try {
+      return sendJSON(res, 200, transcript.status(transcriptMatch[1]));
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+  // 本地视频上传：原始二进制流，返回 fileId 供文案任务使用
+  if (url.pathname === '/api/trends/transcript/upload' && method === 'POST') {
+    const rawName = String(url.searchParams.get('name') || '');
+    const ext = path.extname(rawName).toLowerCase();
+    if (!transcript.UPLOAD_EXTS.has(ext)) {
+      return sendJSON(res, 400, { error: '不支持的视频格式，请上传 mp4 / mov / mkv / webm / mp3 等常见格式' });
+    }
+    const declared = Number(req.headers['content-length']) || 0;
+    if (declared > UPLOAD_MAX_BYTES) {
+      return sendJSON(res, 413, { error: '视频文件不能超过 2GB' });
+    }
+    const fileId = crypto.randomUUID() + ext;
+    const target = path.join(transcript.UPLOAD_DIR, fileId);
+    try {
+      await fs.promises.mkdir(transcript.UPLOAD_DIR, { recursive: true });
+      const size = await saveUpload(req, target, UPLOAD_MAX_BYTES);
+      if (!size) throw Object.assign(new Error('上传内容为空'), { status: 400 });
+      cleanupUploads();
+      return sendJSON(res, 201, { fileId, name: transcript.baseName(rawName), size });
+    } catch (err) {
+      await fs.promises.rm(target, { force: true }).catch(() => {});
+      return sendError(res, err);
+    }
+  }
+
+  // 本地语音识别：ffmpeg / whisper.cpp / 模型状态
+  if (url.pathname === '/api/asr/status' && method === 'GET') {
+    return sendJSON(res, 200, asr.status());
+  }
+  if (url.pathname === '/api/asr/model' && method === 'POST') {
+    if (!asr.modelReady()) asr.downloadModel().catch(() => {});
+    return sendJSON(res, 202, asr.status());
+  }
+
+  // 住宅代理配置（雷达搜索与小红书/抖音登录共用出口，各用户本机独立）
+  if (url.pathname === '/api/proxy') {
+    if (method === 'GET') {
+      return sendJSON(res, 200, proxyConfig.getPublic());
+    }
+    if (method === 'PUT' || method === 'POST') {
+      try {
+        const body = await readBody(req);
+        const saved = proxyConfig.save(body);
+        // 配置变化后空闲时关掉暖浏览器，下次搜索按新配置重开
+        await trendsBrowser.resetWarm();
+        return sendJSON(res, 200, { ok: true, proxy: saved });
+      } catch (err) {
+        return sendError(res, err);
+      }
+    }
+    res.writeHead(405, { Allow: 'GET, PUT, POST' });
+    return res.end();
+  }
+  if (url.pathname === '/api/proxy/test' && method === 'POST') {
+    try {
+      const body = await readBody(req);
+      return sendJSON(res, 200, await proxyConfig.test(body));
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+  if (url.pathname === '/api/proxy/rotate' && method === 'POST') {
+    // 搜索/登录/采集进行中不能换出口，否则会打断正在进行的会话
+    if (browserLogin.isBusy()) {
+      return sendJSON(res, 409, { error: '有浏览器任务正在进行，请等待任务结束后再更换出口 IP' });
+    }
+    try {
+      const rotated = proxyConfig.rotateSession();
+      await trendsBrowser.resetWarm({ force: true });
+      return sendJSON(res, 200, { ok: true, proxy: rotated });
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
 
   // 小红书笔记数据采集（复用一键登录的浏览器 profile）
   if (url.pathname === '/api/collectors/xiaohongshu/status' && method === 'GET') {
@@ -821,7 +981,14 @@ async function handleApi(req, res, url) {
     const platform = decodeURIComponent(parts[2] || '');
     // GET /api/connections  → 全量（含定义与掩码）
     if (!platform && method === 'GET') {
-      return sendJSON(res, 200, channelConnections.getAll());
+      const data = channelConnections.getAll();
+      try {
+        data.proxy = proxyConfig.getPublic();
+      } catch (err) {
+        // 代理配置文件损坏不影响连接页展示
+        data.proxy = null;
+      }
+      return sendJSON(res, 200, data);
     }
     if (!platform) {
       res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -947,6 +1114,8 @@ try {
   console.warn('[media] 暂存素材清理失败：', err.message);
 }
 
+cleanupUploads();
+
 try {
   const started = wechatMonitor.startScheduler();
   const ms = wechatMonitor.getStatus();
@@ -984,7 +1153,11 @@ function gracefulShutdown(reason) {
     publishTasks.stopScheduler();
   } catch (err) {}
   try {
-    require('./lib/browser-login').cancel();
+    browserLogin.cancel();
+  } catch (err) {}
+  // 尽力关闭暖浏览器并回收本地代理隧道（不阻塞退出）
+  try {
+    Promise.resolve(trendsBrowser.resetWarm({ force: true })).catch(() => {});
   } catch (err) {}
   clients.forEach((res) => {
     try {

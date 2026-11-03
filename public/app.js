@@ -4,6 +4,8 @@
   var reloadTimer = null;
   var staleWhileEditing = false;
   var trendTimer = null;
+  var trendTxTimer = null;
+  var trendAsrTimer = null;
 
   function request(path, options){
     var opt = options || {};
@@ -72,7 +74,8 @@
     lifecyclePage:1, lifecycleSize:30, reviewListPage:1, reviewListSize:30,
     topicSort:'desc', assetKeyword:'all', inspectCode:null,
     topicChecked:{},
-    trend:{ keywords:'', sel:{ '小红书':true, '抖音':true, 'B站':true }, platforms:null, job:null, error:'' }
+    trend:{ keywords:'', sel:{ '小红书':true, '抖音':true, 'B站':true }, platforms:null, proxy:null, job:null, error:'', tab:'search',
+      tx:{ url:'', job:null, error:'', fileId:'', fileName:'', fileSize:0, uploading:false, uploadPct:0, uploadXhr:null, asr:null, asrLoading:false } }
   };
   var editing = { dbKey:null, recordId:null, record:null };
   var loading = false;
@@ -1106,13 +1109,21 @@
 
   function trendPanel(){
     var t = state.trend;
+    var tab = t.tab === 'transcript' ? 'transcript' : 'search';
     var html = '';
     html += '<div class="flex items-start justify-between px-space-lg pt-space-lg pb-space-sm border-b border-surface-container-low">';
     html += '<div class="flex items-center gap-2 min-w-0"><span class="kicker-dot"></span><div class="min-w-0"><h3 class="text-headline-sm font-headline-sm text-on-surface">爆款灵感雷达</h3>';
-    html += '<p class="text-label-sm text-on-surface-variant">输入关键词，抓取小红书 / 抖音 / B站 的高互动内容，一键转成选题</p></div></div>';
+    html += '<p class="text-label-sm text-on-surface-variant">搜索高互动内容，或把视频文案提取出来一键转成选题</p></div></div>';
     html += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0" data-act="trendConnect" type="button" title="连接设置"><span class="material-symbols-outlined text-base">settings</span></button>';
     html += '</div>';
 
+    html += '<div class="px-space-lg pt-space-md"><div class="seg" role="tablist">';
+    html += '<button class="' + (tab === 'search' ? 'on' : '') + '" data-act="trendTab" data-tab="search" type="button" role="tab"><span class="material-symbols-outlined text-[14px] align-middle">travel_explore</span> 爆款搜索</button>';
+    html += '<button class="' + (tab === 'transcript' ? 'on' : '') + '" data-act="trendTab" data-tab="transcript" type="button" role="tab"><span class="material-symbols-outlined text-[14px] align-middle">subtitles</span> 文案提取</button>';
+    html += '</div></div>';
+
+    /* 搜索面板 */
+    html += '<div data-trend-panel="search"' + (tab === 'search' ? '' : ' class="hidden"') + '>';
     html += '<div class="px-space-lg py-space-md border-b border-surface-container-low">';
     html += '<div class="fld"><label class="lab">关键词 <b>*</b></label><input id="trendKeywords" class="inp" maxlength="120" placeholder="例如：AI剪辑 副业 小红书封面" value="' + esc(t.keywords) + '"><span class="helper">用空格或逗号分隔，最多 5 个；1 小时内复用缓存，搜索结果保留 30 天</span></div>';
     html += '<div class="flex flex-wrap items-center gap-2 mt-1">';
@@ -1124,15 +1135,475 @@
       html += '<label class="tag-opt"><input type="checkbox" data-trend-platform="' + esc(p) + '"' + (checked ? ' checked' : '') + '><span class="inline-flex items-center gap-1"><i style="width:6px;height:6px;border-radius:9999px;background:' + dotColor + ';display:inline-block"></i>' + esc(p) + ' · ' + statusText + '</span></label>';
     });
     html += '</div>';
-    html += '<div class="flex items-center gap-2 mt-space-sm">';
+    html += '<div class="flex items-center gap-2 mt-space-sm flex-wrap">';
+    html += trendProxyChip(t.proxy);
     html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="trendSearch" type="button"><span class="material-symbols-outlined text-base">travel_explore</span>搜索爆款</button>';
     html += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="trendSearch" data-force="1" type="button" title="忽略 1 小时缓存，重新抓取"><span class="material-symbols-outlined text-base">refresh</span>刷新</button>';
     html += '</div>';
     html += '<p id="trendError" class="mt-2 text-label-sm text-error"' + (t.error ? '' : ' style="display:none"') + '>' + esc(t.error || '') + '</p>';
     html += '</div>';
-
     html += '<div id="trendResults" class="max-h-[calc(100vh-22rem)] overflow-y-auto px-space-lg py-space-md">' + trendResultsHtml() + '</div>';
+    html += '</div>';
+
+    /* 文案提取面板 */
+    html += '<div data-trend-panel="transcript"' + (tab === 'transcript' ? '' : ' class="hidden"') + '>';
+    html += '<div class="px-space-lg py-space-md border-b border-surface-container-low">';
+    html += '<div class="fld"><label class="lab">视频链接</label><input id="transcriptUrl" class="inp" maxlength="500" placeholder="粘贴 B站 / 抖音 / 小红书 / 快手 视频链接" value="' + esc(t.tx.url) + '"><span class="helper">有平台字幕时直接读取；没有字幕可下载视频后在下方上传，用本地语音识别提取</span></div>';
+    html += '<div class="fld"><label class="lab">或上传本地视频</label>';
+    html += '<div id="transcriptDrop" class="rounded-xl border border-dashed border-surface-container-high px-3 py-3 text-center transition-colors">';
+    html += '<div id="transcriptFileArea">' + transcriptFileAreaHtml() + '</div>';
+    html += '</div>';
+    html += '<span class="helper">视频、音频都支持；ffmpeg 抽音频和语音识别都在本机完成，文件不会上传云端</span></div>';
+    html += asrStatusHtml();
+    html += '<div class="flex items-center gap-2 mt-space-sm flex-wrap">';
+    html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="transcriptStart" type="button"><span class="material-symbols-outlined text-base">subtitles</span>' + (t.tx.fileId ? '转写本地视频' : '提取文案') + '</button>';
+    html += trendProxyChip(t.proxy);
+    html += '</div>';
+    html += '<p id="transcriptError" class="mt-2 text-label-sm text-error"' + (t.tx.error ? '' : ' style="display:none"') + '>' + esc(t.tx.error || '') + '</p>';
+    html += '</div>';
+    html += '<div id="transcriptResult" class="max-h-[calc(100vh-22rem)] overflow-y-auto px-space-lg py-space-md">' + transcriptResultHtml() + '</div>';
+    html += '</div>';
     return html;
+  }
+
+  function switchTrendTab(tab){
+    tab = tab === 'transcript' ? 'transcript' : 'search';
+    state.trend.tab = tab;
+    var panels = document.querySelectorAll('[data-trend-panel]');
+    for(var i = 0; i < panels.length; i++){
+      panels[i].classList.toggle('hidden', panels[i].getAttribute('data-trend-panel') !== tab);
+    }
+    var btns = document.querySelectorAll('[data-act="trendTab"]');
+    for(var j = 0; j < btns.length; j++){
+      btns[j].classList.toggle('on', btns[j].getAttribute('data-tab') === tab);
+    }
+    if(tab === 'transcript'){
+      loadAsrStatus();
+      var inp = $('transcriptUrl');
+      if(inp && !inp.value) inp.focus();
+    }
+  }
+
+  function formatClock(sec){
+    var s = Math.max(0, Math.round(num(sec)));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+    if(h) return h + ':' + pad2(m) + ':' + pad2(r);
+    return m + ':' + pad2(r);
+  }
+
+  function transcriptResultHtml(){
+    var tx = state.trend.tx;
+    var job = tx.job;
+    if(!job){
+      return '<div class="rounded-xl border border-dashed border-surface-container-high px-4 py-8 text-center">' +
+        '<span class="material-symbols-outlined text-3xl text-outline">subtitles</span>' +
+        '<p class="mt-2 text-label-md font-semibold text-on-surface">把视频里的口播文案提取出来</p>' +
+        '<p class="mt-1 text-label-sm text-on-surface-variant">粘贴链接读取平台字幕，或上传本地视频用本机语音识别；完成后可复制、下载、转成选题或存进素材库。</p></div>';
+    }
+    var html = '';
+    var running = job.status === 'queued' || job.status === 'running';
+    if(running){
+      html += '<div class="rounded-xl bg-surface-container-low px-4 py-5 text-center">';
+      html += '<span class="material-symbols-outlined text-2xl text-primary animate-spin">progress_activity</span>';
+      html += '<p class="mt-2 text-label-md font-semibold text-on-surface">' + esc(job.stage || '提取中') + '</p>';
+      var runHint = job.platform === '本地文件' ? '本地转写耗时与视频长度、设备性能有关，请保持页面打开' : '首次打开页面可能稍慢，请保持网络与浏览器可用';
+      html += '<p class="mt-1 text-label-sm text-on-surface-variant">' + esc(job.platform || '') + (job.platform ? ' · ' : '') + runHint + '</p>';
+      html += '<div class="mt-3 h-1.5 rounded-full bg-surface-container-high overflow-hidden"><div class="h-full bg-primary transition-all" style="width:' + Math.max(5, Math.min(100, num(job.progress))) + '%"></div></div>';
+      html += '</div>';
+      return html;
+    }
+    if(job.status === 'error'){
+      html += '<div class="rounded-xl bg-error-container/50 px-4 py-4">';
+      html += '<div class="flex items-center gap-1.5 text-label-md font-semibold text-on-error-container"><span class="material-symbols-outlined text-base">error</span>提取失败</div>';
+      html += '<p class="mt-1.5 text-label-sm text-on-error-container">' + esc(job.error || '未知错误') + '</p>';
+      if(job.platform) html += '<p class="mt-1 text-[11px] text-on-error-container/80">平台：' + esc(job.platform) + '</p>';
+      html += '</div>';
+      return html;
+    }
+    var sourceLabel = job.source === 'caption' ? '平台字幕' : job.source === 'whisper' ? '本地语音识别' : (job.source === 'mock' ? '演示数据' : '字幕');
+    html += '<div class="flex items-start justify-between gap-2 mb-2">';
+    html += '<div class="min-w-0"><p class="text-[13px] font-semibold text-on-surface leading-snug line-clamp-2">' + esc(job.title || '已提取视频文案') + '</p>';
+    html += '<div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[11px] text-on-surface-variant">';
+    if(job.platform) html += '<span class="font-semibold">' + esc(job.platform) + '</span>';
+    if(job.author) html += '<span>· ' + esc(job.author) + '</span>';
+    if(job.duration) html += '<span>· ' + formatClock(job.duration) + '</span>';
+    html += '<span>· ' + esc(sourceLabel) + ' · ' + esc(String(num(job.segments && job.segments.length) || 0)) + ' 段</span>';
+    html += '</div></div></div>';
+
+    html += '<div class="flex flex-wrap items-center gap-2 mb-3">';
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold hover:opacity-90" data-act="transcriptToTopic" type="button"><span class="material-symbols-outlined text-[13px]">add_task</span>转选题</button>';
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="transcriptSaveAsset" type="button"><span class="material-symbols-outlined text-[13px]">inventory_2</span>存素材库</button>';
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="transcriptCopy" type="button"><span class="material-symbols-outlined text-[13px]">content_copy</span>复制</button>';
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="transcriptDownload" type="button"><span class="material-symbols-outlined text-[13px]">download</span>下载 TXT</button>';
+    if(job.resolvedUrl) html += '<a href="' + esc(job.resolvedUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 text-[10px] text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[13px]">open_in_new</span>看原作</a>';
+    html += '</div>';
+
+    if((job.segments || []).length){
+      html += '<div class="rounded-xl bg-surface-container-low px-3 py-2.5 mb-2 max-h-56 overflow-y-auto">';
+      job.segments.forEach(function(s){
+        html += '<div class="flex gap-2 py-0.5 text-[12px] leading-relaxed"><span class="shrink-0 w-10 text-right font-mono text-[10px] text-outline pt-0.5">' + formatClock(s.start) + '</span><span class="text-on-surface">' + esc(s.text) + '</span></div>';
+      });
+      html += '</div>';
+    }
+    html += '<div class="rounded-xl border border-surface-container-high px-3 py-2.5"><p class="text-[11px] font-semibold text-on-surface-variant mb-1">整篇文案</p>';
+    html += '<pre class="whitespace-pre-wrap break-words font-sans text-[12px] leading-relaxed text-on-surface max-h-72 overflow-y-auto">' + esc(job.text || '') + '</pre></div>';
+    return html;
+  }
+
+  function renderTranscriptResult(){
+    var box = $('transcriptResult');
+    if(box) box.innerHTML = transcriptResultHtml();
+  }
+
+  function transcriptFileAreaHtml(){
+    var tx = state.trend.tx;
+    var html = '<input id="transcriptFile" type="file" accept="video/*,audio/*,.mkv,.flv,.ts,.m4v" class="hidden">';
+    if(tx.uploading){
+      var pct = Math.max(1, Math.min(100, num(tx.uploadPct)));
+      html += '<div class="flex items-center justify-center gap-2 text-label-sm text-on-surface-variant"><span class="material-symbols-outlined text-base animate-spin">progress_activity</span><span class="truncate max-w-[14rem]">' + esc(tx.fileName || '上传中') + '</span><span class="shrink-0">' + pct + '%</span></div>';
+      html += '<div class="mt-2 h-1.5 rounded-full bg-surface-container-high overflow-hidden"><div class="h-full bg-primary transition-all" style="width:' + pct + '%"></div></div>';
+      return html;
+    }
+    if(tx.fileId){
+      html += '<div class="flex items-center justify-center gap-2 text-label-sm">';
+      html += '<span class="material-symbols-outlined text-base text-primary">movie</span>';
+      html += '<span class="truncate max-w-[14rem] font-semibold text-on-surface" title="' + esc(tx.fileName) + '">' + esc(tx.fileName || '已上传视频') + '</span>';
+      html += '<span class="text-on-surface-variant shrink-0">' + fmtBytes(tx.fileSize) + '</span>';
+      html += '<button class="text-on-surface-variant hover:text-error shrink-0" data-act="transcriptClearFile" type="button" title="移除文件"><span class="material-symbols-outlined text-base">close</span></button>';
+      html += '</div>';
+      return html;
+    }
+    html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-high text-label-sm font-semibold text-on-surface-variant hover:bg-surface-container" data-act="transcriptPick" type="button"><span class="material-symbols-outlined text-base">upload_file</span>选择视频文件</button>';
+    html += '<p class="mt-1.5 text-[11px] text-on-surface-variant">或把视频拖到这里 · 支持 mp4 / mov / mkv / webm / mp3，最大 2GB</p>';
+    return html;
+  }
+
+  function renderTranscriptFileArea(){
+    var box = $('transcriptFileArea');
+    if(box) box.innerHTML = transcriptFileAreaHtml();
+  }
+
+  function asrStatusHtml(){
+    var asr = state.trend.tx.asr;
+    if(!asr){
+      return '<div id="asrStatus" class="mt-2 text-[11px] text-on-surface-variant">检测本地语音识别环境…</div>';
+    }
+    if(asr.error){
+      return '<div id="asrStatus" class="mt-2 text-[11px] text-error">本地语音识别状态读取失败：' + esc(asr.error) + '</div>';
+    }
+    var ff = asr.ffmpeg || {};
+    var wh = asr.whisper || {};
+    var dl = asr.download || {};
+    var model = asr.model || {};
+    var html = '<div id="asrStatus" class="rounded-xl bg-surface-container-low px-3 py-2 mt-2 text-[11px] text-on-surface-variant">';
+    html += '<div class="flex flex-wrap items-center gap-x-3 gap-y-1">';
+    html += '<span>' + (ff.available ? '✓ ffmpeg' : '✗ ffmpeg 未找到') + '</span>';
+    html += '<span>' + (wh.available ? '✓ whisper.cpp' : '✗ whisper.cpp 未找到') + '</span>';
+    html += '<span>模型 ' + esc(model.name || '') + '</span>';
+    html += '</div>';
+    if(!ff.available){
+      html += '<p class="mt-1 text-error">未找到 ffmpeg：开发环境请运行 npm run vendor:ffmpeg，安装版请重新安装应用。</p>';
+    }
+    if(!wh.available){
+      html += '<p class="mt-1 text-error">未找到本地 whisper.cpp：开发环境请运行 npm run vendor:whisper，安装版请重新安装应用。</p>';
+    }
+    if(dl.state === 'downloading'){
+      var dlPct = Math.max(2, Math.min(100, num(dl.progress)));
+      html += '<div class="mt-2 flex items-center gap-2"><div class="flex-1 h-1.5 rounded-full bg-surface-container-high overflow-hidden"><div class="h-full bg-primary transition-all" style="width:' + dlPct + '%"></div></div><span class="shrink-0">' + dlPct + '%</span></div>';
+    } else if(model.ready){
+      html += '<p class="mt-1 text-[#2f8f5b]">语音模型已就绪，可直接转写本地视频。</p>';
+    } else if(!wh.available){
+      html += '<p class="mt-1">安装 whisper.cpp 后可下载并使用语音模型。</p>';
+    } else if(dl.state === 'error'){
+      html += '<div class="mt-1 flex items-center gap-2 flex-wrap"><span class="text-error">模型下载失败：' + esc(dl.error || '未知错误') + '</span><button class="px-2 py-0.5 rounded-full bg-surface-container-high font-semibold hover:bg-surface-container" data-act="transcriptAsrDownload" type="button">重试下载</button></div>';
+    } else {
+      var mb = Math.round((num(model.expectedBytes) || 0) / 1048576);
+      html += '<div class="mt-1 flex items-center gap-2 flex-wrap"><span>首次转写需下载语音模型 ' + esc(model.name || '') + '（约 ' + mb + 'MB）</span><button class="px-2 py-0.5 rounded-full bg-surface-container-high font-semibold hover:bg-surface-container" data-act="transcriptAsrDownload" type="button">下载模型</button></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderAsrStatus(){
+    var box = $('asrStatus');
+    if(!box) return;
+    box.outerHTML = asrStatusHtml();
+  }
+
+  function loadAsrStatus(){
+    var tx = state.trend.tx;
+    if(tx.asrLoading) return;
+    tx.asrLoading = true;
+    request('/asr/status').then(function(st){
+      tx.asrLoading = false;
+      tx.asr = st;
+      renderAsrStatus();
+      if(st && st.download && st.download.state === 'downloading') startAsrPoll();
+    }).catch(function(err){
+      tx.asrLoading = false;
+      tx.asr = { error: errMsg(err) };
+      renderAsrStatus();
+    });
+  }
+
+  function startAsrPoll(){
+    if(trendAsrTimer) return;
+    trendAsrTimer = setInterval(function(){
+      request('/asr/status').then(function(st){
+        state.trend.tx.asr = st;
+        renderAsrStatus();
+        var dlState = st && st.download ? st.download.state : '';
+        if(dlState === 'downloading') return;
+        clearInterval(trendAsrTimer);
+        trendAsrTimer = null;
+        if(st && st.model && st.model.ready) toast('语音模型已就绪');
+        else if(dlState === 'error') toast('语音模型下载失败：' + ((st.download && st.download.error) || '未知错误'), 'err');
+      }).catch(function(err){
+        clearInterval(trendAsrTimer);
+        trendAsrTimer = null;
+        state.trend.tx.asr = { error: errMsg(err) };
+        renderAsrStatus();
+      });
+    }, 1500);
+  }
+
+  function downloadAsrModel(){
+    request('/asr/model', { method: 'POST' }).then(function(st){
+      state.trend.tx.asr = st;
+      renderAsrStatus();
+      startAsrPoll();
+      toast('已开始下载语音模型');
+    }).catch(function(err){
+      toast('启动模型下载失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function pickTranscriptFile(){
+    var input = $('transcriptFile');
+    if(input) input.click();
+  }
+
+  function clearTranscriptFile(){
+    var tx = state.trend.tx;
+    tx.fileId = '';
+    tx.fileName = '';
+    tx.fileSize = 0;
+    renderTranscriptFileArea();
+    renderTranscriptResult();
+    var startBtn = document.querySelector('[data-act="transcriptStart"]');
+    if(startBtn) startBtn.innerHTML = '<span class="material-symbols-outlined text-base">subtitles</span>提取文案';
+  }
+
+  function uploadTranscriptFile(file){
+    var tx = state.trend.tx;
+    return new Promise(function(resolve, reject){
+      var xhr = new XMLHttpRequest();
+      tx.uploadXhr = xhr;
+      xhr.open('POST', API + '/trends/transcript/upload?name=' + encodeURIComponent(file.name));
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.upload.onprogress = function(ev){
+        if(!ev.lengthComputable) return;
+        tx.uploadPct = Math.round((ev.loaded / ev.total) * 100);
+        renderTranscriptFileArea();
+      };
+      xhr.onload = function(){
+        tx.uploadXhr = null;
+        var body = null;
+        try{ body = JSON.parse(xhr.responseText); }catch(err){}
+        if(xhr.status >= 200 && xhr.status < 300 && body && body.fileId) return resolve(body);
+        reject(new Error((body && body.error) || ('上传失败（HTTP ' + xhr.status + '）')));
+      };
+      xhr.onerror = function(){
+        tx.uploadXhr = null;
+        reject(new Error('上传中断，请确认本地服务仍在运行'));
+      };
+      xhr.onabort = function(){
+        tx.uploadXhr = null;
+        reject(new Error('上传已取消'));
+      };
+      xhr.send(file);
+    });
+  }
+
+  function selectTranscriptFile(file){
+    if(!file) return;
+    var tx = state.trend.tx;
+    if(file.size > 2 * 1024 * 1024 * 1024){
+      toast('视频文件不能超过 2GB', 'err');
+      return;
+    }
+    setTranscriptError('');
+    tx.fileId = '';
+    tx.fileName = file.name;
+    tx.fileSize = file.size;
+    tx.uploadPct = 0;
+    tx.uploading = true;
+    renderTranscriptFileArea();
+    uploadTranscriptFile(file).then(function(res){
+      tx.uploading = false;
+      tx.fileId = res.fileId;
+      tx.fileName = res.name || file.name;
+      tx.fileSize = res.size || file.size;
+      renderTranscriptFileArea();
+      renderTranscriptResult();
+      var startBtn = document.querySelector('[data-act="transcriptStart"]');
+      if(startBtn) startBtn.innerHTML = '<span class="material-symbols-outlined text-base">subtitles</span>转写本地视频';
+      loadAsrStatus();
+      toast('视频已上传，可以开始转写');
+    }).catch(function(err){
+      tx.uploading = false;
+      tx.fileId = '';
+      tx.fileName = '';
+      tx.fileSize = 0;
+      renderTranscriptFileArea();
+      setTranscriptError('上传失败：' + errMsg(err));
+      toast('上传失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function setTranscriptError(msg){
+    state.trend.tx.error = msg || '';
+    var el = $('transcriptError');
+    if(el){
+      el.textContent = state.trend.tx.error;
+      el.style.display = state.trend.tx.error ? '' : 'none';
+    }
+  }
+
+  function startTranscript(){
+    var tx = state.trend.tx;
+    var url = String(tx.url || '').trim();
+    if(tx.uploading){
+      toast('视频还在上传，请稍候', 'err');
+      return;
+    }
+    if(!tx.fileId && !url){
+      toast('请粘贴视频链接或选择本地视频', 'err');
+      var inp = $('transcriptUrl');
+      if(inp) inp.focus();
+      return;
+    }
+    setTranscriptError('');
+    var payload = tx.fileId
+      ? { fileId: tx.fileId, name: tx.fileName }
+      : { url: url };
+    request('/trends/transcript', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).then(function(job){
+      tx.job = job;
+      // 本地文件在任务结束时会被服务端删除，界面同步清空，避免重复提交
+      if(tx.fileId){
+        tx.fileId = '';
+        tx.fileName = '';
+        tx.fileSize = 0;
+        renderTranscriptFileArea();
+        var startBtn = document.querySelector('[data-act="transcriptStart"]');
+        if(startBtn) startBtn.innerHTML = '<span class="material-symbols-outlined text-base">subtitles</span>提取文案';
+      }
+      renderTranscriptResult();
+      startTranscriptPoll();
+    }).catch(function(err){
+      setTranscriptError(errMsg(err));
+      toast('发起提取失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function startTranscriptPoll(){
+    if(trendTxTimer) return;
+    trendTxTimer = setInterval(function(){
+      var job = state.trend.tx.job;
+      if(!job || !job.id) return;
+      request('/trends/transcript/' + encodeURIComponent(job.id)).then(function(next){
+        state.trend.tx.job = next;
+        var running = next.status === 'queued' || next.status === 'running';
+        if(running) state.trend.tx.error = '';
+        renderTranscriptResult();
+        if(!running){
+          clearInterval(trendTxTimer);
+          trendTxTimer = null;
+          if(next.status === 'done') toast('文案提取完成 · 共 ' + (next.segments || []).length + ' 段', 'ok');
+          else toast('文案提取失败：' + (next.error || '未知错误'), 'err');
+        }
+      }).catch(function(err){
+        clearInterval(trendTxTimer);
+        trendTxTimer = null;
+        setTranscriptError(errMsg(err));
+        toast('提取状态读取失败：' + errMsg(err), 'err');
+      });
+    }, 1200);
+  }
+
+  function transcriptPlainText(){
+    var job = state.trend.tx.job;
+    return job && job.text ? String(job.text) : '';
+  }
+
+  function transcriptCopy(){
+    var text = transcriptPlainText();
+    if(!text){ toast('还没有可复制的文案', 'err'); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast('文案已复制到剪贴板'); }, function(){ toast('复制失败，请手动选择正文', 'err'); });
+      return;
+    }
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); toast('文案已复制到剪贴板'); }
+    catch(err){ toast('复制失败，请手动选择正文', 'err'); }
+    document.body.removeChild(ta);
+  }
+
+  function transcriptDownload(){
+    var job = state.trend.tx.job;
+    var text = transcriptPlainText();
+    if(!text){ toast('还没有可下载的文案', 'err'); return; }
+    var name = String(job.title || '视频文案').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 50) || '视频文案';
+    var blob = new Blob(['﻿' + text], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function transcriptToTopic(){
+    var job = state.trend.tx.job;
+    if(!job || !job.text){ toast('还没有可用的文案', 'err'); return; }
+    var flat = String(job.text).replace(/\s+/g, ' ').trim();
+    openEditor('topic', null, {
+      subText: '来自' + (job.platform || '视频') + '文案 · 确认后保存为选题',
+      fill: {
+        '选题': String(job.title || flat.slice(0, 50) || '视频文案转选题').slice(0, 60),
+        '状态': '待写',
+        '切入角度': '参考原视频口播结构，保留开场钩子和核心结论，换成本账号的实操步骤与真实案例。文案节选：' + flat.slice(0, 160) + (flat.length > 160 ? '…' : ''),
+        '标签': ['热点'],
+        '参考链接': job.resolvedUrl || job.url || ''
+      }
+    });
+  }
+
+  function transcriptSaveAsset(){
+    var job = state.trend.tx.job;
+    if(!job || !job.text){ toast('还没有可保存的文案', 'err'); return; }
+    openEditor('asset', null, {
+      subText: '来自' + (job.platform || '视频') + '文案 · 保存为素材',
+      fill: {
+        '标题': String(job.title || '视频文案').slice(0, 80),
+        '平台': job.platform || '',
+        '成稿Markdown': job.text,
+        '关键词': ['干货'],
+        '归档日期': isoDay(new Date()),
+        '字数': String(job.text.replace(/\s/g, '').length),
+        '发布链接': job.resolvedUrl || job.url || ''
+      }
+    });
   }
 
   function trendPlatformInfo(platform){
@@ -1140,6 +1611,26 @@
     if(!list) return { loading:true, ready:null };
     for(var i = 0; i < list.length; i++) if(list[i].platform === platform) return list[i];
     return { ready:null };
+  }
+
+  function trendProxyChip(proxy){
+    if(!proxy) return '';
+    var label, cls, title;
+    if(proxy.enabled && proxy.configured){
+      label = '代理 ' + (proxy.host || '') + (proxy.port ? ':' + proxy.port : '');
+      cls = 'chip-mint';
+      title = '雷达搜索与小红书/抖音登录经该住宅代理出网' + (proxy.envOverride ? '（部分字段由环境变量控制）' : '') + '，点击打开连接设置';
+    } else if(proxy.enabled){
+      label = '代理未配置完整';
+      cls = 'chip-honey';
+      title = proxy.hint || '请在「连接设置 · 网络代理」补全主机、端口、账号与密码';
+    } else {
+      label = '直连';
+      cls = 'chip-line';
+      title = '当前未启用独立网络出口，搜索遇到平台访问限制时可到「连接设置 · 网络代理」配置';
+    }
+    return '<button class="chip ' + cls + ' hover:opacity-90" data-act="trendConnect" type="button" title="' + esc(title) + '">'
+      + '<span class="material-symbols-outlined text-[12px]">vpn_lock</span>' + esc(label) + '</button>';
   }
 
   function trendResultsHtml(){
@@ -1278,6 +1769,8 @@
   function loadTrendPlatforms(){
     return request('/trends/platforms').then(function(res){
       state.trend.platforms = (res && res.platforms) || [];
+      var first = state.trend.platforms[0];
+      state.trend.proxy = (first && first.proxy) || null;
       if(state.view === 'topics'){
         var box = $('trendInspector');
         if(box) box.innerHTML = trendPanel();
@@ -2237,6 +2730,7 @@
 
   /* ---------- 连接设置 ---------- */
   var connData = null; // 连接设置一览（来自 /api/connections），null 表示尚未加载
+  var connTab = 'platforms'; // 'platforms' 渠道 Cookie 设置（默认）/ 'proxy' 网络代理
 
   function loadConnections(){
     request('/connections').then(function(d){
@@ -2293,15 +2787,49 @@
       + '<span class="chip chip-honey">Cookie 登录 ' + cookieCount + '</span>'
       + '</div></div>';
 
+    // Tab：渠道 Cookie 设置（默认）/ 网络代理
+    var activeTab = connTab === 'proxy' ? 'proxy' : 'platforms';
+    html += '<div class="seg mb-space-lg">';
+    html += '<button class="' + (activeTab === 'platforms' ? 'on' : '') + '" data-act="connTab" data-tab="platforms" type="button">渠道 Cookie 设置</button>';
+    if(d.proxy){
+      var proxyTabLabel = '网络代理';
+      if(d.proxy.enabled) proxyTabLabel += d.proxy.configured ? ' · 已启用' : ' · 待完善';
+      html += '<button class="' + (activeTab === 'proxy' ? 'on' : '') + '" data-act="connTab" data-tab="proxy" type="button">' + proxyTabLabel + '</button>';
+    }
+    html += '</div>';
+
+    html += '<div data-conn-panel="platforms"' + (activeTab === 'platforms' ? '' : ' class="hidden"') + '>';
     if(!platforms.length){
       html += '<div class="rounded-2xl bg-surface-container-lowest border border-dashed border-outline-variant p-space-xl text-center text-on-surface-variant">当前筛选下没有渠道，切换右上角「全部平台」查看。</div>';
-      return html;
+    } else {
+      html += '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
+      platforms.forEach(function(p){ html += connCard(p, d); });
+      html += '</div>';
     }
-
-    html += '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
-    platforms.forEach(function(p){ html += connCard(p, d); });
     html += '</div>';
+
+    if(d.proxy){
+      html += '<div data-conn-panel="proxy"' + (activeTab === 'proxy' ? '' : ' class="hidden"') + '>' + proxyCard(d) + '</div>';
+    }
     return html;
+  }
+
+  function switchConnTab(tab){
+    if(tab !== 'platforms' && tab !== 'proxy') return;
+    connTab = tab;
+    var view = document.querySelector('#view');
+    if(!view) return;
+    var panels = view.querySelectorAll('[data-conn-panel]');
+    for(var i = 0; i < panels.length; i++){
+      var panel = panels[i];
+      if(panel.getAttribute('data-conn-panel') === tab) panel.classList.remove('hidden');
+      else panel.classList.add('hidden');
+    }
+    var tabs = view.querySelectorAll('[data-act="connTab"]');
+    for(var j = 0; j < tabs.length; j++){
+      if(tabs[j].getAttribute('data-tab') === tab) tabs[j].classList.add('on');
+      else tabs[j].classList.remove('on');
+    }
   }
 
   function connCard(p, d){
@@ -2372,6 +2900,171 @@
     html += '</div></div>';
     html += '</div>';
     return html;
+  }
+
+  function proxyCard(d){
+    var p = d && d.proxy;
+    if(!p) return '';
+    var enabled = p.enabled === true;
+    var complete = p.configured === true;
+    var hasPwd = !!(p.password && p.password.hasValue);
+    var env = p.envControlled || {};
+    var rotateLocked = !!(env.session || (env.password && p.envOverride));
+    var savedAt = p.updatedAt ? '更新于 ' + esc(fmtDateTime(p.updatedAt)) : '尚未配置';
+    var html = '';
+    html += '<div class="rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm p-space-lg flex flex-col gap-space-md mb-space-lg">';
+    // 头部：标题 + 范围 + 状态 + 启用开关
+    html += '<div class="flex items-start justify-between gap-3">'
+      + '<div class="flex items-center gap-3 min-w-0">'
+      + '<span class="w-11 h-11 rounded-2xl bg-[#E2DFFF] text-[#444465] flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-xl">vpn_lock</span></span>'
+      + '<div class="min-w-0"><div class="flex items-center gap-2 flex-wrap">'
+      + '<span class="text-label-md font-label-md text-on-surface">网络代理 · 住宅出口</span>'
+      + '<span class="chip chip-line">雷达搜索 / 小红书·抖音登录</span>'
+      + (enabled ? '<span class="chip chip-mint">已启用</span>' : '<span class="chip chip-line">未启用</span>')
+      + (p.sticky ? '<span class="chip chip-honey">粘性会话</span>' : '')
+      + (p.envOverride ? '<span class="chip chip-honey" title="环境变量优先于本页保存">环境变量覆盖</span>' : '')
+      + '</div>'
+      + '<p class="text-label-sm text-on-surface-variant mt-1">为本机浏览器配置独立网络出口并尽量保持同一出口 IP，提升小红书/抖音访问稳定性；代理账号由你自行提供，配置只保存在本机 data/proxy.json。</p></div></div>'
+      + '<button class="shrink-0 px-3 py-1.5 rounded-full text-label-sm font-label-sm ' + (enabled ? 'bg-surface-container-low text-on-surface hover:bg-surface-container-high' : 'bg-primary text-on-primary hover:opacity-90') + '" data-act="proxyToggle" type="button">' + (enabled ? '停用' : '启用') + '</button>'
+      + '</div>';
+    // 字段
+    html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">主机</label>'
+      + '<input class="inp" data-proxy-field="host" value="' + esc(p.host || '') + '" placeholder="例如 gate.example.com" autocomplete="off" spellcheck="false"></div>';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">端口</label>'
+      + '<input class="inp" data-proxy-field="port" inputmode="numeric" value="' + esc(p.port || '') + '" placeholder="例如 8080" autocomplete="off" spellcheck="false"></div>';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">用户名</label>'
+      + '<input class="inp" data-proxy-field="username" value="' + esc(p.username || '') + '" placeholder="代理账号" autocomplete="off" spellcheck="false"></div>';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">密码'
+      + (hasPwd ? '<span class="ml-auto inline-flex items-center gap-1"><span class="chip chip-mint">已保存</span><button class="chip chip-line hover:bg-[#FCE3DD] hover:text-[#8E3B26]" data-act="proxyClear" type="button">清除</button></span>' : '')
+      + '</label>'
+      + '<input class="inp" type="password" data-proxy-field="password" data-has="' + (hasPwd ? '1' : '0') + '" value="" placeholder="' + (hasPwd ? '已配置 · 留空则保持不变' : '代理密码') + '" autocomplete="off" spellcheck="false"></div>';
+    html += '</div>';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">会话模板 <span class="text-on-surface-variant text-[11px] normal-case tracking-normal">（选填）</span></label>'
+      + '<input class="inp" data-proxy-field="sessionTemplate" value="' + esc(p.sessionTemplate || '') + '" placeholder="例如 user-session-{session}" autocomplete="off" spellcheck="false">'
+      + '<span class="helper">用户名里包含 {session} 时会按会话注入当前会话 ID，用于固定出口 IP；能否真正固定取决于代理商</span></div>';
+    // 会话轮换
+    html += '<div class="flex items-center gap-2 flex-wrap">'
+      + '<span class="chip ' + (p.sticky ? 'chip-mint' : 'chip-line') + '">' + (p.sticky ? '粘性会话' : '未设会话模板') + '</span>'
+      + (p.sessionId ? '<span class="chip chip-line" title="当前会话 ID">会话 ' + esc(p.sessionId) + '</span>' : '')
+      + '<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-label-sm font-label-sm text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" data-act="proxyRotate" type="button"' + (rotateLocked ? ' disabled title="代理会话由环境变量控制，无法在界面更换出口 IP"' : '') + '>更换出口 IP</button>';
+    if(!p.sticky){
+      html += '<span class="text-label-sm text-on-surface-variant">未包含 {session} 时，出口是否固定取决于代理商</span>';
+    }
+    html += '</div>';
+    if(env.any){
+      html += '<p class="text-label-sm text-[#8A5A00]">检测到 WB_PROXY_* 环境变量：环境变量优先于本页保存，密码不会回显。</p>';
+    }
+    // 测试结果行
+    html += '<p class="text-label-sm text-on-surface-variant hidden" data-proxy-msg="1"></p>';
+    // 底部操作
+    html += '<div class="flex items-center justify-between gap-2 pt-space-sm border-t border-surface-container mt-auto">'
+      + '<div class="min-w-0"><p class="text-label-sm text-on-surface-variant truncate">' + savedAt + '</p>'
+      + '<p class="text-label-sm ' + (complete ? 'text-[#1B6F43]' : 'text-[#9A3B3B]') + '">' + (complete ? '配置完整' : '主机、端口、用户名、密码待填写') + '</p></div>'
+      + '<div class="flex items-center gap-2 shrink-0">'
+      + '<button class="px-4 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="proxyTest" type="button">测试连接</button>'
+      + '<button class="inline-flex items-center gap-1 px-5 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" data-act="proxySave" type="button"><span class="material-symbols-outlined text-base">save</span>保存</button>'
+      + '</div></div>';
+    html += '</div>';
+    return html;
+  }
+
+  function proxyCollect(){
+    function val(key){
+      var el = document.querySelector('#view [data-proxy-field="' + key + '"]');
+      return el ? el.value : '';
+    }
+    var pwdEl = document.querySelector('#view [data-proxy-field="password"]');
+    var has = pwdEl && pwdEl.getAttribute('data-has') === '1';
+    var pwd = pwdEl ? pwdEl.value : '';
+    return {
+      host: val('host'),
+      port: val('port'),
+      username: val('username'),
+      password: pwd !== '' ? pwd : (has ? '__KEEP_EXISTING__' : ''),
+      sessionTemplate: val('sessionTemplate')
+    };
+  }
+
+  function proxyEnabledState(){
+    if(connData && connData.proxy) return connData.proxy.enabled === true;
+    var btn = document.querySelector('#view button[data-act="proxyToggle"]');
+    return btn ? btn.textContent.trim() === '停用' : false;
+  }
+
+  function proxyMsg(text, ok){
+    var el = document.querySelector('#view [data-proxy-msg="1"]');
+    if(!el) return;
+    el.className = 'text-label-sm ' + (ok ? 'text-[#1B6F43]' : 'text-[#9A3B3B]');
+    el.textContent = text;
+  }
+
+  function proxySave(){
+    var payload = proxyCollect();
+    payload.enabled = proxyEnabledState();
+    request('/proxy', { method: 'PUT', body: JSON.stringify(payload) }).then(function(){
+      connData = null;
+      loadConnections();
+      loadTrendPlatforms();
+      toast('网络代理配置已保存', 'ok');
+    }).catch(function(err){
+      toast('保存失败：' + err.message, 'err');
+    });
+  }
+
+  function proxyTest(){
+    var payload = proxyCollect();
+    var btn = document.querySelector('#view button[data-act="proxyTest"]');
+    if(btn){ btn.disabled = true; btn.textContent = '测试中…'; }
+    proxyMsg('正在通过代理连接测试站点…', true);
+    request('/proxy/test', { method: 'POST', body: JSON.stringify(payload) }).then(function(resp){
+      var text = (resp && resp.message) || '代理可用';
+      proxyMsg('✓ ' + text, true);
+      toast('网络代理：' + text, 'ok');
+    }).catch(function(err){
+      proxyMsg('✕ ' + err.message, false);
+      toast('代理测试失败：' + err.message, 'err');
+    }).finally(function(){
+      if(btn && document.body.contains(btn)){ btn.disabled = false; btn.textContent = '测试连接'; }
+    });
+  }
+
+  function proxyRotate(){
+    request('/proxy/rotate', { method: 'POST', body: '{}' }).then(function(resp){
+      connData = null;
+      loadConnections();
+      loadTrendPlatforms();
+      var sid = resp && resp.proxy && resp.proxy.sessionId ? '（新会话 ' + resp.proxy.sessionId + '）' : '';
+      toast('已更换出口 IP ' + sid, 'ok');
+    }).catch(function(err){
+      toast('更换出口 IP 失败：' + err.message, 'err');
+    });
+  }
+
+  function proxyToggle(){
+    var payload = proxyCollect();
+    payload.enabled = !proxyEnabledState();
+    request('/proxy', { method: 'PUT', body: JSON.stringify(payload) }).then(function(){
+      connData = null;
+      loadConnections();
+      loadTrendPlatforms();
+      toast(payload.enabled ? '网络代理已启用' : '网络代理已停用', 'ok');
+    }).catch(function(err){
+      toast('操作失败：' + err.message, 'err');
+    });
+  }
+
+  function proxyClear(){
+    var payload = proxyCollect();
+    payload.password = '';
+    payload.enabled = proxyEnabledState();
+    request('/proxy', { method: 'PUT', body: JSON.stringify(payload) }).then(function(){
+      connData = null;
+      loadConnections();
+      toast('代理密码已清除', 'ok');
+    }).catch(function(err){
+      toast('清除失败：' + err.message, 'err');
+    });
   }
 
   function connCollect(platform){
@@ -4041,6 +4734,10 @@
       try{ localStorage.setItem(TREND_DRAFT_KEY, t.value); }catch(err){ /* 隐私模式下忽略 */ }
       return;
     }
+    if(t.id === 'transcriptUrl'){
+      state.trend.tx.url = t.value;
+      return;
+    }
   });
   viewEl.addEventListener('change', function(e){
     var t = e.target;
@@ -4049,6 +4746,31 @@
       state.trend.sel[trendPlatform] = !!t.checked;
       return;
     }
+    if(t.id === 'transcriptFile'){
+      var picked = t.files && t.files[0];
+      t.value = '';
+      selectTranscriptFile(picked);
+      return;
+    }
+  });
+  viewEl.addEventListener('dragover', function(e){
+    var zone = e.target && e.target.closest ? e.target.closest('#transcriptDrop') : null;
+    if(!zone) return;
+    e.preventDefault();
+    zone.classList.add('border-primary');
+  });
+  viewEl.addEventListener('dragleave', function(e){
+    var zone = e.target && e.target.closest ? e.target.closest('#transcriptDrop') : null;
+    if(!zone) return;
+    zone.classList.remove('border-primary');
+  });
+  viewEl.addEventListener('drop', function(e){
+    var zone = e.target && e.target.closest ? e.target.closest('#transcriptDrop') : null;
+    if(!zone) return;
+    e.preventDefault();
+    zone.classList.remove('border-primary');
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    selectTranscriptFile(file);
   });
 
   function assetEditTarget(e){
@@ -4221,6 +4943,51 @@
       startTrendSearch(actEl.getAttribute('data-force') === '1');
       return;
     }
+    if(act === 'trendTab'){
+      e.preventDefault();
+      switchTrendTab(actEl.getAttribute('data-tab'));
+      return;
+    }
+    if(act === 'transcriptStart'){
+      e.preventDefault();
+      startTranscript();
+      return;
+    }
+    if(act === 'transcriptPick'){
+      e.preventDefault();
+      pickTranscriptFile();
+      return;
+    }
+    if(act === 'transcriptClearFile'){
+      e.preventDefault();
+      clearTranscriptFile();
+      return;
+    }
+    if(act === 'transcriptAsrDownload'){
+      e.preventDefault();
+      downloadAsrModel();
+      return;
+    }
+    if(act === 'transcriptCopy'){
+      e.preventDefault();
+      transcriptCopy();
+      return;
+    }
+    if(act === 'transcriptDownload'){
+      e.preventDefault();
+      transcriptDownload();
+      return;
+    }
+    if(act === 'transcriptToTopic'){
+      e.preventDefault();
+      transcriptToTopic();
+      return;
+    }
+    if(act === 'transcriptSaveAsset'){
+      e.preventDefault();
+      transcriptSaveAsset();
+      return;
+    }
     if(act === 'trendToTopic'){
       e.preventDefault();
       var trendItem = trendItemById(id);
@@ -4274,6 +5041,36 @@
     if(act === 'connClear'){
       e.preventDefault();
       connClear(actEl.getAttribute('data-platform'), actEl.getAttribute('data-key'));
+      return;
+    }
+    if(act === 'connTab'){
+      e.preventDefault();
+      switchConnTab(actEl.getAttribute('data-tab'));
+      return;
+    }
+    if(act === 'proxySave'){
+      e.preventDefault();
+      proxySave();
+      return;
+    }
+    if(act === 'proxyTest'){
+      e.preventDefault();
+      proxyTest();
+      return;
+    }
+    if(act === 'proxyRotate'){
+      e.preventDefault();
+      proxyRotate();
+      return;
+    }
+    if(act === 'proxyToggle'){
+      e.preventDefault();
+      proxyToggle();
+      return;
+    }
+    if(act === 'proxyClear'){
+      e.preventDefault();
+      proxyClear();
       return;
     }
     if(act === 'assetKw'){

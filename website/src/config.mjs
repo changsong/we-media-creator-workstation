@@ -212,7 +212,7 @@ export const faqTopics = {
         { q: '需要什么系统？', a: 'Windows 10 及以上、macOS 11 及以上，或 Ubuntu 22.04 及以上的 Linux 发行版。同时需要本机安装 Chrome 或 Edge。' },
         { q: '一定要装 Chrome 吗？', a: '需要。发布与部分数据采集依赖本机 Chrome/Edge 浏览器环境。没有浏览器时，桌面应用仍可管理选题和排期，但无法执行自动发布。' },
         { q: '需要申请 API 或开发者账号吗？', a: '不需要。你在独立浏览器窗口扫码登录自己的平台账号即可，登录态只保存在本机。' },
-        { q: '账号安全吗？会不会被封？', a: '客户端使用你自己的 IP 和登录态，不经过中转服务器，也不会把账号密码上传云端。自动化仍受平台风控策略影响，我们内置了执行间隔与温和重试，但不能承诺 100% 不受影响。' },
+        { q: '账号安全吗？会不会被封？', a: '客户端使用你自己的 IP 和登录态，不经过中转服务器，也不会把账号密码上传云端。自动化仍受平台访问限制影响，我们内置了执行间隔与温和重试，但不能承诺 100% 不受影响。' },
       ],
     },
     {
@@ -257,7 +257,7 @@ export const faqTopics = {
         { q: 'What do I need?', a: 'Windows 10+, macOS 11+, or Ubuntu 22.04+, plus Chrome or Edge installed on the same machine.' },
         { q: 'Do I have to install Chrome?', a: 'Yes. Publishing and some data collection rely on a local Chrome/Edge environment. Without it, you can still organize topics and schedules, but automatic publishing will not run.' },
         { q: 'Do I need API keys or a developer account?', a: 'No. Sign in to your own platform accounts in an isolated browser window; the session stays on your machine.' },
-        { q: 'Is my account safe? Could it get banned?', a: 'The app uses your own IP and signed-in session, with no relay server and no passwords sent to the cloud. Automation is still subject to platform risk controls; we add pacing and gentle retries but cannot promise zero risk.' },
+        { q: 'Is my account safe? Could it get banned?', a: 'The app uses your own IP and signed-in session, with no relay server and no passwords sent to the cloud. Automation is still subject to platform access restrictions; we add pacing and gentle retries but cannot promise zero risk.' },
       ],
     },
     {

@@ -119,6 +119,98 @@ function stopServer() {
   const platformLoaded = await waitFor(() => /演示/.test(doc.getElementById('view').textContent), 8000);
   check('平台登录状态加载完成（mock 显示演示）', !!platformLoaded);
 
+  // 住宅代理：默认关闭；配置接口需掩码、KEEP 与配置不完整时拒绝启用
+  const platRes = await (await fetch(BASE + '/api/trends/platforms')).json();
+  check(
+    '平台状态附带代理信息',
+    !!(platRes.platforms[0] && platRes.platforms[0].proxy),
+    JSON.stringify(platRes.platforms[0] && platRes.platforms[0].proxy)
+  );
+  check('雷达面板显示直连 chip', /直连/.test(doc.getElementById('view').textContent));
+
+  const proxy0 = await (await fetch(BASE + '/api/proxy')).json();
+  check('初始代理未启用且未配置', proxy0.enabled === false && proxy0.configured === false);
+  check('初始代理密码不回显', proxy0.password.value === '' && proxy0.password.hasValue === false);
+
+  const putProxy = (body) =>
+    fetch(BASE + '/api/proxy', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+  const incomplete = await putProxy({ enabled: true, host: '10.0.0.9', port: 8080, username: 'u' });
+  check('启用但缺少密码时拒绝保存（400）', incomplete.status === 400, 'HTTP ' + incomplete.status);
+
+  const putOk = await putProxy({
+    enabled: true,
+    host: '10.0.0.9',
+    port: 8080,
+    username: 'u',
+    password: 'secret',
+    sessionTemplate: 'u-s-{session}'
+  });
+  check('保存代理配置成功', putOk.ok, 'HTTP ' + putOk.status);
+
+  const proxy1 = await (await fetch(BASE + '/api/proxy')).json();
+  check('启用后 configured 为 true', proxy1.enabled === true && proxy1.configured === true);
+  check(
+    '读取时密码被掩码',
+    proxy1.password.value === '••••••••' && proxy1.password.hasValue === true,
+    JSON.stringify(proxy1.password)
+  );
+  check('会话模板标记为粘性', proxy1.sticky === true && !!proxy1.sessionId);
+
+  await putProxy({ password: '__KEEP_EXISTING__', host: '10.0.0.10' });
+  const rawProxy = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'proxy.json'), 'utf8'));
+  check('KEEP 保留原密码并更新主机', rawProxy.password === 'secret' && rawProxy.host === '10.0.0.10', rawProxy.host);
+
+  const connRes = await (await fetch(BASE + '/api/connections')).json();
+  check(
+    '/api/connections 附带掩码后的代理配置',
+    !!connRes.proxy && connRes.proxy.password.hasValue === true && connRes.proxy.password.value === '••••••••',
+    JSON.stringify(connRes.proxy && connRes.proxy.password)
+  );
+
+  click(win, doc.querySelector('.nav-link[data-tab="connections"]'));
+  await waitFor(() => /网络代理 · 住宅出口/.test(doc.getElementById('view').textContent), 8000);
+  const connViewText = doc.getElementById('view').textContent;
+  check('连接设置渲染代理卡片', /网络代理 · 住宅出口/.test(connViewText));
+  check('代理卡片不泄漏密码明文', connViewText.indexOf('secret') < 0);
+
+  const platformsTabBtn = doc.querySelector('[data-act="connTab"][data-tab="platforms"]');
+  const proxyTabBtn = doc.querySelector('[data-act="connTab"][data-tab="proxy"]');
+  const platformsPanel = doc.querySelector('[data-conn-panel="platforms"]');
+  const proxyPanel = doc.querySelector('[data-conn-panel="proxy"]');
+  check(
+    '连接设置默认选中渠道 Cookie 设置 Tab',
+    !!platformsTabBtn && platformsTabBtn.classList.contains('on') && !!proxyTabBtn && !proxyTabBtn.classList.contains('on')
+  );
+  check(
+    '默认显示渠道卡片、隐藏网络代理面板',
+    !!platformsPanel && !platformsPanel.classList.contains('hidden') &&
+      !!proxyPanel && proxyPanel.classList.contains('hidden')
+  );
+  click(win, proxyTabBtn);
+  check(
+    '切到网络代理 Tab 后代理面板可见、渠道隐藏',
+    !!proxyPanel && !proxyPanel.classList.contains('hidden') &&
+      !!platformsPanel && platformsPanel.classList.contains('hidden') &&
+      proxyTabBtn.classList.contains('on') && !platformsTabBtn.classList.contains('on')
+  );
+  click(win, platformsTabBtn);
+  check(
+    '切回渠道 Tab 后代理面板隐藏',
+    !!proxyPanel && proxyPanel.classList.contains('hidden') &&
+      !!platformsPanel && !platformsPanel.classList.contains('hidden')
+  );
+  click(win, doc.querySelector('.nav-link[data-tab="topics"]'));
+  await sleep(250);
+
+  await putProxy({ enabled: false });
+  const proxyOff = await (await fetch(BASE + '/api/proxy')).json();
+  check('可以停用代理', proxyOff.enabled === false);
+
   const kw = doc.getElementById('trendKeywords');
   kw.value = '冒烟爆款';
   key(win, kw, 'input');
@@ -164,6 +256,137 @@ function stopServer() {
   await sleep(300);
   const rowHit = savedTitle && doc.getElementById('view').textContent.indexOf(savedTitle.slice(0, 20)) >= 0;
   check('选题池出现转换后的新选题', !!rowHit);
+
+  // 文案提取：接口与前端 Tab
+  const txBad = await fetch(BASE + '/api/trends/transcript', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: 'not-a-link' })
+  });
+  check('文案提取拒绝非法链接', txBad.status === 400, 'HTTP ' + txBad.status);
+  const txPost = await fetch(BASE + '/api/trends/transcript', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: 'https://www.bilibili.com/video/BV1xx411c7mD' })
+  });
+  const txJob = await txPost.json();
+  check('文案提取接口返回 202 与任务快照', txPost.status === 202 && !!txJob.id && txJob.status !== 'error', JSON.stringify(txJob && txJob.status));
+  let txFinal = null;
+  for (let i = 0; i < 20; i++) {
+    const r = await fetch(BASE + '/api/trends/transcript/' + txJob.id);
+    txFinal = await r.json();
+    if (txFinal.status === 'done' || txFinal.status === 'error') break;
+    await sleep(250);
+  }
+  check('演示模式文案提取完成', txFinal && txFinal.status === 'done', txFinal && txFinal.error);
+  check(
+    '文案快照包含分段与整篇文本',
+    !!txFinal && Array.isArray(txFinal.segments) && txFinal.segments.length >= 3 && /视频文案的结构/.test(txFinal.text),
+    txFinal ? txFinal.segments.length + ' 段' : '无分段'
+  );
+  const txMissing = await fetch(BASE + '/api/trends/transcript/no-such-job');
+  check('不存在的文案任务返回 404', txMissing.status === 404, 'HTTP ' + txMissing.status);
+
+  // 本地文件：上传接口与 ASR 状态
+  const asrRes = await fetch(BASE + '/api/asr/status');
+  const asrBody = await asrRes.json();
+  check(
+    '/api/asr/status 返回 ffmpeg / whisper / 模型状态',
+    asrRes.ok && !!asrBody.ffmpeg && !!asrBody.whisper && !!asrBody.model && asrBody.offline === true,
+    JSON.stringify(asrBody.model)
+  );
+  const uploadBad = await fetch(BASE + '/api/trends/transcript/upload?name=note.txt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: 'hello'
+  });
+  check('上传接口拒绝不支持的格式', uploadBad.status === 400, 'HTTP ' + uploadBad.status);
+  const uploadEmpty = await fetch(BASE + '/api/trends/transcript/upload?name=empty.mp4', {
+    method: 'POST',
+    headers: { 'Content-Type': 'video/mp4' },
+    body: Buffer.alloc(0)
+  });
+  check('上传接口拒绝空文件', uploadEmpty.status === 400, 'HTTP ' + uploadEmpty.status);
+  const uploadOk = await fetch(BASE + '/api/trends/transcript/upload?name=local-demo.wav', {
+    method: 'POST',
+    headers: { 'Content-Type': 'audio/wav' },
+    body: Buffer.alloc(4096, 1)
+  });
+  const uploadBody = await uploadOk.json();
+  check(
+    '上传本地音视频返回 fileId 与大小',
+    uploadOk.status === 201 && /^[0-9a-f-]{36}\.wav$/i.test(uploadBody.fileId || '') && uploadBody.size === 4096,
+    JSON.stringify(uploadBody)
+  );
+  const fileJobRes = await fetch(BASE + '/api/trends/transcript', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileId: uploadBody.fileId, name: 'local-demo.wav' })
+  });
+  const fileJob = await fileJobRes.json();
+  check(
+    '本地文件任务识别为「本地文件」',
+    fileJobRes.status === 202 && fileJob.platform === '本地文件' && fileJob.title === 'local-demo',
+    JSON.stringify({ platform: fileJob.platform, title: fileJob.title })
+  );
+  let fileFinal = null;
+  for (let i = 0; i < 20; i++) {
+    fileFinal = await (await fetch(BASE + '/api/trends/transcript/' + fileJob.id)).json();
+    if (fileFinal.status === 'done' || fileFinal.status === 'error') break;
+    await sleep(200);
+  }
+  check(
+    '演示模式本地文件任务完成',
+    !!fileFinal && fileFinal.status === 'done' && fileFinal.platform === '本地文件',
+    fileFinal && (fileFinal.error || fileFinal.status)
+  );
+  const staleUpload = await fetch(BASE + '/api/trends/transcript', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileId: '00000000-0000-0000-0000-000000000000.mp4' })
+  });
+  check('不存在的上传文件返回 404', staleUpload.status === 404, 'HTTP ' + staleUpload.status);
+
+  const txTabBtn = doc.querySelector('[data-act="trendTab"][data-tab="transcript"]');
+  const searchTabBtn = doc.querySelector('[data-act="trendTab"][data-tab="search"]');
+  click(win, txTabBtn);
+  check(
+    '雷达可切到文案提取 Tab',
+    !!txTabBtn && txTabBtn.classList.contains('on') &&
+      !doc.querySelector('[data-trend-panel="transcript"]').classList.contains('hidden') &&
+      doc.querySelector('[data-trend-panel="search"]').classList.contains('hidden')
+  );
+  const txUrl = doc.getElementById('transcriptUrl');
+  txUrl.value = 'https://www.douyin.com/video/7300000000000000000';
+  key(win, txUrl, 'input');
+  click(win, doc.querySelector('[data-act="transcriptStart"]'));
+  const txBox = await waitFor(() => {
+    const box = doc.getElementById('transcriptResult');
+    return box && /演示视频/.test(box.textContent) ? box : null;
+  }, 15000);
+  check('前端文案提取展示结果', !!txBox);
+  const txBoxText = txBox ? txBox.textContent : '';
+  check('结果含分段、整篇文案与操作按钮', /整篇文案/.test(txBoxText) &&
+    !!doc.querySelector('[data-act="transcriptToTopic"]') &&
+    !!doc.querySelector('[data-act="transcriptSaveAsset"]') &&
+    !!doc.querySelector('[data-act="transcriptCopy"]') &&
+    !!doc.querySelector('[data-act="transcriptDownload"]'), txBoxText.slice(0, 30));
+  check(
+    '文案提取面板含本地上传入口',
+    !!doc.getElementById('transcriptFile') &&
+      !!doc.querySelector('[data-act="transcriptPick"]') &&
+      /文件不会上传云端/.test(doc.getElementById('view').textContent)
+  );
+  const asrCard = await waitFor(() => {
+    const el = doc.getElementById('asrStatus');
+    return el && /whisper\.cpp/.test(el.textContent) && /模型 small/.test(el.textContent) ? el : null;
+  }, 10000);
+  check('前端展示本地语音识别环境', !!asrCard, asrCard ? asrCard.textContent.slice(0, 40) : '未渲染');
+  check(
+    '模型未下载时提供下载入口或安装提示',
+    !!(asrCard && (asrCard.querySelector('[data-act="transcriptAsrDownload"]') || /安装 whisper\.cpp/.test(asrCard.textContent)))
+  );
+  click(win, searchTabBtn);
 
   // 第二次相同关键词：应命中 1 小时缓存
   const kw2 = doc.getElementById('trendKeywords');

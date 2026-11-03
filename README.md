@@ -81,6 +81,8 @@ lib/db.js                    连接、DDL、索引、事务、每日备份
 lib/store.js                 查询/写入/校验/自动编号/CSV
 lib/migrate.js               旧 JSON 导入、示例数据写入
 lib/seed.js                  示例数据内容
+lib/proxy-tunnel.js          本地无认证代理转发层（替 Chrome 注入上游代理鉴权）
+lib/proxy-config.js          住宅代理配置（data/proxy.json、掩码、会话模板）
 public/                      index.html / style.css / app.js
 data/workbench.db            数据库（运行时生成）
 data/backups/                每日整库快照，保留 7 天
@@ -88,6 +90,7 @@ data/legacy/                 迁移前的 JSON 存档
 tools/migrate-json-to-sqlite.js  迁移命令
 tools/smoke-test.js          页面冒烟测试（需要 jsdom）
 tools/sync-test.js           SSE 同步验证
+tools/verify-proxy.js        代理模块自检（本地 mock 上游，无需真实代理）
 desktop/main.js              Electron 主进程：窗口、托盘、服务子进程、日志
 desktop/updater.js           自动更新（electron-updater）
 electron-builder.yml         桌面打包与发布源配置
@@ -188,6 +191,35 @@ meta                        schema_version
 
 字段值支持裸值（`"平台": "小红书"`）或类型包装（`"平台": {"select": "小红书"}`）。服务端按 schema 统一校验：选项不在候选、评分越界、链接非 http(s)、必填为空、复盘同日重复、编号冲突，都会返回 400/409 和中文原因。
 
+## 文案提取（爆款雷达）
+
+「选题池 → 爆款灵感雷达 → 文案提取」可以把视频里的口播文案转成可编辑文本，完成后可复制、下载 TXT、转成选题或存进素材库。
+
+- **输入**：粘贴 B站 / 抖音 / 小红书 / 快手视频链接；短链（`b23.tv`、`v.douyin.com`、`xhslink.com`、`v.kuaishou.com`）会自动展开。也可以直接选择或拖入本地视频/音频（最大 2GB）。
+- **链接来源**：优先读取平台自带字幕（B站字幕 JSON、抖音 `caption_infos`）；小红书、快手字幕覆盖有限，没有字幕时会提示下载视频后在本页上传，不会伪造结果。
+- **本地文件**：ffmpeg 抽取 16kHz 单声道音频，再用内置 whisper.cpp 在本机转写；音视频不会上传云端。模型不随安装包分发，首次转写按需下载 `small` 模型（约 466MB）到 `data/models`，之后离线可用。
+- **任务模型**：串行执行，同一时间只跑一个任务，进程内保留最近 20 个结果；刷新页面后需要重新发起。上传的临时文件在任务结束后删除，残留文件按 24 小时清理。
+- **接口**：
+  - `POST /api/trends/transcript` 提交 `{ "url": "https://..." }` 或 `{ "fileId": "...", "name": "..." }`，返回 202 与任务快照；`GET /api/trends/transcript/:id` 轮询状态、分段与整篇文本。
+  - `POST /api/trends/transcript/upload?name=xxx.mp4` 以原始二进制流上传，返回 `{ fileId, name, size }`。
+  - `GET /api/asr/status` 查看 ffmpeg / whisper.cpp / 模型状态；`POST /api/asr/model` 开始下载模型。
+  - `WB_TRENDS_MOCK=1` 时返回演示文案，便于无网络测试；`WB_WHISPER_MODEL` 可切换 `tiny/base/small/medium/large-v3`，`WB_ASR_LANG` 指定识别语言（默认 `auto`）。
+- **二进制**：`npm run vendor` 会把 ffmpeg-static 复制到 `vendor/ffmpeg`，并准备 whisper.cpp CLI 到 `vendor/whisper/<platform>-<arch>`；`vendor/` 不入库。Windows / Linux 下载官方预编译包，`npm run dist:win` / `dist:linux` 会自动准备；macOS 在打包时（`npm run dist:mac`）从源码编译 universal `whisper-cli`（arm64 + x86_64），需要构建机具备 Xcode Command Line Tools 与 cmake，产物同时写入 `vendor/whisper/darwin-arm64` 和 `darwin-x64`。可用 `WB_WHISPER_SRC` 指定本地源码、`WB_WHISPER_BUILD` 指定版本、`WB_WHISPER_MAC_METAL=0` 强制纯 CPU 构建，或用 `WB_WHISPER_PATH` / `WB_FFMPEG_PATH` 指向自定义程序。
+- **合规**：提取结果仅供个人学习、研究与选题参考；视频与文案著作权归原作者，不得直接搬运发布或冒充原创（见官网《服务条款》「文案提取与知识产权」）。
+
+## 网络代理（爆款雷达 / 小红书·抖音登录）
+
+小红书、抖音对无头浏览器搜索的访问限制主要来自 IP。可在「连接设置 · 网络代理」为每个创作者本机配置自己的 HTTP 代理（用户名 + 密码），雷达搜索与小红书/抖音一键登录会经同一出口访问；其它浏览器流程默认仍直连。
+
+- 配置落盘 `data/proxy.json`，读取掩码、密码不回显；也可用环境变量 `WB_PROXY_ENABLED / SCHEME / HOST / PORT / USER / PASS / SESSION / TEMPLATE / AUTO_ROTATE` 覆盖（环境变量优先）。
+- Chrome 启动参数无法携带代理密码，服务会在 `127.0.0.1` 起一个仅本机可连的转发代理，替 Chrome 注入 `Proxy-Authorization`。
+- **粘性会话**：一套安装持有一个 `sessionId`；若会话模板含 `{session}`（如 `user-session-{session}`），会注入到代理用户名里固定出口 IP（能否固定取决于代理商）。设置后可在界面「更换出口 IP」。
+- **失败即停**：代理已启用但配置不完整时，雷达/登录会直接报错而不是静默改走直连，避免泄漏本机真实 IP。
+- **访问受限重试**：命中平台访问限制时最多重试 1 次（指数退避 + 同平台 4 分钟冷却），不自动更换出口 IP，避免破坏登录与搜索同 IP 的前提。
+- 接口：`GET/PUT /api/proxy`、`POST /api/proxy/test`（探测抖音 443 并尽量返回出口 IP）、`POST /api/proxy/rotate`（有浏览器任务时返回 409）。
+
+**合规约定**：本应用只提供代理配置入口，不内置、不代售、不托管任何代理或 IP 资源。代理账号由使用者自行提供并保证来源合法；使用者应遵守各平台用户协议与所在地法律法规，不得将本功能用于规避国家网络管理、跨境违规访问、批量注册、刷量或其他违法用途。详细约定见官网《服务条款》中「网络代理与访问出口」一节。
+
 ## 验证
 
 ```bash
@@ -195,9 +227,11 @@ npm start                                  # 另开一个终端
 set NODE_PATH=C:\Users\Intel\.workbuddy\binaries\node\workspace\node_modules
 node tools/smoke-test.js                   # 25 项页面交互
 node tools/sync-test.js                    # SSE 推送
+node tools/verify-proxy.js                 # 代理转发/配置自检（无需真实代理）
+node tools/verify-trends.js                # 雷达搜索 + 文案提取（含本地上传）+ 代理 Tab（演示模式）
 ```
 
-最近一次结果：冒烟 25/25 通过，SSE 推送正常，`integrity_check = ok`，悬空引用 0。
+最近一次结果：`verify-trends` 62/62 通过；本地 whisper.cpp 链路用合成语音验证通过（tiny 模型，12 秒音频约 43 秒转写）。
 
 ## 常见改动
 
