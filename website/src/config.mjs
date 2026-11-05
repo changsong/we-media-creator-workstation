@@ -10,6 +10,16 @@ export const FEEDBACK_ENDPOINT = process.env.FEEDBACK_ENDPOINT || '/api/feedback
 export const CHECKOUT_URL = process.env.CHECKOUT_URL || '';
 export const CONTACT_EMAIL = process.env.CONTACT_EMAIL || '';
 
+// Keygate 托管页：登录、我的授权、购买（Stripe 就绪后按套餐填 CHECKOUT_ID_*）
+export const KEYGATE_BASE_URL = (process.env.KEYGATE_BASE_URL || 'https://keygate.unionuser.com').replace(/\/+$/, '');
+export const KEYGATE_LOGIN_URL = `${KEYGATE_BASE_URL}/login`;
+export const KEYGATE_PORTAL_URL = `${KEYGATE_BASE_URL}/portal`;
+export const CHECKOUT_IDS = {
+  monthly: process.env.CHECKOUT_ID_MONTHLY || '',
+  yearly: process.env.CHECKOUT_ID_YEARLY || '',
+  lifetime: process.env.CHECKOUT_ID_LIFETIME || '',
+};
+
 export const PLANS = [
   {
     id: 'monthly',

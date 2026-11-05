@@ -22,8 +22,8 @@
     "site:serve": "node website/server.mjs",
     "site:deploy": "node website/scripts/deploy.mjs",
     "site:releases": "node website/scripts/sync-releases.mjs",
-    "check": "node --check server.js && node --check public/app.js && node --check lib/db.js && node --check lib/store.js && node --check lib/migrate.js && node --check lib/proxy-tunnel.js && node --check lib/proxy-config.js && node --check lib/trends/transcript.js && node --check lib/asr.js && node --check desktop/main.js && node --check desktop/updater.js && node --check tools/upload-oss.js && node --check tools/verify-proxy.js && node --check tools/prepare-vendor.js && node --check tools/fetch-whisper.js && node --check tools/build-whisper-mac.js && node --check tools/ci-vendor.js",
-    "test": "node tools/smoke-test.js && node tools/sync-test.js && node tools/verify-proxy.js"
+    "check": "node --check server.js && node --check public/app.js && node --check lib/db.js && node --check lib/store.js && node --check lib/migrate.js && node --check lib/license.js && node --check lib/proxy-tunnel.js && node --check lib/proxy-config.js && node --check lib/trends/transcript.js && node --check lib/asr.js && node --check desktop/main.js && node --check desktop/updater.js && node --check tools/upload-oss.js && node --check tools/verify-proxy.js && node --check tools/prepare-vendor.js && node --check tools/fetch-whisper.js && node --check tools/build-whisper-mac.js && node --check tools/ci-vendor.js",
+    "test": "node --test tools/license-test.js && node tools/smoke-test.js && node tools/sync-test.js && node tools/verify-proxy.js"
   },
   "engines": {
     "node": ">=22.5"

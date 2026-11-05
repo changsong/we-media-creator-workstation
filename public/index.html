@@ -58,8 +58,8 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
     </nav>
   </div>
   <div class="flex flex-col items-center gap-space-xs w-full px-space-xs">
-    <button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" title="设置" type="button">
-      <span class="material-symbols-outlined text-lg">settings</span>
+    <button id="accountBtn" class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" title="账号与授权" type="button">
+      <span class="material-symbols-outlined text-lg">workspace_premium</span>
     </button>
     <button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" id="helpBtn" title="帮助" type="button">
       <span class="material-symbols-outlined text-lg">help</span>
@@ -115,6 +115,12 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
       </button>
     </div>
   </header>
+
+  <div id="licenseBanner" class="license-banner">
+    <span class="material-symbols-outlined text-lg">info</span>
+    <p id="licenseBannerText" class="flex-1 min-w-0">自动发布需要有效授权，编辑与排期不受影响。</p>
+    <button id="licenseBannerBtn" type="button" class="shrink-0 px-4 py-1.5 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all">去激活</button>
+  </div>
 
   <main id="view" class="w-full pt-20 px-space-lg pb-space-lg bg-surface-container-low min-h-screen"></main>
 </div>
@@ -190,6 +196,58 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
       <button id="profileSave" class="inline-flex items-center gap-1 px-6 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all" type="button">
         <span class="material-symbols-outlined text-base">save</span>保存
       </button>
+    </div>
+  </div>
+</div>
+
+<div id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+  <div class="modal-card account-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Account &amp; License</span>
+        <h3 id="accountModalTitle" class="text-headline-md font-headline-md text-on-surface mt-1">账号与授权</h3>
+        <p class="text-label-sm text-on-surface-variant mt-1">账号与授权由 Union User（keygate.unionuser.com）提供。</p>
+      </div>
+      <button id="accountClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+
+    <div id="accountStatus" class="account-status"></div>
+
+    <div id="accountLoginBox">
+      <p class="text-label-sm text-on-surface-variant">使用购买时填写的邮箱接收验证码；登录后会自动发现并激活授权。</p>
+      <div class="fld" style="margin-bottom:0">
+        <label class="lab" for="accountEmail">邮箱</label>
+        <input id="accountEmail" class="inp" type="email" placeholder="you@example.com" autocomplete="email" spellcheck="false">
+      </div>
+      <div class="flex flex-wrap items-center gap-space-sm mt-space-sm">
+        <button id="accountSendCode" class="px-5 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all disabled:opacity-50" type="button">发送验证码</button>
+        <input id="accountCode" class="inp" type="text" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code" style="display:none;width:9rem">
+        <button id="accountVerifyCode" class="px-5 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all disabled:opacity-50" type="button" style="display:none">登录</button>
+      </div>
+    </div>
+
+    <div class="account-sep"></div>
+
+    <div>
+      <p class="text-label-sm text-on-surface-variant">已有授权码可直接激活（购买邮箱与登录邮箱不同时使用）。</p>
+      <div class="fld" style="margin-bottom:0">
+        <label class="lab" for="accountKey">授权码</label>
+        <input id="accountKey" class="inp" type="text" placeholder="粘贴授权码" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="flex flex-wrap items-center gap-space-sm mt-space-sm">
+        <button id="accountActivate" class="px-5 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all disabled:opacity-50" type="button">激活</button>
+        <button id="accountRefresh" class="px-5 py-2 rounded-full bg-surface-container-low text-on-surface text-label-md font-label-md hover:bg-surface-container-high transition-colors disabled:opacity-50" type="button">刷新授权</button>
+        <button id="accountDeactivate" class="px-5 py-2 rounded-full bg-surface-container-low text-on-surface text-label-md font-label-md hover:bg-surface-container-high transition-colors disabled:opacity-50" type="button">解绑本机</button>
+      </div>
+    </div>
+
+    <div class="account-links">
+      <a href="https://keygate.unionuser.com/portal" target="_blank" rel="noopener">我的授权</a>
+      <a href="https://www.wemediacreator.com/pricing/" target="_blank" rel="noopener">购买授权</a>
+      <button id="accountCopyMachine" type="button">复制机器码</button>
+      <button id="accountLogout" type="button" style="display:none">退出登录</button>
     </div>
   </div>
 </div>

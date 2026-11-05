@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SITE_BASE, VERSION, PLANS, PLATFORMS, PLAN_FEATURES_ZH, PLAN_FEATURES_EN } from '../config.mjs';
+import { SITE_BASE, VERSION, PLANS, PLATFORMS, PLAN_FEATURES_ZH, PLAN_FEATURES_EN, KEYGATE_BASE_URL, CHECKOUT_IDS } from '../config.mjs';
 import { esc, routeTo, asset } from './layout.mjs';
 import { ui } from './i18n.mjs';
 
@@ -10,6 +10,8 @@ const MOCKUP = fs.readFileSync(path.join(__dirname, '..', 'partials', 'app-mocku
 const ASSET_BASE = `${SITE_BASE}/assets`;
 
 export function checkoutUrl(plan, lang = 'zh', checkout = '') {
+  const checkoutId = CHECKOUT_IDS[plan];
+  if (checkoutId) return `${KEYGATE_BASE_URL}/pay/${encodeURIComponent(checkoutId)}`;
   if (checkout) {
     const sep = checkout.includes('?') ? '&' : '?';
     return `${checkout}${sep}plan=${encodeURIComponent(plan)}&lang=${lang === 'en' ? 'en' : 'zh'}`;

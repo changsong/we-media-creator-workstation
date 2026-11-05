@@ -1,4 +1,4 @@
-import { SITE_URL, SITE_BASE, VERSION, RELEASES, PLANS, PLATFORMS, PLAN_FEATURES_ZH, PLAN_FEATURES_EN, faqTopics } from '../config.mjs';
+import { SITE_URL, SITE_BASE, VERSION, RELEASES, PLANS, PLATFORMS, PLAN_FEATURES_ZH, PLAN_FEATURES_EN, faqTopics, KEYGATE_PORTAL_URL } from '../config.mjs';
 import { BLOG_POSTS, findPost } from '../data/blog.mjs';
 import { FEATURE_BLOCKS } from '../data/features.mjs';
 import { USE_CASES } from '../data/use-cases.mjs';
@@ -400,6 +400,7 @@ function pricingPage(lang, checkout = '') {
       body: `<div class="max-w-6xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter items-stretch">${pricingCards({ lang, detailed: true, checkout })}</div>
         <p class="mt-6 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'Prices are in USD. A license activates up to three devices. Checkout shows the final refund terms.' : '价格为人民币（CNY）。每份授权最多同时激活 3 台设备，退款条款以购买页为准。'}</p>
+        <p class="mt-2 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'After purchase, open the desktop app, go to “Account &amp; License” in the lower-left corner, and sign in with your purchase email to activate — or paste the license key.' : '购买后打开桌面端，点击左下角「账号与授权」，用购买邮箱接收验证码登录即可自动激活；也可以直接粘贴授权码。'} <a class="text-primary underline decoration-gold-accent decoration-2 underline-offset-2" href="${KEYGATE_PORTAL_URL}" target="_blank" rel="noopener">${isEn ? 'Manage my licenses' : '管理我的授权'}</a></p>
       </div>`,
     }),
     contentSection({
@@ -558,6 +559,7 @@ function downloadPage(lang) {
   const steps = [
     ['download', isEn ? 'Download' : '下载', isEn ? 'Pick the installer for your system. The highlighted card is your current OS.' : '选择对应系统的安装包，上方会自动标出当前系统。'],
     ['install_desktop', isEn ? 'Install & sign in' : '安装并登录', isEn ? 'Install, open the app, and scan the QR code once per platform you use.' : '安装后打开应用，为常用平台各扫码登录一次。'],
+    ['workspace_premium', isEn ? 'Activate your license' : '激活授权', isEn ? 'Open “Account & License” in the lower-left corner and sign in with your purchase email, or paste your license key. Scheduled publishing needs an active license; planning stays free.' : '点击左下角「账号与授权」，用购买邮箱验证码登录自动激活，或粘贴授权码。编辑与排期免费，自动发布需要有效授权。'],
     ['schedule', isEn ? 'Schedule your first post' : '排期第一条内容', isEn ? 'Add a post to the publish center and let it run on time.' : '把第一条内容放进发布中心，让它在设定时间自动发布。'],
   ].map(([ic, title, desc], i) => `<div class="rounded-2xl bg-surface-white p-5 shadow-sm">
     <div class="flex items-center gap-3 mb-2"><span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-canvas-dark text-[11px] font-bold text-gold-accent">0${i + 1}</span><span class="text-primary">${icon(ic, 'text-[20px]')}</span></div>
@@ -581,8 +583,8 @@ function downloadPage(lang) {
     `<div class="max-w-6xl mx-auto mt-4 rounded-2xl bg-surface-container-low/70 px-5 py-4 font-body-sm text-body-sm text-on-surface-variant flex items-start gap-2">${icon('info', 'text-[18px] text-primary mt-0.5')}<span>${isEn ? 'The desktop app needs a local Chrome or Edge installation for publishing. Mobile phones are not supported; the app is a desktop workbench.' : '发布依赖本机安装的 Chrome 或 Edge 浏览器。暂不支持手机端，工作台是桌面应用。'}</span></div>`,
     contentSection({
       body: `<div class="max-w-6xl mx-auto">
-        ${sectionHeading({ lang, eyebrow: isEn ? 'First run' : '第一次使用', title: isEn ? 'Three steps to your first scheduled post' : '三步完成第一次排期' })}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">${steps}</div>
+        ${sectionHeading({ lang, eyebrow: isEn ? 'First run' : '第一次使用', title: isEn ? 'Four steps to your first scheduled post' : '四步完成第一次排期' })}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">${steps}</div>
       </div>`,
     }),
     contentSection({

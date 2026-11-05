@@ -1,3 +1,5 @@
+import { KEYGATE_LOGIN_URL, KEYGATE_PORTAL_URL } from '../config.mjs';
+
 export const UI = {
   zh: {
     brand: '自媒体内容运营工作台',
@@ -9,6 +11,7 @@ export const UI = {
       { key: 'pricing', label: '价格方案', route: '/pricing/' },
       { key: 'privacy', label: '安全与隐私', route: '/#local-first' },
       { key: 'faq', label: '常见问题', route: '/faq/' },
+      { key: 'account', label: '登录 / 账号', route: KEYGATE_LOGIN_URL },
     ],
     seePricing: '查看价格',
     download: '下载桌面版',
@@ -32,6 +35,7 @@ export const UI = {
             { label: '支持平台', route: '/platforms/' },
             { label: '价格方案', route: '/pricing/' },
             { label: '下载桌面版', route: '/download/' },
+            { label: '我的授权', route: KEYGATE_PORTAL_URL },
             { label: '更新日志', route: '/changelog/' },
           ],
         },
@@ -52,7 +56,7 @@ export const UI = {
             { label: '诚实边界说明', route: '/faq/' },
             { label: '隐私政策', route: '/legal/privacy/' },
             { label: '服务条款', route: '/legal/terms/' },
-            { label: '账号登录方式', route: '/features/#connect' },
+            { label: '账号登录方式', route: KEYGATE_LOGIN_URL },
           ],
         },
         {
@@ -141,6 +145,7 @@ export const UI = {
       { key: 'pricing', label: 'Pricing', route: '/pricing/' },
       { key: 'privacy', label: 'Privacy', route: '/#local-first' },
       { key: 'faq', label: 'FAQ', route: '/faq/' },
+      { key: 'account', label: 'Sign in', route: KEYGATE_LOGIN_URL },
     ],
     seePricing: 'See pricing',
     download: 'Download',
@@ -164,6 +169,7 @@ export const UI = {
             { label: 'Platforms', route: '/platforms/' },
             { label: 'Pricing', route: '/pricing/' },
             { label: 'Download', route: '/download/' },
+            { label: 'My licenses', route: KEYGATE_PORTAL_URL },
             { label: 'Changelog', route: '/changelog/' },
           ],
         },
@@ -184,7 +190,7 @@ export const UI = {
             { label: 'Honest limitations', route: '/faq/' },
             { label: 'Privacy policy', route: '/legal/privacy/' },
             { label: 'Terms of service', route: '/legal/terms/' },
-            { label: 'How sign-in works', route: '/features/#connect' },
+            { label: 'How sign-in works', route: KEYGATE_LOGIN_URL },
           ],
         },
         {

@@ -22,7 +22,11 @@
         }
         if(!res.ok){
           var msg = (body && (body.error || body.message)) || ('请求失败（HTTP ' + res.status + '）');
-          throw new Error(msg);
+          var err = new Error(msg);
+          err.status = res.status;
+          if(body && body.code) err.code = body.code;
+          if(body && body.details) err.details = body.details;
+          throw err;
         }
         return body;
       });
@@ -285,6 +289,242 @@
     if(!err) return '未知错误';
     if(typeof err === 'string') return err;
     return err.message || err.msg || err.error || '写入未生效，请重试';
+  }
+
+  /* ---------- 账号与授权 ---------- */
+  var LICENSE = { status:null, held:true, reason:'' };
+  var LICENSE_REASONS = {
+    not_activated: '尚未激活授权',
+    license_invalid: '授权无效或已失效',
+    clock_skew: '系统时间异常',
+    token_missing: '需要联网续验授权',
+    token_expired: '离线授权已到期，需要联网续验',
+    device_mismatch: '授权与本机不匹配',
+    license_inactive: '授权状态异常',
+    license_expired: '授权已过期',
+    feature_not_entitled: '当前套餐不含自动发布'
+  };
+
+  function licenseReasonText(reason){
+    return LICENSE_REASONS[reason] || '需要有效授权';
+  }
+
+  function applyLicenseStatus(status){
+    LICENSE.status = status || null;
+    var pub = status && status.publish;
+    LICENSE.held = !(pub && pub.allowed);
+    LICENSE.reason = (pub && pub.reason) || '';
+    renderLicenseBanner();
+    renderAccount();
+  }
+
+  function renderLicenseBanner(){
+    var banner = $('licenseBanner');
+    if(!banner) return;
+    banner.classList.toggle('on', !!LICENSE.held);
+    var text = $('licenseBannerText');
+    if(text && LICENSE.held){
+      text.textContent = '自动发布需要有效授权（' + licenseReasonText(LICENSE.reason) + '），编辑与排期不受影响。';
+    }
+  }
+
+  function fmtLicenseDate(value){
+    if(!value) return '';
+    var d = new Date(value);
+    if(!isFinite(d.getTime())) return String(value);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function renderAccount(){
+    var box = $('accountStatus');
+    if(!box) return;
+    var s = LICENSE.status;
+    if(!s){
+      box.innerHTML = '<div class="row"><span>授权服务</span><span class="warn">正在读取状态…</span></div>';
+      return;
+    }
+    var lic = s.license || { present:false };
+    var rows = [];
+    rows.push('<div class="row"><span>账号</span><span>' + (s.user && s.user.email ? esc(s.user.email) : '未登录') + '</span></div>');
+
+    if(lic.present){
+      rows.push('<div class="row"><span>授权</span><span>' + esc((lic.planName || '已激活') + (lic.maskedKey ? ' · ' + lic.maskedKey : '')) + '</span></div>');
+      rows.push('<div class="row"><span>发布权限</span><span class="' + (s.publish.allowed ? 'ok' : 'bad') + '">' + (s.publish.allowed ? '可用' : licenseReasonText(LICENSE.reason)) + '</span></div>');
+      rows.push('<div class="row"><span>有效期</span><span>' + (lic.validUntil ? esc(fmtLicenseDate(lic.validUntil)) : '长期') + '</span></div>');
+      if(lic.activationLimit != null){
+        rows.push('<div class="row"><span>设备</span><span>' + esc(String(lic.activationCount || 0) + ' / ' + lic.activationLimit) + '</span></div>');
+      }
+      if(lic.tokenExpiresAt){
+        rows.push('<div class="row"><span>离线验签至</span><span>' + esc(fmtLicenseDate(lic.tokenExpiresAt) + ' 23:59') + '</span></div>');
+      }
+    } else {
+      rows.push('<div class="row"><span>授权</span><span class="warn">未激活</span></div>');
+    }
+    rows.push('<div class="row"><span>机器码</span><code>' + esc(s.machineId || '') + '</code></div>');
+    box.innerHTML = rows.join('');
+
+    var loginBox = $('accountLoginBox');
+    if(loginBox) loginBox.style.display = s.loggedIn ? 'none' : '';
+    var logoutBtn = $('accountLogout');
+    if(logoutBtn) logoutBtn.style.display = s.loggedIn ? '' : 'none';
+    var deact = $('accountDeactivate');
+    if(deact) deact.disabled = !lic.present;
+    var refreshBtn = $('accountRefresh');
+    if(refreshBtn) refreshBtn.disabled = !lic.present;
+    var emailEl = $('accountEmail');
+    if(emailEl && s.user && s.user.email && !emailEl.value) emailEl.value = s.user.email;
+  }
+
+  function loadLicenseStatus(){
+    return request('/license/status').then(function(s){
+      applyLicenseStatus(s);
+      return s;
+    }).catch(function(){ return null; });
+  }
+
+  function openAccountModal(){
+    var modal = $('accountModal');
+    if(modal) modal.classList.add('on');
+    renderAccount();
+    loadLicenseStatus();
+  }
+
+  function closeAccountModal(){
+    var modal = $('accountModal');
+    if(modal) modal.classList.remove('on');
+  }
+
+  function handleLicenseError(err){
+    if(!err || err.code !== 'LICENSE_REQUIRED') return false;
+    if(err.details && err.details.reason){
+      LICENSE.held = true;
+      LICENSE.reason = err.details.reason;
+      renderLicenseBanner();
+    }
+    openAccountModal();
+    return true;
+  }
+
+  function reloadAfterLicenseChange(){
+    if(PUB.loaded){
+      loadPublishData().then(function(){ render(); }).catch(function(){ /* 授权状态已更新，列表下次刷新 */ });
+    }
+  }
+
+  function sendLoginCode(){
+    var emailEl = $('accountEmail');
+    var email = String(emailEl ? emailEl.value : '').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      toast('请输入正确的邮箱地址', 'err');
+      if(emailEl) emailEl.focus();
+      return;
+    }
+    var btn = $('accountSendCode');
+    if(btn) btn.disabled = true;
+    request('/license/login/send', { method:'POST', body: JSON.stringify({ email:email }) })
+      .then(function(){
+        var codeEl = $('accountCode');
+        if(codeEl){ codeEl.style.display = ''; codeEl.focus(); }
+        var verifyBtn = $('accountVerifyCode');
+        if(verifyBtn) verifyBtn.style.display = '';
+        toast('验证码已发送，请查收邮件', 'ok');
+      })
+      .catch(function(err){ toast('发送失败：' + errMsg(err), 'err'); })
+      .finally(function(){ if(btn) btn.disabled = false; });
+  }
+
+  function verifyLoginCode(){
+    var emailEl = $('accountEmail');
+    var codeEl = $('accountCode');
+    var email = String(emailEl ? emailEl.value : '').trim();
+    var code = String(codeEl ? codeEl.value : '').trim();
+    if(!/^\d{6}$/.test(code)){ toast('请输入 6 位验证码', 'err'); if(codeEl) codeEl.focus(); return; }
+    var btn = $('accountVerifyCode');
+    if(btn) btn.disabled = true;
+    request('/license/login/verify', { method:'POST', body: JSON.stringify({ email:email, code:code }) })
+      .then(function(res){
+        if(res && res.status) applyLicenseStatus(res.status);
+        if(codeEl) codeEl.value = '';
+        if(res && res.warning){
+          toast('登录成功，但授权激活失败：' + res.warning, 'err');
+        } else if(res && res.needsLicenseKey){
+          toast('登录成功；未找到可用授权，请手动输入授权码', '');
+        } else {
+          toast('登录成功，授权已自动激活', 'ok');
+          reloadAfterLicenseChange();
+        }
+      })
+      .catch(function(err){ toast('登录失败：' + errMsg(err), 'err'); })
+      .finally(function(){ if(btn) btn.disabled = false; });
+  }
+
+  function activateLicense(){
+    var el = $('accountKey');
+    var key = String(el ? el.value : '').trim();
+    if(!key){ toast('请输入授权码', 'err'); if(el) el.focus(); return; }
+    var btn = $('accountActivate');
+    if(btn) btn.disabled = true;
+    request('/license/activate', { method:'POST', body: JSON.stringify({ license_key:key }) })
+      .then(function(s){
+        applyLicenseStatus(s);
+        if(el) el.value = '';
+        toast('授权激活成功', 'ok');
+        reloadAfterLicenseChange();
+      })
+      .catch(function(err){ toast('激活失败：' + errMsg(err), 'err'); })
+      .finally(function(){ if(btn) btn.disabled = false; });
+  }
+
+  function refreshLicense(){
+    var btn = $('accountRefresh');
+    if(btn) btn.disabled = true;
+    request('/license/refresh', { method:'POST', body:'{}' })
+      .then(function(s){
+        applyLicenseStatus(s);
+        var ok = s && s.publish && s.publish.allowed;
+        toast(ok ? '授权有效' : '授权不可用：' + licenseReasonText(LICENSE.reason), ok ? 'ok' : 'err');
+        reloadAfterLicenseChange();
+      })
+      .catch(function(err){ toast('续验失败：' + errMsg(err), 'err'); })
+      .finally(function(){ if(btn) btn.disabled = false; });
+  }
+
+  function deactivateLicense(){
+    if(!window.confirm('解绑本机后，这台设备需要重新激活才能自动发布。确定继续？')) return;
+    var btn = $('accountDeactivate');
+    if(btn) btn.disabled = true;
+    request('/license/deactivate', { method:'POST', body:'{}' })
+      .then(function(s){
+        applyLicenseStatus(s);
+        toast('已解绑本机', 'ok');
+        reloadAfterLicenseChange();
+      })
+      .catch(function(err){ toast('解绑失败：' + errMsg(err), 'err'); })
+      .finally(function(){ if(btn) btn.disabled = false; });
+  }
+
+  function logoutAccount(){
+    request('/license/logout', { method:'POST', body:'{}' })
+      .then(function(s){
+        applyLicenseStatus(s);
+        toast('已退出登录', 'ok');
+        reloadAfterLicenseChange();
+      })
+      .catch(function(err){ toast('退出失败：' + errMsg(err), 'err'); });
+  }
+
+  function copyMachineId(){
+    var id = LICENSE.status && LICENSE.status.machineId;
+    if(!id){ toast('机器码尚未就绪，请稍后再试', 'err'); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(id).then(function(){
+        toast('机器码已复制', 'ok');
+      }).catch(function(){
+        toast('复制失败，请手动选择机器码', 'err');
+      });
+    } else {
+      toast('复制失败，请手动选择机器码', 'err');
+    }
   }
 
   /* ---------- data ---------- */
@@ -3309,7 +3549,12 @@
         if(!hasTask) toast('未自动排入发布任务：' + r.skipped[0].reason);
       }
       return r;
-    }).catch(function(){ return null; });
+    }).catch(function(err){
+      if(handleLicenseError(err)){
+        toast('自动发布需要有效授权，请先激活', 'err');
+      }
+      return null;
+    });
   }
 
   function scanPendingSchedules(){
@@ -3329,6 +3574,10 @@
         }
       });
     }).catch(function(err){
+      if(handleLicenseError(err)){
+        toast('自动排入发布任务需要有效授权', 'err');
+        return;
+      }
       toast('扫描失败：' + errMsg(err), 'err');
     });
   }
@@ -4537,6 +4786,10 @@
       }
       toast((labels[action] || '操作成功') + ' · ' + hhmm(), 'ok');
     }).catch(function(err){
+      if(handleLicenseError(err)){
+        toast('发布功能需要有效授权，请先激活', 'err');
+        return;
+      }
       toast('操作失败：' + errMsg(err), 'err');
     });
   }
@@ -6654,6 +6907,23 @@
   $('profileCancel').addEventListener('click', closeProfileEditor);
   $('profileModal').addEventListener('click', function(e){ if(e.target === this) closeProfileEditor(); });
 
+  /* ---------- 账号与授权 wiring ---------- */
+  var accountBtn = $('accountBtn');
+  if(accountBtn) accountBtn.addEventListener('click', openAccountModal);
+  var licenseBannerBtn = $('licenseBannerBtn');
+  if(licenseBannerBtn) licenseBannerBtn.addEventListener('click', openAccountModal);
+  $('accountClose').addEventListener('click', closeAccountModal);
+  $('accountModal').addEventListener('click', function(e){ if(e.target === this) closeAccountModal(); });
+  $('accountSendCode').addEventListener('click', sendLoginCode);
+  $('accountVerifyCode').addEventListener('click', verifyLoginCode);
+  $('accountCode').addEventListener('keydown', function(e){ if(e.key === 'Enter') verifyLoginCode(); });
+  $('accountKey').addEventListener('keydown', function(e){ if(e.key === 'Enter') activateLicense(); });
+  $('accountActivate').addEventListener('click', activateLicense);
+  $('accountRefresh').addEventListener('click', refreshLicense);
+  $('accountDeactivate').addEventListener('click', deactivateLicense);
+  $('accountLogout').addEventListener('click', logoutAccount);
+  $('accountCopyMachine').addEventListener('click', copyMachineId);
+
   /* ---------- drawer wiring ---------- */
   $('drawerClose').addEventListener('click', closeEditor);
   $('drawerCancel').addEventListener('click', closeEditor);
@@ -6664,6 +6934,7 @@
       closeEditor();
       $('modal').classList.remove('on');
       $('profileModal').classList.remove('on');
+      closeAccountModal();
       closeVoiceMemo();
       closePublishModal();
       pendingDelete = null;
@@ -6717,6 +6988,7 @@
       loadVoiceRecordings(),
       loadTrendPlatforms(),
       loadTrendLatest(),
+      loadLicenseStatus(),
       loadPublishData().catch(function(){ /* 发布服务不可用时不影响其它页面 */ })
     ]).then(loadAllData);
   }

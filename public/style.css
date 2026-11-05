@@ -152,10 +152,25 @@ a{text-decoration:none}
 .cal-form .fld{margin-bottom:0}
 
 /* modal */
-#modal,#profileModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(25,28,30,.38);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:90;padding:1rem}
-#modal.on,#profileModal.on{opacity:1;pointer-events:auto}
+#modal,#profileModal,#accountModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(25,28,30,.38);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:90;padding:1rem}
+#modal.on,#profileModal.on,#accountModal.on{opacity:1;pointer-events:auto}
 .modal-card{width:420px;max-width:100%;background:#fff;border-radius:1.5rem;padding:1.5rem;display:flex;flex-direction:column;gap:.75rem;box-shadow:0 24px 64px rgba(25,28,30,.24);transform:translateY(8px) scale(.98);transition:transform .2s ease}
-#modal.on .modal-card,#profileModal.on .modal-card{transform:translateY(0) scale(1)}
+#modal.on .modal-card,#profileModal.on .modal-card,#accountModal.on .modal-card{transform:translateY(0) scale(1)}
+#accountModal .modal-card{width:560px;max-height:90vh;overflow-y:auto}
+.account-status{background:#f2f3f6;border-radius:1rem;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.35rem;font-size:13px;line-height:20px;color:#191c1e}
+.account-status .row{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.account-status .ok{color:#1b6f43}
+.account-status .warn{color:#9a6700}
+.account-status .bad{color:#ba1a1a}
+.account-status code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#44474a;word-break:break-all}
+.account-sep{height:1px;background:#e7e8eb;margin:.25rem 0}
+.account-links{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;font-size:13px}
+.account-links a{color:#090c0d;text-decoration:underline;text-decoration-color:#e7c361;text-decoration-thickness:2px;text-underline-offset:3px}
+.account-links button{color:#44474a;background:none;border:none;padding:0;cursor:pointer;font-size:13px;text-decoration:underline;font-family:inherit}
+.license-banner{margin:80px 1.5rem 0;display:none;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:1rem;background:#fff7e0;border:1px solid #f1dfa8;color:#5c4a12;font-size:13px;line-height:20px}
+.license-banner.on{display:flex}
+.license-banner + main{padding-top:5rem}
+.license-banner.on + main{padding-top:1rem}
 .profile-avatar-btn{position:relative;width:88px;height:88px;border-radius:9999px;overflow:hidden;background:#f2f3f6;border:1px solid #e1e2e5;padding:0;flex-shrink:0}
 .profile-avatar-btn img{width:100%;height:100%;object-fit:cover;display:block}
 .profile-avatar-btn .overlay{position:absolute;left:0;right:0;bottom:0;background:rgba(25,28,30,.62);color:#fff;font:600 10px/16px "Be Vietnam Pro",sans-serif;padding:2px 0;opacity:0;transition:opacity .15s}

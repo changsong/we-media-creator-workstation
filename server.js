@@ -26,6 +26,7 @@ const recordings = require('./lib/recordings');
 const media = require('./lib/media');
 const publishTasks = require('./lib/publish-tasks');
 const profile = require('./lib/profile');
+const license = require('./lib/license');
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PORT = Number(process.env.PORT) || readFlag('--port') || 5180;
@@ -76,7 +77,10 @@ function sendJSON(res, status, body) {
 function sendError(res, err) {
   const status = err && err.status ? err.status : 500;
   if (status >= 500) console.error('[error]', err);
-  sendJSON(res, status, { error: err && err.message ? err.message : '服务端错误' });
+  const body = { error: err && err.message ? err.message : '服务端错误' };
+  if (err && err.code) body.code = err.code;
+  if (err && err.details) body.details = err.details;
+  sendJSON(res, status, body);
 }
 
 function readBody(req) {
@@ -291,6 +295,40 @@ async function handleApi(req, res, url) {
       orphans: store.orphans(),
       time: new Date().toISOString()
     });
+  }
+
+  // 账号与授权（Keygate）
+  if (parts[1] === 'license') {
+    const action = parts.slice(2).join('/');
+    if ((!action || action === 'status') && method === 'GET') return sendJSON(res, 200, license.getStatus());
+    if (method === 'POST') {
+      try {
+        if (action === 'login/send') {
+          const body = await readBody(req);
+          return sendJSON(res, 200, await license.sendLoginCode(body.email));
+        }
+        if (action === 'login/verify') {
+          const body = await readBody(req);
+          return sendJSON(res, 200, await license.verifyLoginCode(body.email, body.code));
+        }
+        if (action === 'logout') {
+          return sendJSON(res, 200, await license.logout());
+        }
+        if (action === 'activate') {
+          const body = await readBody(req);
+          return sendJSON(res, 200, await license.activate(body.license_key));
+        }
+        if (action === 'deactivate') {
+          return sendJSON(res, 200, await license.deactivate());
+        }
+        if (action === 'refresh') {
+          return sendJSON(res, 200, await license.refresh());
+        }
+      } catch (err) {
+        return sendError(res, err);
+      }
+    }
+    return sendJSON(res, 404, { error: '接口不存在' });
   }
 
   // 主理人资料
@@ -853,6 +891,8 @@ async function handleApi(req, res, url) {
     }
     if (parts[2] === 'auto-queue' && method === 'POST') {
       try {
+        await license.ensureFreshForPublish();
+        license.assertPublishLicense();
         const body = await readBody(req);
         if (body && body.all) {
           const rows = [];
@@ -923,6 +963,8 @@ async function handleApi(req, res, url) {
       }
       if (id && action === 'run' && method === 'POST') {
         try {
+          await license.ensureFreshForPublish();
+          license.assertPublishLicense();
           return sendJSON(res, 200, { task: publishTasks.runNow(id) });
         } catch (err) {
           return sendError(res, err);
@@ -937,6 +979,8 @@ async function handleApi(req, res, url) {
       }
       if (id && action === 'retry' && method === 'POST') {
         try {
+          await license.ensureFreshForPublish();
+          license.assertPublishLicense();
           return sendJSON(res, 200, { task: publishTasks.retry(id) });
         } catch (err) {
           return sendError(res, err);
@@ -1127,6 +1171,16 @@ try {
 }
 
 try {
+  const ls = license.init();
+  license.startRefreshTimer();
+  console.log(
+    `[license] 授权状态：${ls.license.present ? `${ls.license.planName || '已激活'}` : '未激活'}；发布${ls.publish.allowed ? '已授权' : '受限（需激活授权码）'}`
+  );
+} catch (err) {
+  console.warn('[license] 授权模块启动异常：', err.message);
+}
+
+try {
   publishTasks.startScheduler();
   const ps = publishTasks.getStatus();
   console.log(`[publish] 发布队列：每 30 秒巡检，到点自动发布；已排程 ${ps.scheduled} 条`);
@@ -1151,6 +1205,9 @@ function gracefulShutdown(reason) {
   console.log('\n正在关闭…' + (reason ? `（${reason}）` : ''));
   try {
     publishTasks.stopScheduler();
+  } catch (err) {}
+  try {
+    license.stopRefreshTimer();
   } catch (err) {}
   try {
     browserLogin.cancel();
