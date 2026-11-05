@@ -624,14 +624,16 @@ export function pageHero({ lang, eyebrow, title, description, breadcrumbHtml = '
 </section>`;
 }
 
+const externalAttr = (href) => (/^https?:/.test(href) ? ' target="_blank" rel="noopener"' : '');
+
 export function primaryButton({ href, label, download = false }) {
-  return `<a class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-lg shadow-gold-accent/25 transition-all transform hover:-translate-y-0.5" href="${href}">
+  return `<a class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-lg shadow-gold-accent/25 transition-all transform hover:-translate-y-0.5" href="${href}"${externalAttr(href)}>
     ${icon(download ? 'download' : 'arrow_forward', 'text-[18px]')}<span>${esc(label)}</span>
   </a>`;
 }
 
 export function secondaryButton({ href, label }) {
-  return `<a class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-surface-white hover:bg-surface-container-low text-on-surface font-label-capsule text-label-capsule shadow-sm transition-all" href="${href}">${esc(label)}</a>`;
+  return `<a class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-surface-white hover:bg-surface-container-low text-on-surface font-label-capsule text-label-capsule shadow-sm transition-all" href="${href}"${externalAttr(href)}>${esc(label)}</a>`;
 }
 
 /* --------------------------------------------------------- Card grids */

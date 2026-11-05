@@ -1,4 +1,4 @@
-import { KEYGATE_LOGIN_URL, KEYGATE_PORTAL_URL } from '../config.mjs';
+import { KEYGATE_LOGIN_URL, KEYGATE_PORTAL_URL, KEYGATE_TRIAL_URL } from '../config.mjs';
 
 export const UI = {
   zh: {
@@ -14,6 +14,7 @@ export const UI = {
       { key: 'account', label: '登录 / 账号', route: KEYGATE_LOGIN_URL },
     ],
     seePricing: '查看价格',
+    trial: '免费试用',
     download: '下载桌面版',
     downloadFree: '下载桌面版 (免费体验)',
     buy: '立即购买',
@@ -35,6 +36,7 @@ export const UI = {
             { label: '支持平台', route: '/platforms/' },
             { label: '价格方案', route: '/pricing/' },
             { label: '下载桌面版', route: '/download/' },
+            { label: '免费试用', route: KEYGATE_TRIAL_URL },
             { label: '我的授权', route: KEYGATE_PORTAL_URL },
             { label: '更新日志', route: '/changelog/' },
           ],
@@ -148,6 +150,7 @@ export const UI = {
       { key: 'account', label: 'Sign in', route: KEYGATE_LOGIN_URL },
     ],
     seePricing: 'See pricing',
+    trial: 'Start free trial',
     download: 'Download',
     downloadFree: 'Download for desktop',
     buy: 'Buy now',
@@ -169,6 +172,7 @@ export const UI = {
             { label: 'Platforms', route: '/platforms/' },
             { label: 'Pricing', route: '/pricing/' },
             { label: 'Download', route: '/download/' },
+            { label: 'Free trial', route: KEYGATE_TRIAL_URL },
             { label: 'My licenses', route: KEYGATE_PORTAL_URL },
             { label: 'Changelog', route: '/changelog/' },
           ],

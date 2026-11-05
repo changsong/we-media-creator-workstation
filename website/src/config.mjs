@@ -14,6 +14,9 @@ export const CONTACT_EMAIL = process.env.CONTACT_EMAIL || '';
 export const KEYGATE_BASE_URL = (process.env.KEYGATE_BASE_URL || 'https://keygate.unionuser.com').replace(/\/+$/, '');
 export const KEYGATE_LOGIN_URL = `${KEYGATE_BASE_URL}/login`;
 export const KEYGATE_PORTAL_URL = `${KEYGATE_BASE_URL}/portal`;
+// 免费试用：FreeTrial 套餐的自助领证页（Keygate 托管）
+export const KEYGATE_TRIAL_URL = process.env.KEYGATE_TRIAL_URL
+  || `${KEYGATE_BASE_URL}/signup/${encodeURIComponent(process.env.KEYGATE_TRIAL_CHECKOUT_ID || '4917722b')}`;
 export const CHECKOUT_IDS = {
   monthly: process.env.CHECKOUT_ID_MONTHLY || '',
   yearly: process.env.CHECKOUT_ID_YEARLY || '',

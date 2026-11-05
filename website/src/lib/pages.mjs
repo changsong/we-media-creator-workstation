@@ -1,4 +1,4 @@
-import { SITE_URL, SITE_BASE, VERSION, RELEASES, PLANS, PLATFORMS, PLAN_FEATURES_ZH, PLAN_FEATURES_EN, faqTopics, KEYGATE_PORTAL_URL } from '../config.mjs';
+import { SITE_URL, SITE_BASE, VERSION, RELEASES, PLANS, PLATFORMS, PLAN_FEATURES_ZH, PLAN_FEATURES_EN, faqTopics, KEYGATE_PORTAL_URL, KEYGATE_TRIAL_URL } from '../config.mjs';
 import { BLOG_POSTS, findPost } from '../data/blog.mjs';
 import { FEATURE_BLOCKS } from '../data/features.mjs';
 import { USE_CASES } from '../data/use-cases.mjs';
@@ -394,12 +394,14 @@ function pricingPage(lang, checkout = '') {
         ? 'Every plan includes all features and all eight platforms. Only the billing rhythm and duration differ — no cut-down tiers.'
         : '所有方案都包含全部功能与八个平台，区别只在付费周期与有效期。没有功能阉割版本，也没有隐藏加价。',
       breadcrumbHtml: bc.html,
-      actions: primaryButton({ href: routeTo('/download/', lang), label: isEn ? 'Download free first' : '先免费下载体验', download: true }),
+      actions: primaryButton({ href: routeTo('/download/', lang), label: isEn ? 'Download free first' : '先免费下载体验', download: true })
+        + secondaryButton({ href: KEYGATE_TRIAL_URL, label: isEn ? 'Claim a free trial' : '免费领取试用授权' }),
     }),
     contentSection({
       body: `<div class="max-w-6xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter items-stretch">${pricingCards({ lang, detailed: true, checkout })}</div>
         <p class="mt-6 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'Prices are in USD. A license activates up to three devices. Checkout shows the final refund terms.' : '价格为人民币（CNY）。每份授权最多同时激活 3 台设备，退款条款以购买页为准。'}</p>
+        <p class="mt-2 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'Not decided yet? Claim a free trial license with your email — auto-publishing works during the trial, and you can upgrade any time.' : '还没决定？可以先用邮箱领取免费试用授权，试用期内自动发布可用，之后随时升级付费方案。'} <a class="text-primary underline decoration-gold-accent decoration-2 underline-offset-2" href="${KEYGATE_TRIAL_URL}" target="_blank" rel="noopener">${isEn ? 'Claim free trial' : '免费领取试用授权'}</a></p>
         <p class="mt-2 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'After purchase, open the desktop app, go to “Account &amp; License” in the lower-left corner, and sign in with your purchase email to activate — or paste the license key.' : '购买后打开桌面端，点击左下角「账号与授权」，用购买邮箱接收验证码登录即可自动激活；也可以直接粘贴授权码。'} <a class="text-primary underline decoration-gold-accent decoration-2 underline-offset-2" href="${KEYGATE_PORTAL_URL}" target="_blank" rel="noopener">${isEn ? 'Manage my licenses' : '管理我的授权'}</a></p>
       </div>`,
     }),

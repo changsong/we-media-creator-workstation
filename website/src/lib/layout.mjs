@@ -1,4 +1,4 @@
-import { SITE_URL, SITE_BASE, VERSION, RELEASES } from '../config.mjs';
+import { SITE_URL, SITE_BASE, VERSION, RELEASES, KEYGATE_TRIAL_URL } from '../config.mjs';
 import { ui } from './i18n.mjs';
 
 export function esc(value = '') {
@@ -42,18 +42,19 @@ export function header({ lang, route }) {
     if (base === '/') return false;
     return route === base || route.startsWith(base);
   };
+  const externalAttr = (navRoute) => (/^https?:/.test(navRoute) ? ' target="_blank" rel="noopener"' : '');
   const navLinks = t.nav
     .map((item) => {
       const active = isActive(item.route);
       const cls = active
         ? 'whitespace-nowrap transition-colors text-on-surface font-headline-sm font-semibold'
         : 'whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md';
-      return `<a class="${cls}" href="${routeTo(item.route, lang)}"${active ? ' aria-current="page"' : ''}>${esc(item.label)}</a>`;
+      return `<a class="${cls}" href="${routeTo(item.route, lang)}"${active ? ' aria-current="page"' : ''}${externalAttr(item.route)}>${esc(item.label)}</a>`;
     })
     .join('');
 
   const mobileLinks = t.nav
-    .map((item) => `<a class="px-4 py-3 rounded-xl hover:bg-surface-container-low transition-colors font-body-md text-body-md text-on-surface" href="${routeTo(item.route, lang)}">${esc(item.label)}</a>`)
+    .map((item) => `<a class="px-4 py-3 rounded-xl hover:bg-surface-container-low transition-colors font-body-md text-body-md text-on-surface" href="${routeTo(item.route, lang)}"${externalAttr(item.route)}>${esc(item.label)}</a>`)
     .join('');
 
   return `<header id="site-header" class="fixed top-0 left-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(9,12,13,0.04)]">
@@ -77,7 +78,7 @@ export function header({ lang, route }) {
       <div class="hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm">
         <span class="w-2 h-2 rounded-full bg-status-success"></span><span>macOS / Win</span>
       </div>
-      <a class="hidden xl:inline-flex items-center px-4 py-2 rounded-full bg-surface-container-low text-on-surface font-label-capsule text-label-capsule hover:bg-surface-container transition-colors" href="${routeTo('/pricing/', lang)}">${esc(t.seePricing)}</a>
+      <a class="hidden xl:inline-flex items-center px-4 py-2 rounded-full bg-surface-container-low text-on-surface font-label-capsule text-label-capsule hover:bg-surface-container transition-colors" href="${KEYGATE_TRIAL_URL}" target="_blank" rel="noopener">${esc(t.trial)}</a>
       <a class="hidden sm:inline-flex items-center px-5 py-2.5 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-[0_4px_14px_rgba(255,217,117,0.4)] transition-all" href="${routeTo('/download/', lang)}">${esc(t.downloadFree)}</a>
       <a class="hidden md:flex w-8 h-8 rounded-full bg-primary items-center justify-center shrink-0" href="${routeTo('/feedback/', lang)}" aria-label="${esc(t.feedback.title)}"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></a>
       <button id="menu-toggle" class="xl:hidden inline-flex w-9 h-9 rounded-full bg-surface-container-low items-center justify-center text-on-surface" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="${esc(t.menu)}" data-label-open="${esc(t.menu)}" data-label-close="${esc(t.closeMenu)}">
@@ -89,7 +90,7 @@ export function header({ lang, route }) {
     <div class="max-w-[1440px] mx-auto px-margin py-3 grid grid-cols-1 sm:grid-cols-2 gap-1">
       ${mobileLinks}
       <a class="px-4 py-3 rounded-xl bg-gold-accent text-canvas-dark font-label-capsule text-label-capsule" href="${routeTo('/download/', lang)}">${esc(t.downloadFree)}</a>
-      <a class="px-4 py-3 rounded-xl bg-surface-container-low text-on-surface font-label-capsule text-label-capsule" href="${routeTo('/pricing/', lang)}">${esc(t.seePricing)}</a>
+      <a class="px-4 py-3 rounded-xl bg-surface-container-low text-on-surface font-label-capsule text-label-capsule" href="${KEYGATE_TRIAL_URL}" target="_blank" rel="noopener">${esc(t.trial)}</a>
     </div>
   </div>
 </header>`;
