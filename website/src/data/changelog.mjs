@@ -1,8 +1,58 @@
 export const CHANGELOG = [
   {
+    version: '2.0.5',
+    date: '2026-11-05',
+    current: true,
+    titleZh: '账号授权与免费试用',
+    titleEn: 'Accounts, licenses, and free trial',
+    itemsZh: [
+      '新增「账号与授权」：用邮箱验证码登录，已购买授权自动激活，也可手动粘贴授权码。',
+      '新用户首次登录自动开通免费试用；同一邮箱同时有试用与付费授权时优先使用付费授权。',
+      '自动发布需要有效授权，编辑、排期与本地数据管理保持免费。',
+      '支持授权续验与解绑本机，断网时在离线有效期内仍可发布。',
+      '官网新增登录、我的授权与免费试用入口。',
+    ],
+    itemsEn: [
+      'New Account & License panel: sign in with an email code, activate a purchased license automatically, or paste a license key.',
+      'New users receive a free trial on first sign-in; paid licenses take precedence over trials on the same email.',
+      'Scheduled publishing needs an active license; editing, planning, and local data management stay free.',
+      'Licenses can be re-verified or unbound from this device, and offline publishing works until the token expires.',
+      'The website adds sign-in, license management, and free-trial links.',
+    ],
+  },
+  {
+    version: '2.0.4',
+    date: '2026-11-03',
+    titleZh: 'macOS 安装包构建修复',
+    titleEn: 'macOS packaging fixes',
+    itemsZh: [
+      'macOS 按 x64 / arm64 分架构编译 whisper.cpp，修复 universal 打包失败。',
+      'CI 构建失败时输出关键日志，便于定位依赖问题。',
+    ],
+    itemsEn: [
+      'whisper.cpp is now built per architecture (x64 / arm64) on macOS, fixing universal packaging.',
+      'CI now surfaces key logs when dependency setup fails.',
+    ],
+  },
+  {
+    version: '2.0.3',
+    date: '2026-11-03',
+    titleZh: '视频文案提取与住宅代理',
+    titleEn: 'Video transcripts and residential proxy',
+    itemsZh: [
+      '爆款灵感雷达新增视频文案提取：优先读取平台字幕，没有字幕时用本地 whisper.cpp 识别。',
+      '新增住宅代理配置与本地转发层，小红书、抖音的登录与雷达请求可共用同一出口。',
+      '补充三平台安装包的 ffmpeg 与 whisper.cpp，无需另行安装。',
+    ],
+    itemsEn: [
+      'The viral idea radar can extract video transcripts: platform subtitles first, local whisper.cpp as fallback.',
+      'Added residential proxy settings and a local forwarding layer shared by Xiaohongshu and Douyin sessions and radar requests.',
+      'Installers for all three platforms now bundle ffmpeg and whisper.cpp.',
+    ],
+  },
+  {
     version: '2.0.2',
     date: '2026-10-30',
-    current: true,
     titleZh: '爆款灵感雷达与八平台数据复盘',
     titleEn: 'Viral idea radar and eight-platform analytics',
     itemsZh: [
