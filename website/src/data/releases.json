@@ -1,62 +1,62 @@
 {
   "base": "https://we-media-creator.oss-cn-beijing.aliyuncs.com",
-  "version": "2.0.4",
-  "releaseDate": "2026-11-03T05:51:07.052Z",
-  "generatedAt": "2026-11-03T05:54:36.560Z",
+  "version": "2.0.5",
+  "releaseDate": "2026-11-06T14:11:05.344Z",
+  "generatedAt": "2026-11-06T14:18:05.186Z",
   "platforms": {
     "win": {
       "x64": {
         "exe": {
-          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/win/x64/WeMedia-Workstation-Setup-2.0.4.exe",
-          "name": "WeMedia-Workstation-Setup-2.0.4.exe",
-          "size": 178754758,
-          "sha512": "IGwuK+FXdS6f1qRdcXgGGHZ7Lg1V4ouCJl668Yf+RPCB3/GrhRwtl+/puUdTAKlEJ5n5tA+ajaP2PFbZTV+KAA=="
+          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/win/x64/WeMedia-Workstation-Setup-2.0.5.exe",
+          "name": "WeMedia-Workstation-Setup-2.0.5.exe",
+          "size": 178766135,
+          "sha512": "RNOXw4AxlF1HjWVguZ/L8mzPoAfxJL1ZaJLrQ6G8tVcqQ6U7bABz3OldmVBiwe2AljXtPtn/7ucCOT6lRyMY3g=="
         }
       }
     },
     "linux": {
       "x64": {
         "appimage": {
-          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/linux/x64/WeMedia-Workstation-2.0.4-linux-x86_64.AppImage",
-          "name": "WeMedia-Workstation-2.0.4-linux-x86_64.AppImage",
-          "size": 172424350,
-          "sha512": "RXWEywTkEAECk2K4HT5gBaU8cMeKej07IfLZ9DGzCOcP5qhbJxX/Wopy67moAOza1D16g3AgxnaNw1OsP+IQmg=="
+          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/linux/x64/WeMedia-Workstation-2.0.5-linux-x86_64.AppImage",
+          "name": "WeMedia-Workstation-2.0.5-linux-x86_64.AppImage",
+          "size": 172436685,
+          "sha512": "flZKYjNfFihNrZa0BS6EL+5PJVHvFu44yxLafCcTBwSHuBgIhbO3cNjSshLOpPi4PjXKjzZTz5O2+XSNX4VUHw=="
         },
         "deb": {
-          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/linux/x64/WeMedia-Workstation-2.0.4-linux-amd64.deb",
-          "name": "WeMedia-Workstation-2.0.4-linux-amd64.deb",
-          "size": 158479332,
-          "sha512": "aaLOt4MmVNQP8S+ysSNvrrOCPMvHiS3wfX0l+DahdvwKmPbAdiKMofYBNsUZtMODdmRVvlkkCX7L3OGxxUMD6Q=="
+          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/linux/x64/WeMedia-Workstation-2.0.5-linux-amd64.deb",
+          "name": "WeMedia-Workstation-2.0.5-linux-amd64.deb",
+          "size": 158489312,
+          "sha512": "2Pu5wDOwL4zs8ts3O7EoU8e7wpwbXHxxTPbvVE7oxK0a4dUFLJBp6kUUxmnEI0gPx55QFsPEO0rxM05IzkCK2A=="
         }
       }
     },
     "mac": {
       "x64": {
         "dmg": {
-          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/mac/x64/WeMedia-Workstation-2.0.4-mac-x64.dmg",
-          "name": "WeMedia-Workstation-2.0.4-mac-x64.dmg",
-          "size": 183154885,
-          "sha512": "qceaiXcIUn9Ab69HKY0+TjvVsWxflfTJKbYUdz52r/cLwSAyhwfXK3mJTEczdmsfo6S5CMAM088J2SIJs4LiAQ=="
+          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/mac/x64/WeMedia-Workstation-2.0.5-mac-x64.dmg",
+          "name": "WeMedia-Workstation-2.0.5-mac-x64.dmg",
+          "size": 183169878,
+          "sha512": "9Wczf8zfoTuLQOi1062n6D+fNzn5wSHa7k7THypr17k1FoiA/kTpyWNRJqbnbWOty+shA4ewvxCLI+2sxKqqMA=="
         },
         "zip": {
-          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/mac/x64/WeMedia-Workstation-2.0.4-mac-x64.zip",
-          "name": "WeMedia-Workstation-2.0.4-mac-x64.zip",
-          "size": 177903496,
-          "sha512": "AXcIEpfk1ol+0JyVLAol97EXRTXJNCkZBZHN71lnyBdGw60ydNjgo4+zfxqeN39xVredRFmIVxLFlqf87f8iHA=="
+          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/mac/x64/WeMedia-Workstation-2.0.5-mac-x64.zip",
+          "name": "WeMedia-Workstation-2.0.5-mac-x64.zip",
+          "size": 177916120,
+          "sha512": "YRyTMBK1YbqL96llH93WTlsksgtVjTgPH2HvOo/jiAKMG21SZO9cQznhHCDHO53pNR3R6YON+JI4B31KUyv3yQ=="
         }
       },
       "arm64": {
         "dmg": {
-          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/mac/arm64/WeMedia-Workstation-2.0.4-mac-arm64.dmg",
-          "name": "WeMedia-Workstation-2.0.4-mac-arm64.dmg",
-          "size": 167562434,
-          "sha512": "p8drkqzb4Y4fZTr4uN37v7/3Jqtx6EpGHsyGg6qOHN5l7L4cPjapynXY2A8HUyGJzpEakvo9fkyGJ2SFjxfVOg=="
+          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/mac/arm64/WeMedia-Workstation-2.0.5-mac-arm64.dmg",
+          "name": "WeMedia-Workstation-2.0.5-mac-arm64.dmg",
+          "size": 167570396,
+          "sha512": "ZmNwBba8LHOfkW4ZoZbNm06NJxjxGfbgDrYlMSv8iDNEOHsuBIC0vCCRe5NeapLkTmQyGoW9SblIHCA9d830Gg=="
         },
         "zip": {
-          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/mac/arm64/WeMedia-Workstation-2.0.4-mac-arm64.zip",
-          "name": "WeMedia-Workstation-2.0.4-mac-arm64.zip",
-          "size": 162663092,
-          "sha512": "xWeRKylpaNo5CaXKTVuTx7aeOf0wqu9GfesM5ghz5hpJVth9WxAzw1MyK+D3yMhlmEEjd03XQ6X+pQriiqJ1ag=="
+          "url": "https://we-media-creator.oss-cn-beijing.aliyuncs.com/we-media/mac/arm64/WeMedia-Workstation-2.0.5-mac-arm64.zip",
+          "name": "WeMedia-Workstation-2.0.5-mac-arm64.zip",
+          "size": 162675726,
+          "sha512": "FwXMiqnl3BjZRvPcR7r7IPVRnobNACbVbR8nITf5X+Krmgf6xQfRh5Kg3SsXV9oJB4/u8x3WdkbfYWdlAO+XHw=="
         }
       }
     }
