@@ -31,6 +31,8 @@ function copyAssets() {
     fs.copyFileSync(path.join(src, name), path.join(assetsDir, name));
   }
   fs.copyFileSync(path.join(__dirname, 'src', 'site.js'), path.join(assetsDir, 'site.js'));
+  fs.copyFileSync(path.join(__dirname, 'src', 'checkout.js'), path.join(assetsDir, 'checkout.js'));
+  fs.copyFileSync(path.join(__dirname, 'src', 'vendor', 'qrcode.js'), path.join(assetsDir, 'qrcode.js'));
   fs.copyFileSync(path.join(__dirname, 'src', 'assets', 'og.png'), path.join(assetsDir, 'og.png'));
   const videoDir = path.join(__dirname, 'public', 'video');
   if (fs.existsSync(videoDir)) {

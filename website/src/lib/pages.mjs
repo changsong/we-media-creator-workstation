@@ -42,14 +42,14 @@ function formatSize(bytes) {
   return `${(Number(bytes) / 1024 / 1024).toFixed(1)} MB`;
 }
 
-function page({ lang, route, title, description, body, jsonLd = [], priority = 0.7, lastmod, noindex = false, ogType = 'website' }) {
+function page({ lang, route, title, description, body, jsonLd = [], priority = 0.7, lastmod, noindex = false, ogType = 'website', scripts = '' }) {
   return {
     lang,
     route,
     priority,
     lastmod,
     noindex,
-    html: layout({ lang, route, title, description, body, jsonLd, noindex, ogType }),
+    html: layout({ lang, route, title, description, body, jsonLd, noindex, ogType, scripts }),
   };
 }
 
@@ -189,7 +189,7 @@ function featuresPage(lang) {
     title: isEn ? 'Features — planning, scheduling, publishing, analytics' : '功能特性｜选题、排期、八平台发布与数据复盘',
     description: isEn
       ? 'Explore the viral idea radar, idea pool, content calendar, publish queue, automatic analytics for eight platforms, asset library, and one-click sign-in.'
-      : '了解 WeMedia 工作台的爆款灵感雷达、选题池、内容日历、八平台发布队列、八平台自动数据复盘、素材库与一键登录能力。',
+      : '了解媒管家的爆款灵感雷达、选题池、内容日历、八平台发布队列、八平台自动数据复盘、素材库与一键登录能力。',
     body,
     priority: 0.9,
   });
@@ -363,7 +363,7 @@ function platformPage(lang, slug) {
   return page({
     lang,
     route: `/platforms/${slug}/`,
-    title: isEn ? `${name} publishing & analytics — WeMedia Workstation` : `${name}发布与数据复盘｜自媒体内容运营工作台`,
+    title: isEn ? `${name} publishing & analytics — WeMedia Creator` : `${name}发布与数据复盘｜媒管家`,
     description: (isEn ? detail.intro : detail.intro).slice(0, 150),
     body,
     jsonLd: [bc.jsonLd, faqLd],
@@ -441,7 +441,7 @@ function pricingPage(lang, checkout = '') {
   const productLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: isEn ? 'WeMedia Creator Workstation' : '自媒体内容运营工作台',
+    name: isEn ? 'WeMedia Creator' : '媒管家',
     description: isEn
       ? 'Local-first desktop workspace for publishing to eight Chinese platforms with automatic analytics.'
       : '本地优先的自媒体桌面工作台，支持八个平台发布与八个平台数据自动回流。',
@@ -636,7 +636,7 @@ function downloadPage(lang) {
   const appLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: isEn ? 'WeMedia Creator Workstation' : '自媒体内容运营工作台',
+    name: isEn ? 'WeMedia Creator' : '媒管家',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Windows 10+, macOS 11+, Ubuntu 22.04+',
     softwareVersion: VERSION,
@@ -650,8 +650,8 @@ function downloadPage(lang) {
     route: '/download/',
     title: isEn ? `Download v${VERSION} — Windows, macOS, Linux` : `下载 v${VERSION}｜Windows / macOS / Linux 桌面版`,
     description: isEn
-      ? `Download WeMedia Creator Workstation v${VERSION} for Windows, macOS, and Linux. Local-first, no cloud account.`
-      : `下载自媒体内容运营工作台 v${VERSION}，支持 Windows、macOS 与 Linux。本地优先，无需注册云账号。`,
+      ? `Download WeMedia Creator v${VERSION} for Windows, macOS, and Linux. Local-first, no cloud account.`
+      : `下载媒管家 v${VERSION}，支持 Windows、macOS 与 Linux。本地优先，无需注册云账号。`,
     body,
     jsonLd: [bc.jsonLd, appLd],
     priority: 0.95,
@@ -733,7 +733,7 @@ function useCasePage(lang, slug) {
   return page({
     lang,
     route: `/use-cases/${slug}/`,
-    title: isEn ? `${h1} — WeMedia Workstation` : `${h1}｜自媒体内容运营工作台`,
+    title: isEn ? `${h1} — WeMedia Creator` : `${h1}｜媒管家`,
     description: f('intro').slice(0, 150),
     body,
     jsonLd: [bc.jsonLd],
@@ -984,8 +984,8 @@ function faqPage(lang) {
     route: '/faq/',
     title: isEn ? 'FAQ — accounts, data, pricing, limitations' : '常见问题｜账号安全、数据存放、价格与限制',
     description: isEn
-      ? 'Frequently asked questions about WeMedia Creator Workstation: account safety, local data, platform support, pricing, refunds, and limitations.'
-      : '关于自媒体内容运营工作台的常见问题：账号安全、本地数据、平台支持、价格退款与产品边界。',
+      ? 'Frequently asked questions about WeMedia Creator: account safety, local data, platform support, pricing, refunds, and limitations.'
+      : '关于媒管家的常见问题：账号安全、本地数据、平台支持、价格退款与产品边界。',
     body,
     jsonLd: [bc.jsonLd, faqLd],
     priority: 0.7,
@@ -1248,8 +1248,8 @@ function changelogPage(lang) {
   return page({
     lang,
     route: '/changelog/',
-    title: isEn ? 'Changelog — WeMedia Creator Workstation' : '更新日志｜自媒体内容运营工作台',
-    description: isEn ? 'Release notes for WeMedia Creator Workstation: new platform support, fixes, and compatibility updates.' : '自媒体内容运营工作台的版本更新记录：平台支持、修复与适配变化。',
+    title: isEn ? 'Changelog — WeMedia Creator' : '更新日志｜媒管家',
+    description: isEn ? 'Release notes for WeMedia Creator: new platform support, fixes, and compatibility updates.' : '媒管家的版本更新记录：平台支持、修复与适配变化。',
     body,
     jsonLd: [bc.jsonLd],
     priority: 0.5,
@@ -1288,7 +1288,7 @@ function legalPage(lang, kind) {
   return page({
     lang,
     route,
-    title: isEn ? `${title} — WeMedia Creator Workstation` : `${title}｜自媒体内容运营工作台`,
+    title: isEn ? `${title} — WeMedia Creator` : `${title}｜媒管家`,
     description: intro.slice(0, 150),
     body,
     jsonLd: [bc.jsonLd],
@@ -1311,10 +1311,189 @@ export function render404() {
   return layout({
     lang: 'zh',
     route: '/',
-    title: '页面不存在｜自媒体内容运营工作台',
+    title: '页面不存在｜媒管家',
     description: '你访问的页面不存在，返回首页或下载桌面版。',
     body,
     noindex: true,
+  });
+}
+
+/* --------------------------------------------------------------- Checkout */
+
+function checkoutPlanData() {
+  return PLANS.map((plan) => ({
+    id: plan.id,
+    label: plan.nameZh,
+    price: plan.price,
+    unit: plan.unitZh,
+    tagline: plan.taglineZh,
+    badge: plan.badgeZh,
+  }));
+}
+
+function checkoutScripts() {
+  const payload = { plans: checkoutPlanData(), portalUrl: KEYGATE_PORTAL_URL };
+  const json = JSON.stringify(payload).replace(/</g, '\\u003c');
+  return `<script>window.__CHECKOUT__=${json};</script>
+<script src="${asset('qrcode.js')}" defer></script>
+<script src="${asset('checkout.js')}" defer></script>`;
+}
+
+function checkoutPage(lang) {
+  const isEn = lang === 'en';
+  if (isEn) return null;
+  const bc = crumb(lang, [
+    { label: '首页', route: '/' },
+    { label: '价格方案', route: '/pricing/' },
+    { label: '微信支付', route: '/checkout/' },
+  ]);
+
+  const planButtons = PLANS.map(
+    (plan) => `<button type="button" data-plan="${plan.id}" class="co-plan rounded-2xl border border-border-light bg-white px-3 py-3 text-left transition-colors hover:border-primary/60" aria-pressed="false">
+      <span class="block font-label-capsule text-label-capsule text-on-surface">${esc(plan.nameZh)}</span>
+      <span class="mt-1 block text-headline-md font-bold text-on-surface">¥${plan.price}<span class="ml-1 text-body-sm font-normal text-on-surface-variant">${esc(plan.unitZh)}</span></span>
+    </button>`,
+  ).join('');
+
+  const body = [
+    pageHero({
+      lang,
+      eyebrow: '微信支付',
+      title: '完成支付，立即获得授权',
+      description: '支持微信扫码与手机支付。支付成功后授权码自动发送到你的邮箱，桌面端用同一邮箱登录即可自动激活。',
+      breadcrumbHtml: bc.html,
+      narrow: true,
+    }),
+    contentSection({
+      body: `<div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-gutter pb-space-2xl">
+        <div class="lg:col-span-3 rounded-3xl bg-surface-white p-6 sm:p-8 shadow-sm">
+          <h2 class="font-headline-md text-headline-md text-on-surface">选择方案</h2>
+          <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">三种方案功能完全一致，区别只在有效期。</p>
+          <div id="co-plans" class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2" role="radiogroup" aria-label="购买方案">${planButtons}</div>
+
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface-container-low px-5 py-4">
+            <div>
+              <div id="co-plan-name" class="font-label-capsule text-label-capsule text-on-surface">月付体验方案</div>
+              <div id="co-plan-note" class="mt-1 font-body-sm text-body-sm text-on-surface-variant">先试水，按月续费，随时可暂停。</div>
+            </div>
+            <div class="text-right">
+              <span id="co-price" class="text-display-hero-mobile font-bold text-on-surface">¥49.9</span>
+              <span id="co-unit" class="font-body-sm text-on-surface-variant">/ 月</span>
+            </div>
+          </div>
+
+          <form id="checkout-form" class="mt-6 space-y-4" novalidate>
+            <div data-field>
+              <label class="field-label" for="co-email">接收授权码的邮箱 *</label>
+              <input class="field-input" id="co-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required/>
+              <span class="field-hint">授权码会发送到该邮箱；桌面端请用同一邮箱登录激活。填错将收不到授权。</span>
+              <p class="field-error">请输入有效的邮箱地址</p>
+            </div>
+            <button id="co-submit" class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gold-accent px-7 py-3.5 font-label-capsule text-label-capsule text-canvas-dark shadow-lg shadow-gold-accent/25 transition-colors hover:bg-gold-accent-hover disabled:cursor-not-allowed disabled:opacity-60" type="submit">
+              <span class="material-symbols-outlined text-[18px]">qr_code_2</span>
+              <span id="co-submit-label">微信支付 ¥49.9</span>
+            </button>
+            <p id="co-health" class="hidden rounded-xl bg-status-warning/10 px-4 py-3 font-body-sm text-body-sm text-on-surface-variant"></p>
+            <p id="co-status" class="font-body-sm text-body-sm text-on-surface-variant" role="status" aria-live="polite"></p>
+          </form>
+
+          <div id="checkout-wechat" class="mt-6 rounded-2xl border border-border-light bg-surface-container-low p-5" hidden>
+            <div class="font-headline-md text-headline-md text-on-surface">请在浏览器中打开</div>
+            <p class="mt-2 font-body-sm text-body-sm text-on-surface-variant">微信内暂不支持网页支付。请点击右上角「…」，选择「在浏览器打开」，再使用微信支付。</p>
+            <button id="co-copy-link" type="button" class="mt-4 rounded-full bg-surface-white px-5 py-2.5 font-label-capsule text-label-capsule text-on-surface shadow-sm">复制本页链接</button>
+          </div>
+
+          <div id="checkout-pay" class="mt-6 rounded-2xl border border-border-light bg-surface-container-low p-6 text-center" hidden>
+            <div class="font-headline-md text-headline-md text-on-surface">微信扫码支付</div>
+            <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">打开微信「扫一扫」，扫描下方二维码完成支付。</p>
+            <div id="co-qr" class="mx-auto mt-4 flex h-[220px] w-[220px] items-center justify-center rounded-xl bg-white p-2 shadow-sm"></div>
+            <div class="mt-3 font-body-sm text-body-sm text-on-surface-variant">订单号 <span id="co-order-ref" class="font-mono text-[12px]"></span></div>
+            <p id="co-pay-state" class="mt-3 font-label-capsule text-label-capsule text-primary" role="status" aria-live="polite">等待支付…</p>
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <button id="co-check" type="button" class="rounded-full bg-canvas-dark px-5 py-2.5 font-label-capsule text-label-capsule text-text-light-primary">我已完成支付</button>
+              <a id="co-open-return" class="hidden rounded-full bg-surface-white px-5 py-2.5 font-label-capsule text-label-capsule text-on-surface shadow-sm" href="#">查看结果</a>
+              <button id="co-mock-pay" type="button" class="hidden rounded-full bg-status-warning/15 px-5 py-2.5 font-label-capsule text-label-capsule text-on-surface">模拟支付（本地测试）</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="lg:col-span-2 space-y-4">
+          <div class="rounded-2xl bg-surface-white p-5 shadow-sm">
+            <div class="font-label-capsule text-label-capsule text-on-surface">支付方式</div>
+            <p class="mt-2 font-body-sm text-body-sm text-on-surface-variant">电脑端使用微信扫码；手机浏览器会自动跳转微信完成支付。支付金额以人民币结算。</p>
+          </div>
+          <div class="rounded-2xl bg-surface-white p-5 shadow-sm">
+            <div class="font-label-capsule text-label-capsule text-on-surface">购买后如何激活</div>
+            <ol class="mt-2 space-y-2 font-body-sm text-body-sm text-on-surface-variant">
+              <li>1. 授权码自动发送到购买邮箱。</li>
+              <li>2. 打开桌面端，点击左下角「账号与授权」。</li>
+              <li>3. 用同一邮箱接收验证码登录，或直接粘贴授权码。</li>
+              <li>4. 一份授权最多同时激活 3 台设备。</li>
+            </ol>
+          </div>
+          <div class="rounded-2xl bg-surface-container-low p-5">
+            <div class="font-label-capsule text-label-capsule text-on-surface">退款与发票</div>
+            <p class="mt-2 font-body-sm text-body-sm text-on-surface-variant">支持 14 天无理由退款；如需发票或退款，请通过<a class="text-primary underline decoration-gold-accent underline-offset-2" href="${routeTo('/feedback/?type=license', 'zh')}">反馈表单</a>提交订单号，我们会在 1 个工作日内处理。</p>
+          </div>
+        </aside>
+      </div>`,
+    }),
+  ].join('\n');
+
+  return page({
+    lang: 'zh',
+    route: '/checkout/',
+    title: '微信支付｜媒管家',
+    description: '使用微信支付购买媒管家授权：月付 ¥49.9、年付 ¥500、终身 ¥980。支付后授权码自动发送到邮箱。',
+    body,
+    noindex: true,
+    scripts: checkoutScripts(),
+  });
+}
+
+function checkoutReturnPage(lang) {
+  if (lang === 'en') return null;
+  const bc = crumb(lang, [
+    { label: '首页', route: '/' },
+    { label: '价格方案', route: '/pricing/' },
+    { label: '支付结果', route: '/checkout/return/' },
+  ]);
+
+  const body = [
+    pageHero({
+      lang,
+      eyebrow: '支付结果',
+      title: '正在确认支付结果',
+      description: '请稍候，页面会自动刷新。不要关闭此页面，支付结果通常几秒内返回。',
+      breadcrumbHtml: bc.html,
+      narrow: true,
+    }),
+    contentSection({
+      body: `<div class="mx-auto max-w-2xl rounded-3xl bg-surface-white p-8 text-center shadow-sm">
+        <div id="co-return-icon" class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant">
+          <span class="material-symbols-outlined text-[30px]">hourglass_top</span>
+        </div>
+        <div id="co-return-title" class="mt-4 font-headline-md text-headline-md text-on-surface">等待支付结果…</div>
+        <p id="co-return-body" class="mx-auto mt-2 max-w-md font-body-md text-body-md text-on-surface-variant">如果你已经完成支付，授权通常会在几秒内自动发放。</p>
+        <div id="co-return-meta" class="mt-4 hidden rounded-xl bg-surface-container-low px-4 py-3 font-body-sm text-body-sm text-on-surface-variant"></div>
+        <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <a id="co-open-app" class="inline-flex items-center gap-2 rounded-full bg-canvas-dark px-5 py-2.5 font-label-capsule text-label-capsule text-text-light-primary" href="${routeTo('/download/', 'zh')}">${icon('download', 'text-[18px]')}下载桌面端</a>
+          <a class="inline-flex items-center gap-2 rounded-full bg-surface-container-low px-5 py-2.5 font-label-capsule text-label-capsule text-on-surface" href="${KEYGATE_PORTAL_URL}" target="_blank" rel="noopener">${icon('manage_accounts', 'text-[18px]')}管理我的授权</a>
+          <button id="co-refresh" type="button" class="rounded-full bg-surface-container-low px-5 py-2.5 font-label-capsule text-label-capsule text-on-surface">刷新状态</button>
+          <a class="rounded-full bg-surface-container-low px-5 py-2.5 font-label-capsule text-label-capsule text-on-surface" href="${routeTo('/pricing/', 'zh')}">返回价格方案</a>
+        </div>
+      </div>`,
+    }),
+  ].join('\n');
+
+  return page({
+    lang: 'zh',
+    route: '/checkout/return/',
+    title: '支付结果｜媒管家',
+    description: '查看微信支付与授权发放结果。',
+    body,
+    noindex: true,
+    scripts: checkoutScripts(),
   });
 }
 
@@ -1338,6 +1517,8 @@ export function renderRoutes({ checkout = '' } = {}) {
     pages.push(legalPage(lang, 'privacy'));
     pages.push(legalPage(lang, 'terms'));
   }
+  pages.push(checkoutPage('zh'));
+  pages.push(checkoutReturnPage('zh'));
   return pages.filter(Boolean);
 }
 
@@ -1386,7 +1567,7 @@ Sitemap: ${SITE_URL}${SITE_BASE}/sitemap.xml
 
 export function renderLlms() {
   const base = `${SITE_URL}${SITE_BASE}`;
-  const short = `# WeMedia Creator Workstation
+  const short = `# WeMedia Creator
 
 > Local-first desktop workbench for Chinese content creators: plan, schedule, publish to 8 platforms, and review analytics without cloud accounts.
 

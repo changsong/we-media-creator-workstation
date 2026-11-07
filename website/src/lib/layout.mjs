@@ -115,7 +115,7 @@ export function footer({ lang }) {
       <div class="lg:col-span-2 flex flex-col items-start">
         <a class="flex items-center gap-space-sm mb-space-md" href="${routeTo('/', lang)}">
           <img alt="WeMedia Logo" class="h-8 w-auto object-contain" src="${asset('img-1.png')}" width="32" height="32" loading="lazy"/>
-          <span class="font-headline-sm text-headline-sm text-text-light-primary">WeMedia ${lang === 'en' ? 'Workstation' : '工作台'}</span>
+          <span class="font-headline-sm text-headline-sm text-text-light-primary">${lang === 'en' ? 'WeMedia Creator' : '媒管家'}</span>
         </a>
         <p class="font-body-md text-body-md text-text-light-secondary mb-space-lg max-w-sm">${esc(t.footer.desc)}</p>
         <div class="flex items-center gap-space-sm flex-wrap">
@@ -156,8 +156,8 @@ function globalJsonLd(lang) {
   };
   const site = {
     '@type': 'WebSite',
-    name: lang === 'en' ? 'WeMedia Creator Workstation' : '自媒体内容运营工作台',
-    alternateName: 'WeMedia Creator Workstation',
+    name: lang === 'en' ? 'WeMedia Creator' : '媒管家',
+    alternateName: 'WeMedia Creator',
     url: absolute('/', lang),
     inLanguage: lang === 'en' ? 'en' : 'zh-CN',
   };
@@ -205,7 +205,7 @@ ${noindex ? '<meta name="robots" content="noindex, follow"/>' : '<meta name="rob
 <link rel="alternate" hreflang="en" href="${enHref}"/>
 <link rel="alternate" hreflang="x-default" href="${zhHref}"/>
 <meta property="og:type" content="${ogType}"/>
-<meta property="og:site_name" content="WeMedia Creator Workstation"/>
+<meta property="og:site_name" content="WeMedia Creator"/>
 <meta property="og:title" content="${esc(title)}"/>
 <meta property="og:description" content="${esc(description)}"/>
 <meta property="og:url" content="${canonical}"/>
@@ -235,6 +235,7 @@ export function layout({
   noindex = false,
   mainClass = '',
   bodyClass = '',
+  scripts = '',
 }) {
   return `${head({ lang, route, title, description, jsonLd, ogType, noindex })}
 <body class="bg-background font-body-md text-on-surface antialiased overflow-x-hidden pb-20 xl:pb-0 ${bodyClass}">
@@ -244,6 +245,7 @@ ${header({ lang, route })}
 ${footer({ lang })}
 ${mobileCta({ lang })}
 <script src="${asset('site.js')}" defer></script>
+${scripts}
 </body>
 </html>`;
 }

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SITE_BASE, VERSION, PLANS, PLATFORMS, PLAN_FEATURES_ZH, PLAN_FEATURES_EN, KEYGATE_BASE_URL, CHECKOUT_IDS } from '../config.mjs';
+import { SITE_BASE, VERSION, PLANS, PLATFORMS, PLAN_FEATURES_ZH, PLAN_FEATURES_EN, KEYGATE_BASE_URL, CHECKOUT_IDS, SITE_CHECKOUT } from '../config.mjs';
 import { esc, routeTo, asset } from './layout.mjs';
 import { ui } from './i18n.mjs';
 
@@ -10,6 +10,9 @@ const MOCKUP = fs.readFileSync(path.join(__dirname, '..', 'partials', 'app-mocku
 const ASSET_BASE = `${SITE_BASE}/assets`;
 
 export function checkoutUrl(plan, lang = 'zh', checkout = '') {
+  if (lang !== 'en' && SITE_CHECKOUT !== 'legacy') {
+    return routeTo(`/checkout/?plan=${encodeURIComponent(plan)}`, 'zh');
+  }
   const checkoutId = CHECKOUT_IDS[plan];
   if (checkoutId) return `${KEYGATE_BASE_URL}/pay/${encodeURIComponent(checkoutId)}`;
   if (checkout) {
@@ -406,7 +409,7 @@ const PREVIEW_FEATURES = {
   zh: {
     monthly: ['8 大平台定时自动发布', '8 大平台数据自动回流复盘', '授权激活 3 台个人设备', '订阅期内全功能更新与支持'],
     yearly: ['<strong>包含全部功能与全平台发布</strong>', '8 大平台数据回流及导出 CSV', '授权同时激活 3 台设备', '1 年内版本自动升级与改版适配', '优先邮件与社群工单技术答疑'],
-    lifetime: ['永久使用 WeMedia 全部核心模块', '终身常规适配补丁与故障修复', '3 台设备授权，支持自助换机解绑', '专属创作者交流内测渠道'],
+    lifetime: ['永久使用媒管家全部核心模块', '终身常规适配补丁与故障修复', '3 台设备授权，支持自助换机解绑', '专属创作者交流内测渠道'],
   },
   en: {
     monthly: ['Scheduled publishing to all 8 platforms', 'Automatic analytics for all 8 platforms', 'Activate up to 3 personal devices', 'Every feature and update while subscribed'],
@@ -527,7 +530,7 @@ export const FAQ_PREVIEW = {
   zh: [
     ['会不会把我账号封了？安全吗？', '工作台通过您本机的 Chrome/Edge 环境直接与平台交互，使用您自身的 IP 与 Cookie 登录态，绝不共享中转。同时内置执行间隔与失败温和重试机制。自动化仍受平台访问限制影响，我们不能承诺 100% 不受影响。'],
     ['我的内容素材和数据保存在哪里？', '全部存储在您自己电脑本地的 SQLite 数据库文件中。不向任何云端上传，即使断网也能完全浏览历史排期、素材与本地复盘报表，支持随时一键导出为通用 CSV。'],
-    ['我需要申请各平台的开发者 API 资质吗？', '完全不需要。普通个人作者根本拿不到各平台的官方企业开发者资质。WeMedia 采用桌面原生一键扫码登录，扫码成功后登录态自动保存在本机，零门槛开箱即用。'],
+    ['我需要申请各平台的开发者 API 资质吗？', '完全不需要。普通个人作者根本拿不到各平台的官方企业开发者资质。媒管家采用桌面原生一键扫码登录，扫码成功后登录态自动保存在本机，零门槛开箱即用。'],
     ['平台界面改版导致自动化失败怎么办？', '维护团队持续监测各平台的结构变动。一旦检测到改版，会推送桌面端热适配更新；发布任务会自动核验，失败可安全重试，不会因为一次失败丢失排期。'],
     ['一份授权码支持在几台电脑上使用？', '每个授权码标准支持同时激活 3 台设备（例如工作台式机、随身笔记本与备用机）。换新电脑时，可以通过客户端自助解绑旧设备进行迁移。'],
     ['月付、年付与终身买断的功能有差异吗？', '功能完全一致，不设功能墙或低价阉割。唯一的差异是付费周期与授权期限：年付最具性价比，终身买断一次付费、终身免续费。'],
@@ -592,7 +595,7 @@ export function finalCta({ lang }) {
     <div class="relative z-10 max-w-2xl flex flex-col items-center">
       <span class="px-3.5 py-1 rounded-full bg-surface-dark text-gold-accent font-label-capsule text-body-sm mb-4">${isEn ? 'Give the time back to creating' : '把时间还给好创作'}</span>
       <h2 class="font-headline-lg text-headline-lg md:text-display-hero text-text-light-primary mb-4 leading-tight">${isEn ? 'Stop reposting and copying dashboards' : '告别重复发帖与手抄后台'}</h2>
-      <p class="font-body-lg text-body-lg text-text-light-secondary mb-8">${isEn ? 'Download the workbench and run an eight-platform content matrix from one computer and one table.' : '现在就下载 WeMedia 本地工作台，用一台电脑、一张表，轻松稳固运营八个平台的内容矩阵。'}</p>
+      <p class="font-body-lg text-body-lg text-text-light-secondary mb-8">${isEn ? 'Download the workbench and run an eight-platform content matrix from one computer and one table.' : '现在就下载媒管家，用一台电脑、一张表，轻松稳固运营八个平台的内容矩阵。'}</p>
       <div class="flex flex-wrap items-center justify-center gap-4">
         <a class="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-xl transition-all transform hover:-translate-y-0.5" href="${routeTo('/download/', lang)}">
           ${icon('download', 'text-[20px] fill')}<span>${isEn ? `Download free (v${VERSION})` : `免费下载体验 (v${VERSION})`}</span>

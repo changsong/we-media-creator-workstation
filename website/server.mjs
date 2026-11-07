@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
+import { createCheckout } from './server/index.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteDir = path.resolve(process.env.SITE_DIR || path.join(__dirname, 'site'));
@@ -63,6 +64,8 @@ const insertFeedback = db.prepare(
    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 );
 const recentByIp = db.prepare(`SELECT COUNT(*) AS n FROM feedback WHERE ip = ? AND created_at > ?`);
+
+const checkout = createCheckout();
 
 const TYPES = ['feature', 'bug', 'license', 'partnership', 'suggestion', 'problem'];
 
@@ -259,6 +262,7 @@ function resolveStatic(pathname) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    if (await checkout.handle(req, res, url)) return;
     if (url.pathname === '/api/feedback') return handleFeedback(req, res);
 
     if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -292,6 +296,7 @@ server.listen(port, host, () => {
 });
 
 function shutdown() {
+  checkout.close();
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(0), 3000).unref();
 }

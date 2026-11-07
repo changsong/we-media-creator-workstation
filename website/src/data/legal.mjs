@@ -4,9 +4,9 @@ export const LEGAL = {
     titleZh: '隐私政策',
     titleEn: 'Privacy Policy',
     introZh:
-      '这份政策说明自媒体内容运营工作台（下称「本应用」）如何处理你的数据。核心原则只有一条：内容和账号数据保存在你自己的电脑上，我们不上传、不托管、不出售。',
+      '这份政策说明媒管家（下称「本应用」）如何处理你的数据。核心原则只有一条：内容和账号数据保存在你自己的电脑上，我们不上传、不托管、不出售。',
     introEn:
-      'This policy explains how WeMedia Creator Workstation (“the app”) handles your data. The core rule is simple: your content and account data stay on your computer. We do not upload, host, or sell it.',
+      'This policy explains how WeMedia Creator (“the app”) handles your data. The core rule is simple: your content and account data stay on your computer. We do not upload, host, or sell it.',
     sectionsZh: [
       {
         h: '一、桌面应用里的数据',

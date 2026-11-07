@@ -34,8 +34,8 @@ function runBuild() {
 }
 
 function pack() {
-  step('打包 site/ 与 server.mjs');
-  const result = spawnSync('tar', ['-czf', localTarballName, '-C', websiteDir, 'site', 'server.mjs'], {
+  step('打包 site/、server/ 与 server.mjs');
+  const result = spawnSync('tar', ['-czf', localTarballName, '-C', websiteDir, 'site', 'server', 'server.mjs'], {
     cwd: os.tmpdir(),
     stdio: 'inherit',
   });
@@ -50,12 +50,16 @@ function deploy() {
     'set -e',
     `cat > ${remoteTarball}`,
     `mkdir -p ${remoteDir}`,
+    `cd ${remoteDir}`,
+    `mkdir -p .bak/${stamp}`,
+    `for p in server.mjs site server data/checkout.db data/feedback.db; do [ -e "$p" ] && cp -a "$p" .bak/${stamp}/; done`,
     `tar -xzf ${remoteTarball} -C ${remoteDir}`,
     `rm -f ${remoteTarball}`,
     `systemctl restart ${service}`,
     'sleep 1',
     `systemctl is-active ${service}`,
     `curl -s -o /dev/null -w 'health_http=%{http_code}\\n' -H 'Host: ${healthHost}' http://127.0.0.1:4321/`,
+    `curl -s -H 'Host: ${healthHost}' http://127.0.0.1:4321/api/checkout/health; echo`,
   ].join('; ');
 
   return new Promise((resolve, reject) => {

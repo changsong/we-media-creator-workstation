@@ -4,12 +4,12 @@ import { FAQ_PREVIEW, hero, platformBar, painOutcome, workflow, benefits, trustS
 
 const META = {
   zh: {
-    title: '自媒体内容运营工作台｜八平台一键发布与数据复盘',
+    title: '媒管家｜八平台一键发布与数据复盘',
     description:
       '本地优先的自媒体运营工具：爆款雷达找选题、8 平台自动发布、8 平台作品数据自动复盘（知乎覆盖视频作品），账号与素材留在本机。支持 Windows / macOS / Linux。',
   },
   en: {
-    title: 'WeMedia Creator Workstation | Multi-platform publishing & analytics',
+    title: 'WeMedia Creator | Multi-platform publishing & analytics',
     description:
       'A local-first desktop workspace to find ideas with a viral radar, auto-publish to 8 Chinese platforms, and review performance on all eight. Your accounts and data stay on your machine.',
   },
@@ -19,7 +19,7 @@ function appJsonLd(lang) {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: lang === 'en' ? 'WeMedia Creator Workstation' : '自媒体内容运营工作台',
+    name: lang === 'en' ? 'WeMedia Creator' : '媒管家',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Windows 10+, macOS 11+, Ubuntu 22.04+',
     softwareVersion: VERSION,

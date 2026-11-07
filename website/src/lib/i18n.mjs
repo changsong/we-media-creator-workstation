@@ -2,7 +2,7 @@ import { KEYGATE_LOGIN_URL, KEYGATE_PORTAL_URL, KEYGATE_TRIAL_URL } from '../con
 
 export const UI = {
   zh: {
-    brand: '自媒体内容运营工作台',
+    brand: '媒管家',
     brandShort: '/ WeMediaCreator',
     nav: [
       { key: 'features', label: '功能特性', route: '/features/' },
@@ -138,7 +138,7 @@ export const UI = {
     },
   },
   en: {
-    brand: 'WeMedia Creator Workstation',
+    brand: 'WeMedia Creator',
     brandShort: '/ WeMediaCreator',
     nav: [
       { key: 'features', label: 'Features', route: '/features/' },

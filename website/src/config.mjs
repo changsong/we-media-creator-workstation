@@ -8,6 +8,9 @@ export const RELEASE_DATE = releases.releaseDate;
 
 export const FEEDBACK_ENDPOINT = process.env.FEEDBACK_ENDPOINT || '/api/feedback';
 export const CHECKOUT_URL = process.env.CHECKOUT_URL || '';
+// 'wechat' sends the Chinese price CTAs to the built-in checkout page;
+// 'legacy' restores the previous Keygate/feedback links without a code change.
+export const SITE_CHECKOUT = process.env.SITE_CHECKOUT || 'wechat';
 export const CONTACT_EMAIL = process.env.CONTACT_EMAIL || '';
 
 // Keygate 托管页：登录、我的授权、购买（Stripe 就绪后按套餐填 CHECKOUT_ID_*）
@@ -214,7 +217,7 @@ export const faqTopics = {
     {
       group: '产品',
       items: [
-        { q: '它到底是什么？', a: '自媒体内容运营工作台是一款本地优先的桌面应用。它把选题、排期、发布、数据复盘和素材归档放在同一张工作台里，支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台。' },
+        { q: '它到底是什么？', a: '媒管家是一款本地优先的桌面应用。它把选题、排期、发布、数据复盘和素材归档放在同一张工作台里，支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台。' },
         { q: '和浏览器插件、定时工具有什么不同？', a: '插件通常只能操作单个平台，通用定时工具又依赖平台开放 API。我们通过本机浏览器完成发布，不需要开发者资质；同时把数据回流和复盘做进了同一个应用。' },
         { q: '支持哪些平台？', a: '自动发布覆盖抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台，8 个平台的作品数据都能自动回流复盘表（知乎目前只覆盖视频作品，回答与文章不计入）。' },
       ],
@@ -259,7 +262,7 @@ export const faqTopics = {
     {
       group: 'Product',
       items: [
-        { q: 'What is it?', a: 'WeMedia Creator Workstation is a local-first desktop app that puts topic planning, scheduling, publishing, analytics, and asset archiving in one workspace. It supports Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts.' },
+        { q: 'What is it?', a: 'WeMedia Creator is a local-first desktop app that puts topic planning, scheduling, publishing, analytics, and asset archiving in one workspace. It supports Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts.' },
         { q: 'How is it different from a browser extension or a scheduler?', a: 'Extensions usually handle one platform, while generic schedulers depend on official APIs. We publish through the browser on your own machine, so no developer account is needed, and analytics plus review live in the same app.' },
         { q: 'Which platforms are supported?', a: 'Publishing covers eight platforms: Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts. Automatic analytics currently covers four: Douyin, Xiaohongshu, WeChat Channels, and WeChat Official Accounts.' },
       ],

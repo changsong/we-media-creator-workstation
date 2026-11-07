@@ -1194,7 +1194,7 @@ server.on('error', (err) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`自媒体内容运营工作台已启动：http://${HOST}:${PORT}`);
+  console.log(`媒管家已启动：http://${HOST}:${PORT}`);
   console.log('按 Ctrl+C 停止；数据库 data/workbench.db，每日自动备份到 data/backups/');
 });
 

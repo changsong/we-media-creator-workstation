@@ -14,7 +14,7 @@ const net = require('net');
 const path = require('path');
 const updater = require('./updater');
 
-const APP_TITLE = '自媒体内容运营工作台';
+const APP_TITLE = '媒管家';
 const APP_ID = 'com.changsong.wemediacreator';
 const STARTUP_TIMEOUT_MS = 60000;
 const LOG_MAX_BYTES = 5 * 1024 * 1024;

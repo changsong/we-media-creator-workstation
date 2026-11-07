@@ -2,7 +2,7 @@
   "name": "we-media-creator-workstation",
   "version": "2.0.5",
   "private": true,
-  "description": "自媒体内容运营工作台：选题池 / 内容日历 / 数据复盘 / 素材沉淀，SQLite 持久化",
+  "description": "媒管家：选题池 / 内容日历 / 数据复盘 / 素材沉淀，SQLite 持久化",
   "author": "changsong <qianjinfu@gmail.com>",
   "main": "desktop/main.js",
   "scripts": {
@@ -19,6 +19,7 @@
     "dist:linux": "npm run vendor:ffmpeg && node tools/fetch-whisper.js --platform linux --arch x64 && electron-builder --linux --x64",
     "migrate": "node --disable-warning=ExperimentalWarning tools/migrate-json-to-sqlite.js",
     "site:build": "node website/build.mjs",
+    "site:test": "node --test website/test/*.test.mjs",
     "site:serve": "node website/server.mjs",
     "site:deploy": "node website/scripts/deploy.mjs",
     "site:releases": "node website/scripts/sync-releases.mjs",
