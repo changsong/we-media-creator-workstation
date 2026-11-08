@@ -1,8 +1,31 @@
 export const CHANGELOG = [
   {
+    version: '2.1.0',
+    date: '2026-11-08',
+    current: true,
+    titleZh: '对标账号监控与灰豚数据源',
+    titleEn: 'Competitor account monitoring and Huitun data',
+    itemsZh: [
+      '「爆款灵感雷达」由关键词搜索改为对标账号监控：添加账号后每天 09:10 自动抓取最近 7 天作品，覆盖小红书、抖音、B站。',
+      '小红书抓取接入灰豚数据：输入博主昵称即可自动搜索达人，也可粘贴灰豚达人主页链接；接口响应自动解密。',
+      '灰豚会话 Cookie 支持自动续期，减少重复登录。',
+      '小红书作品的「看原作」改为解析真实笔记链接，不再出现无法打开的地址。',
+      '作品卡片支持一键转选题、提取文案；小红书图文可直接读取正文。',
+      '关键词搜索已下线，降低高频搜索带来的平台风控风险。',
+    ],
+    itemsEn: [
+      'The viral idea radar now monitors competitor accounts instead of keyword search: after adding an account, it fetches the last 7 days of works daily at 09:10 across Xiaohongshu, Douyin, and Bilibili.',
+      'Xiaohongshu fetching uses Huitun data: search a creator by nickname or paste a Huitun profile link, with encrypted API responses decrypted automatically.',
+      'Huitun session cookies renew automatically, reducing repeated sign-ins.',
+      'The “View original” link on Xiaohongshu works now resolves to the real note URL instead of a broken address.',
+      'Work cards support one-click topic creation and transcript extraction; Xiaohongshu image posts expose their body text directly.',
+      'Keyword search is retired to reduce platform risk from high-frequency searching.',
+    ],
+  },
+  {
     version: '2.0.5',
     date: '2026-11-05',
-    current: true,
+    current: false,
     titleZh: '账号授权与免费试用',
     titleEn: 'Accounts, licenses, and free trial',
     itemsZh: [
