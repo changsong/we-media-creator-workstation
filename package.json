@@ -1,6 +1,6 @@
 {
   "name": "we-media-creator-workstation",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "private": true,
   "description": "媒管家：选题池 / 内容日历 / 数据复盘 / 素材沉淀，SQLite 持久化",
   "author": "changsong <qianjinfu@gmail.com>",
