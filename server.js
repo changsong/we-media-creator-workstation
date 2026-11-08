@@ -16,7 +16,7 @@ const kuaishouCollector = require('./lib/kuaishou-collector');
 const weiboCollector = require('./lib/weibo-collector');
 const bilibiliCollector = require('./lib/bilibili-collector');
 const zhihuCollector = require('./lib/zhihu-collector');
-const trends = require('./lib/trends');
+const benchmarks = require('./lib/benchmarks');
 const trendsBrowser = require('./lib/trends/browser');
 const transcript = require('./lib/trends/transcript');
 const asr = require('./lib/asr');
@@ -48,6 +48,8 @@ function broadcast(payload) {
     }
   });
 }
+
+benchmarks.setBroadcast(broadcast);
 
 /* ---------------- 工具 ---------------- */
 function readFlag(name) {
@@ -553,37 +555,90 @@ async function handleApi(req, res, url) {
     return res.end();
   }
 
-  // 爆款灵感：关键词搜索小红书 / 抖音 / B站
-  if (url.pathname === '/api/trends/platforms' && method === 'GET') {
-    return sendJSON(res, 200, {
-      platforms: trends.platformStatuses(),
-      mock: process.env.WB_TRENDS_MOCK === '1'
-    });
+  // 对标账号：每天抓取最近 7 天的视频 / 图文
+  if (url.pathname === '/api/benchmarks' && method === 'GET') {
+    return sendJSON(
+      res,
+      200,
+      benchmarks.overview({
+        platform: url.searchParams.get('platform') || '',
+        accountId: url.searchParams.get('accountId') || '',
+        days: url.searchParams.get('days'),
+        sort: url.searchParams.get('sort') || '',
+        limit: url.searchParams.get('limit')
+      })
+    );
   }
-  if (url.pathname === '/api/trends/search' && method === 'POST') {
+  if (url.pathname === '/api/benchmarks/status' && method === 'GET') {
+    return sendJSON(res, 200, benchmarks.getStatus());
+  }
+  if (url.pathname === '/api/benchmarks/accounts' && method === 'POST') {
     try {
       const body = await readBody(req);
-      return sendJSON(res, 202, trends.search(body));
+      return sendJSON(res, 201, await benchmarks.addAccount(body));
     } catch (err) {
       return sendError(res, err);
     }
   }
-  if (url.pathname === '/api/trends/status' && method === 'GET') {
-    return sendJSON(res, 200, trends.status());
-  }
-  if (url.pathname === '/api/trends/items' && method === 'GET') {
+  if (url.pathname === '/api/benchmarks/refresh' && method === 'POST') {
     try {
-      return sendJSON(res, 200, trends.cached(url.searchParams.get('keyword'), url.searchParams.get('platform')));
+      return sendJSON(res, 202, benchmarks.refreshAll());
     } catch (err) {
       return sendError(res, err);
     }
   }
-  if (url.pathname === '/api/trends/latest' && method === 'GET') {
+  if (url.pathname === '/api/benchmarks/schedule') {
+    if (method === 'GET') {
+      const cfg = benchmarks.loadConfig();
+      return sendJSON(res, 200, {
+        enabled: cfg.enabled,
+        hour: cfg.hour,
+        minute: cfg.minute,
+        status: benchmarks.getStatus()
+      });
+    }
+    if (method === 'PUT' || method === 'POST') {
+      try {
+        const body = await readBody(req);
+        const cfg = benchmarks.saveConfig(body);
+        benchmarks.startScheduler();
+        return sendJSON(res, 200, { ok: true, enabled: cfg.enabled, hour: cfg.hour, minute: cfg.minute });
+      } catch (err) {
+        return sendError(res, err);
+      }
+    }
+    res.writeHead(405, { Allow: 'GET, PUT, POST' });
+    return res.end();
+  }
+  const benchRefresh = url.pathname.match(/^\/api\/benchmarks\/accounts\/([\w-]+)\/refresh$/);
+  if (benchRefresh && method === 'POST') {
     try {
-      return sendJSON(res, 200, { job: trends.latest() });
+      return sendJSON(res, 202, benchmarks.refreshAccount(benchRefresh[1]));
     } catch (err) {
       return sendError(res, err);
     }
+  }
+  const benchAccount = url.pathname.match(/^\/api\/benchmarks\/accounts\/([\w-]+)$/);
+  if (benchAccount) {
+    if (method === 'DELETE') {
+      try {
+        return sendJSON(res, 200, benchmarks.removeAccount(benchAccount[1]));
+      } catch (err) {
+        return sendError(res, err);
+      }
+    }
+    if (method === 'PATCH' || method === 'PUT') {
+      try {
+        const body = await readBody(req);
+        return sendJSON(res, 200, {
+          account: benchmarks.setAccountEnabled(benchAccount[1], body.enabled === true || body.enabled === 'true')
+        });
+      } catch (err) {
+        return sendError(res, err);
+      }
+    }
+    res.writeHead(405, { Allow: 'DELETE, PATCH, PUT' });
+    return res.end();
   }
   // 视频文案提取：B站 / 抖音平台字幕（小红书、快手友好降级）
   if (url.pathname === '/api/trends/transcript' && method === 'POST') {
@@ -636,7 +691,7 @@ async function handleApi(req, res, url) {
     return sendJSON(res, 202, asr.status());
   }
 
-  // 住宅代理配置（雷达搜索与小红书/抖音登录共用出口，各用户本机独立）
+  // 住宅代理配置（对标账号抓取与小红书/抖音登录共用出口，各用户本机独立）
   if (url.pathname === '/api/proxy') {
     if (method === 'GET') {
       return sendJSON(res, 200, proxyConfig.getPublic());
@@ -645,7 +700,7 @@ async function handleApi(req, res, url) {
       try {
         const body = await readBody(req);
         const saved = proxyConfig.save(body);
-        // 配置变化后空闲时关掉暖浏览器，下次搜索按新配置重开
+        // 配置变化后空闲时关掉暖浏览器，下次抓取按新配置重开
         await trendsBrowser.resetWarm();
         return sendJSON(res, 200, { ok: true, proxy: saved });
       } catch (err) {
@@ -1188,6 +1243,16 @@ try {
   console.warn('[publish] 发布队列启动异常：', err.message);
 }
 
+try {
+  const started = benchmarks.startScheduler();
+  const bs = benchmarks.getStatus();
+  console.log(
+    `[benchmarks] 对标账号：${started ? `每天 ${String(bs.hour).padStart(2, '0')}:${String(bs.minute).padStart(2, '0')} 自动更新，下次 ${bs.nextRunAt || '—'}` : '未启用'}`
+  );
+} catch (err) {
+  console.warn('[benchmarks] 定时器启动异常：', err.message);
+}
+
 server.on('error', (err) => {
   console.error('[server] 启动失败：', err.message);
   process.exit(1);
@@ -1205,6 +1270,9 @@ function gracefulShutdown(reason) {
   console.log('\n正在关闭…' + (reason ? `（${reason}）` : ''));
   try {
     publishTasks.stopScheduler();
+  } catch (err) {}
+  try {
+    benchmarks.stopScheduler();
   } catch (err) {}
   try {
     license.stopRefreshTimer();

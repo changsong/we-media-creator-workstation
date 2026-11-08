@@ -78,8 +78,11 @@
     lifecyclePage:1, lifecycleSize:30, reviewListPage:1, reviewListSize:30,
     topicSort:'desc', assetKeyword:'all', inspectCode:null,
     topicChecked:{},
-    trend:{ keywords:'', sel:{ '小红书':true, '抖音':true, 'B站':true }, platforms:null, proxy:null, job:null, error:'', tab:'search',
-      tx:{ url:'', job:null, error:'', fileId:'', fileName:'', fileSize:0, uploading:false, uploadPct:0, uploadXhr:null, asr:null, asrLoading:false } }
+    trend:{
+      tab:'accounts', accounts:[], works:[], status:null, platforms:null, proxy:null,
+      error:'', addUrl:'', addPlatform:'小红书', adding:false, filter:'all', sort:'latest',
+      tx:{ url:'', job:null, error:'', fileId:'', fileName:'', fileSize:0, uploading:false, uploadPct:0, uploadXhr:null, asr:null, asrLoading:false }
+    }
   };
   var editing = { dbKey:null, recordId:null, record:null };
   var loading = false;
@@ -1344,51 +1347,191 @@
     return html;
   }
   /* ---------- view: topics · 爆款灵感雷达 ---------- */
-  var TREND_PLATFORMS = ['小红书', '抖音', 'B站'];
-  var TREND_DRAFT_KEY = 'wb-trend-keywords';
+  var BENCH_PLATFORMS = ['小红书', '抖音', 'B站'];
+
+  function benchStatusText(){
+    var st = state.trend.status;
+    if(!st) return '正在读取监控状态…';
+    if(st.running){
+      var p = st.progress || {};
+      return '正在更新 ' + (p.done || 0) + '/' + (p.total || 0) + ' 个账号…';
+    }
+    if(st.enabled === false) return '自动更新已关闭';
+    return '每天 ' + pad2(st.hour) + ':' + pad2(st.minute) + ' 自动更新' + (st.nextRunAt ? ' · 下次 ' + fmtDateTime(st.nextRunAt) : '');
+  }
+
+  function benchAccountName(acc){
+    return acc.name || (acc.platform + '账号 ' + acc.accountId);
+  }
+
+  function benchAccountsHtml(){
+    var t = state.trend;
+    if(!t.accounts.length){
+      return '<div class="rounded-lg border border-dashed border-surface-container-high px-3 py-4 text-center text-[11px] text-on-surface-variant">还没有对标账号。输入小红书昵称或粘贴其他平台主页链接后，每天自动抓取最近 7 天的作品。</div>';
+    }
+    var html = '';
+    t.accounts.forEach(function(acc){
+      var color = PLATFORM_COLOR[acc.platform] || '#82877e';
+      var failed = !!acc.lastError;
+      html += '<div class="rounded-lg bg-surface-container-low px-2.5 py-2">';
+      html += '<div class="flex items-center gap-2">';
+      if(acc.avatarUrl){
+        html += '<img src="' + esc(acc.avatarUrl) + '" referrerpolicy="no-referrer" alt="" class="w-7 h-7 rounded-full object-cover shrink-0">';
+      } else {
+        html += '<span class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[15px] text-on-surface-variant">person</span></span>';
+      }
+      html += '<div class="min-w-0 flex-1"><div class="flex items-center gap-1.5">';
+      html += '<span class="text-[12px] font-semibold text-on-surface truncate">' + esc(benchAccountName(acc)) + '</span>';
+      html += '<span class="inline-flex items-center gap-0.5 text-[10px] shrink-0" style="color:' + color + '"><i style="width:5px;height:5px;border-radius:9999px;background:' + color + ';display:inline-block"></i>' + esc(acc.platform) + '</span>';
+      html += '</div><p class="text-[10px] ' + (failed ? 'text-error' : 'text-on-surface-variant') + ' truncate" title="' + esc(acc.lastError || '') + '">';
+      html += failed ? esc(acc.lastError) : (acc.lastFetchAt ? '更新于 ' + fmtDateTime(acc.lastFetchAt) : '尚未抓取') + ' · 近 7 天 ' + (acc.recentCount || 0) + ' 条';
+      html += '</p></div>';
+      html += '<button class="w-6 h-6 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant' + (t.status && t.status.running ? ' opacity-40' : '') + '" data-act="benchRefresh" data-id="' + esc(acc.id) + '" type="button" title="更新该账号"' + (t.status && t.status.running ? ' disabled' : '') + '><span class="material-symbols-outlined text-[15px]">refresh</span></button>';
+      html += '<button class="w-6 h-6 rounded-full hover:bg-surface-container flex items-center justify-center ' + (acc.enabled ? 'text-primary' : 'text-outline') + '" data-act="benchToggle" data-id="' + esc(acc.id) + '" data-enabled="' + (acc.enabled ? '1' : '0') + '" type="button" title="' + (acc.enabled ? '已启用，点击暂停自动抓取' : '已暂停，点击启用') + '"><span class="material-symbols-outlined text-[16px]">' + (acc.enabled ? 'toggle_on' : 'toggle_off') + '</span></button>';
+      html += '<button class="w-6 h-6 rounded-full hover:bg-error-container/60 flex items-center justify-center text-on-surface-variant hover:text-error" data-act="benchDelete" data-id="' + esc(acc.id) + '" data-name="' + esc(benchAccountName(acc)) + '" type="button" title="删除账号"><span class="material-symbols-outlined text-[15px]">delete</span></button>';
+      html += '</div></div>';
+    });
+    return html;
+  }
+
+  function benchWorkCard(it){
+    var t = state.trend;
+    var pColor = PLATFORM_COLOR[it.platform] || '#82877e';
+    var metrics = [];
+    if(it.likes) metrics.push('赞 ' + compactNum(it.likes));
+    if(it.comments) metrics.push('评 ' + compactNum(it.comments));
+    if(it.collects) metrics.push('藏 ' + compactNum(it.collects));
+    if(it.reads) metrics.push('播 ' + compactNum(it.reads));
+    var heatColor = it.heat >= 80 ? '#c25454' : it.heat >= 55 ? '#b8863b' : '#82877e';
+    var html = '<div class="rounded-xl bg-surface-container-low px-2.5 py-2 mb-2">';
+    html += '<div class="flex items-start gap-2">';
+    if(it.coverUrl){
+      html += '<img src="' + esc(it.coverUrl) + '" referrerpolicy="no-referrer" alt="" class="w-10 h-14 rounded-md object-cover bg-surface-container-high shrink-0">';
+    }
+    html += '<div class="min-w-0 flex-1">';
+    html += '<p class="text-[12px] font-semibold text-on-surface leading-snug line-clamp-2">' + esc(it.title) + '</p>';
+    html += '<div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1 text-[10px] text-on-surface-variant">';
+    html += '<span class="inline-flex items-center gap-0.5 font-semibold" style="color:' + pColor + '"><i style="width:5px;height:5px;border-radius:9999px;background:' + pColor + ';display:inline-block"></i>' + esc(it.platform) + '</span>';
+    html += '<span>' + (it.itemType === 'video' ? '视频' : '图文') + '</span>';
+    if(it.accountName) html += '<span class="truncate max-w-[7rem]">· ' + esc(it.accountName) + '</span>';
+    if(it.publishedAt) html += '<span>' + fmtDate(it.publishedAt) + '</span>';
+    html += '<span class="chip shrink-0" style="background:' + heatColor + '1a;color:' + heatColor + ';padding:0 6px;height:18px;font-size:10px">热度 ' + Number(it.heat || 0).toFixed(0) + '</span>';
+    html += '</div>';
+    if(metrics.length) html += '<p class="text-[10px] text-on-surface-variant mt-0.5">' + esc(metrics.join(' / ')) + '</p>';
+    html += '</div></div>';
+    html += '<div class="flex items-center gap-2 mt-2">';
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold hover:opacity-90" data-act="benchToTopic" data-id="' + esc(it.id) + '" type="button"><span class="material-symbols-outlined text-[13px]">add_task</span>转选题</button>';
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-high text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container" data-act="benchTranscript" data-id="' + esc(it.id) + '" type="button"><span class="material-symbols-outlined text-[13px]">subtitles</span>提取文案</button>';
+    if(it.itemUrl) html += '<a href="' + esc(it.itemUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 text-[10px] text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[13px]">open_in_new</span>看原作</a>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function benchWorksList(){
+    var t = state.trend;
+    var list = (t.works || []).slice();
+    if(t.filter !== 'all') list = list.filter(function(it){ return it.platform === t.filter; });
+    list.sort(function(a, b){
+      if(t.sort === 'heat') return (Number(b.heat) || 0) - (Number(a.heat) || 0);
+      return String(b.publishedAt || '').localeCompare(String(a.publishedAt || ''));
+    });
+    return list;
+  }
+
+  function benchWorksHtml(){
+    var t = state.trend;
+    if(t.status && t.status.running && !t.works.length){
+      return '<div class="rounded-xl bg-surface-container-low px-4 py-6 text-center text-[11px] text-on-surface-variant"><span class="material-symbols-outlined text-2xl text-primary animate-spin block mb-1">progress_activity</span>正在抓取对标账号作品…</div>';
+    }
+    var list = benchWorksList();
+    if(!list.length){
+      var st = t.status || {};
+      var hour = st.hour != null ? st.hour : 9;
+      var minute = st.minute != null ? st.minute : 10;
+      return '<div class="rounded-xl border border-dashed border-surface-container-high px-4 py-8 text-center"><span class="material-symbols-outlined text-3xl text-outline">radar</span><p class="mt-2 text-label-md font-semibold text-on-surface">最近 7 天还没有作品</p><p class="mt-1 text-label-sm text-on-surface-variant">添加对标账号后点「全部更新」，或等待每天 ' + pad2(hour) + ':' + pad2(minute) + ' 自动抓取。</p></div>';
+    }
+    return list.map(benchWorkCard).join('');
+  }
 
   function trendPanel(){
     var t = state.trend;
-    var tab = t.tab === 'transcript' ? 'transcript' : 'search';
+    var tab = t.tab === 'transcript' ? 'transcript' : 'accounts';
+    var running = !!(t.status && t.status.running);
     var html = '';
     html += '<div class="flex items-start justify-between px-space-lg pt-space-lg pb-space-sm border-b border-surface-container-low">';
     html += '<div class="flex items-center gap-2 min-w-0"><span class="kicker-dot"></span><div class="min-w-0"><h3 class="text-headline-sm font-headline-sm text-on-surface">爆款灵感雷达</h3>';
-    html += '<p class="text-label-sm text-on-surface-variant">搜索高互动内容，或把视频文案提取出来一键转成选题</p></div></div>';
+    html += '<p class="text-label-sm text-on-surface-variant">自动盯对标账号，最近 7 天作品可一键转选题或提取文案</p></div></div>';
     html += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0" data-act="trendConnect" type="button" title="连接设置"><span class="material-symbols-outlined text-base">settings</span></button>';
     html += '</div>';
 
     html += '<div class="px-space-lg pt-space-md"><div class="seg" role="tablist">';
-    html += '<button class="' + (tab === 'search' ? 'on' : '') + '" data-act="trendTab" data-tab="search" type="button" role="tab"><span class="material-symbols-outlined text-[14px] align-middle">travel_explore</span> 爆款搜索</button>';
+    html += '<button class="' + (tab === 'accounts' ? 'on' : '') + '" data-act="trendTab" data-tab="accounts" type="button" role="tab"><span class="material-symbols-outlined text-[14px] align-middle">diversity_3</span> 对标账号</button>';
     html += '<button class="' + (tab === 'transcript' ? 'on' : '') + '" data-act="trendTab" data-tab="transcript" type="button" role="tab"><span class="material-symbols-outlined text-[14px] align-middle">subtitles</span> 文案提取</button>';
     html += '</div></div>';
 
-    /* 搜索面板 */
-    html += '<div data-trend-panel="search"' + (tab === 'search' ? '' : ' class="hidden"') + '>';
+    /* 对标账号面板 */
+    html += '<div data-trend-panel="accounts"' + (tab === 'accounts' ? '' : ' class="hidden"') + '>';
     html += '<div class="px-space-lg py-space-md border-b border-surface-container-low">';
-    html += '<div class="fld"><label class="lab">关键词 <b>*</b></label><input id="trendKeywords" class="inp" maxlength="120" placeholder="例如：AI剪辑 副业 小红书封面" value="' + esc(t.keywords) + '"><span class="helper">用空格或逗号分隔，最多 5 个；1 小时内复用缓存，搜索结果保留 30 天</span></div>';
-    html += '<div class="flex flex-wrap items-center gap-2 mt-1">';
-    TREND_PLATFORMS.forEach(function(p){
+    var addPlatform = t.addPlatform === '抖音' || t.addPlatform === 'B站' ? t.addPlatform : '小红书';
+    html += '<div class="fld"><label class="lab">添加对标账号</label>';
+    html += '<div class="flex items-center gap-1 mb-1.5">';
+    BENCH_PLATFORMS.forEach(function(p){
+      var on = addPlatform === p;
+      html += '<button class="px-2 py-0.5 rounded-full text-[10px] font-semibold ' + (on ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container') + '" data-act="benchAddPlatform" data-val="' + esc(p) + '" type="button">' + esc(p) + '</button>';
+    });
+    html += '</div>';
+    var addPlaceholder = addPlatform === '小红书'
+      ? '输入小红书博主昵称，自动在灰豚数据搜索'
+      : '粘贴' + addPlatform + '账号主页链接';
+    html += '<div class="flex items-start gap-2"><input id="benchUrl" class="inp flex-1" maxlength="500" placeholder="' + esc(addPlaceholder) + '" value="' + esc(t.addUrl || '') + '">';
+    html += '<button class="shrink-0 inline-flex items-center gap-1 px-3 py-2 rounded-full bg-primary text-on-primary text-label-sm font-semibold shadow-sm hover:opacity-90 disabled:opacity-50" data-act="benchAdd" type="button"' + (t.adding ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">add</span>' + (t.adding ? '添加中' : '添加') + '</button></div>';
+    html += '<span class="helper">' + (addPlatform === '小红书'
+      ? '按昵称在灰豚数据直接搜索添加；也可粘贴小红书主页链接或灰豚达人链接'
+      : '支持主页链接和分享短链；添加后自动抓取最近 7 天的视频与图文') + '</span></div>';
+    html += '<div class="flex flex-wrap items-center gap-1.5 mt-1">';
+    BENCH_PLATFORMS.forEach(function(p){
       var info = trendPlatformInfo(p);
-      var checked = !!t.sel[p];
       var dotColor = info.ready === false ? '#c25454' : info.mock ? '#b8863b' : '#2f8f5b';
-      var statusText = info.loading ? '检测中' : info.mock ? '演示' : info.ready === false ? '未登录' : (info.loginRequired ? '已登录' : '免登录');
-      html += '<label class="tag-opt"><input type="checkbox" data-trend-platform="' + esc(p) + '"' + (checked ? ' checked' : '') + '><span class="inline-flex items-center gap-1"><i style="width:6px;height:6px;border-radius:9999px;background:' + dotColor + ';display:inline-block"></i>' + esc(p) + ' · ' + statusText + '</span></label>';
+      var statusText = info.loading
+        ? '检测中'
+        : info.mock
+          ? '演示'
+          : info.ready === false
+            ? '未登录'
+            : (info.dataSource || (info.loginRequired ? '已登录' : '免登录'));
+      html += '<span class="chip chip-line inline-flex items-center gap-1" title="' + esc(info.hint || '') + '"><i style="width:6px;height:6px;border-radius:9999px;background:' + dotColor + ';display:inline-block"></i>' + esc(p) + ' · ' + statusText + '</span>';
     });
     html += '</div>';
     html += '<div class="flex items-center gap-2 mt-space-sm flex-wrap">';
+    html += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50" data-act="benchRefreshAll" type="button"' + (running || !t.accounts.length ? ' disabled' : '') + '><span class="material-symbols-outlined text-base' + (running ? ' animate-spin' : '') + '">' + (running ? 'progress_activity' : 'sync') + '</span>' + (running ? '更新中' : '全部更新') + '</button>';
     html += trendProxyChip(t.proxy);
-    html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="trendSearch" type="button"><span class="material-symbols-outlined text-base">travel_explore</span>搜索爆款</button>';
-    html += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="trendSearch" data-force="1" type="button" title="忽略 1 小时缓存，重新抓取"><span class="material-symbols-outlined text-base">refresh</span>刷新</button>';
     html += '</div>';
-    html += '<p id="trendError" class="mt-2 text-label-sm text-error"' + (t.error ? '' : ' style="display:none"') + '>' + esc(t.error || '') + '</p>';
+    html += '<p class="mt-1.5 text-[11px] text-on-surface-variant">' + esc(benchStatusText()) + '</p>';
+    html += '<p id="benchError" class="mt-1 text-label-sm text-error"' + (t.error ? '' : ' style="display:none"') + '>' + esc(t.error || '') + '</p>';
     html += '</div>';
-    html += '<div id="trendResults" class="max-h-[calc(100vh-22rem)] overflow-y-auto px-space-lg py-space-md">' + trendResultsHtml() + '</div>';
+
+    html += '<div class="px-space-lg py-space-md border-b border-surface-container-low">';
+    html += '<div class="flex items-center justify-between mb-1.5"><span class="text-label-sm font-semibold text-on-surface">对标账号</span><span class="text-[11px] text-on-surface-variant">' + t.accounts.length + ' 个</span></div>';
+    html += '<div id="benchAccounts" class="space-y-1.5 max-h-44 overflow-y-auto">' + benchAccountsHtml() + '</div>';
+    html += '</div>';
+
+    html += '<div class="px-space-lg py-space-md">';
+    html += '<div class="flex items-center justify-between gap-2 mb-2">';
+    html += '<div class="flex items-center gap-1">';
+    [['all', '全部'], ['小红书', '小红书'], ['抖音', '抖音'], ['B站', 'B站']].forEach(function(f){
+      html += '<button class="px-2 py-0.5 rounded-full text-[10px] font-semibold ' + (t.filter === f[0] ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container') + '" data-act="benchFilter" data-val="' + esc(f[0]) + '" type="button">' + esc(f[1]) + '</button>';
+    });
+    html += '</div>';
+    html += '<button class="inline-flex items-center gap-0.5 text-[10px] text-on-surface-variant hover:text-on-surface" data-act="benchSort" type="button" title="切换排序方式"><span class="material-symbols-outlined text-[14px]">swap_vert</span>' + (t.sort === 'heat' ? '按热度' : '按最新') + '</button>';
+    html += '</div>';
+    html += '<div id="benchWorks" class="max-h-[420px] overflow-y-auto">' + benchWorksHtml() + '</div>';
+    html += '</div>';
     html += '</div>';
 
     /* 文案提取面板 */
     html += '<div data-trend-panel="transcript"' + (tab === 'transcript' ? '' : ' class="hidden"') + '>';
     html += '<div class="px-space-lg py-space-md border-b border-surface-container-low">';
-    html += '<div class="fld"><label class="lab">视频链接</label><input id="transcriptUrl" class="inp" maxlength="500" placeholder="粘贴 B站 / 抖音 / 小红书 / 快手 视频链接" value="' + esc(t.tx.url) + '"><span class="helper">有平台字幕时直接读取；没有字幕可下载视频后在下方上传，用本地语音识别提取</span></div>';
+    html += '<div class="fld"><label class="lab">视频 / 笔记链接</label><input id="transcriptUrl" class="inp" maxlength="500" placeholder="粘贴 B站 / 抖音 / 小红书 视频或图文笔记链接" value="' + esc(t.tx.url) + '"><span class="helper">视频优先读取平台字幕，小红书图文直接读取笔记正文；没有字幕可下载视频后在下方上传，用本地语音识别提取</span></div>';
     html += '<div class="fld"><label class="lab">或上传本地视频</label>';
     html += '<div id="transcriptDrop" class="rounded-xl border border-dashed border-surface-container-high px-3 py-3 text-center transition-colors">';
     html += '<div id="transcriptFileArea">' + transcriptFileAreaHtml() + '</div>';
@@ -1407,7 +1550,7 @@
   }
 
   function switchTrendTab(tab){
-    tab = tab === 'transcript' ? 'transcript' : 'search';
+    tab = tab === 'transcript' ? 'transcript' : 'accounts';
     state.trend.tab = tab;
     var panels = document.querySelectorAll('[data-trend-panel]');
     for(var i = 0; i < panels.length; i++){
@@ -1460,7 +1603,10 @@
       html += '</div>';
       return html;
     }
-    var sourceLabel = job.source === 'caption' ? '平台字幕' : job.source === 'whisper' ? '本地语音识别' : (job.source === 'mock' ? '演示数据' : '字幕');
+    var sourceLabel = job.source === 'caption' ? '平台字幕'
+      : job.source === 'whisper' ? '本地语音识别'
+      : job.source === 'note' ? '图文正文'
+      : job.source === 'mock' ? '演示数据' : '字幕';
     html += '<div class="flex items-start justify-between gap-2 mb-2">';
     html += '<div class="min-w-0"><p class="text-[13px] font-semibold text-on-surface leading-snug line-clamp-2">' + esc(job.title || '已提取视频文案') + '</p>';
     html += '<div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[11px] text-on-surface-variant">';
@@ -1859,7 +2005,7 @@
     if(proxy.enabled && proxy.configured){
       label = '代理 ' + (proxy.host || '') + (proxy.port ? ':' + proxy.port : '');
       cls = 'chip-mint';
-      title = '雷达搜索与小红书/抖音登录经该住宅代理出网' + (proxy.envOverride ? '（部分字段由环境变量控制）' : '') + '，点击打开连接设置';
+      title = '对标账号抓取与小红书/抖音登录经该住宅代理出网' + (proxy.envOverride ? '（部分字段由环境变量控制）' : '') + '，点击打开连接设置';
     } else if(proxy.enabled){
       label = '代理未配置完整';
       cls = 'chip-honey';
@@ -1867,92 +2013,78 @@
     } else {
       label = '直连';
       cls = 'chip-line';
-      title = '当前未启用独立网络出口，搜索遇到平台访问限制时可到「连接设置 · 网络代理」配置';
+      title = '当前未启用独立网络出口，抓取遇到平台访问限制时可到「连接设置 · 网络代理」配置';
     }
     return '<button class="chip ' + cls + ' hover:opacity-90" data-act="trendConnect" type="button" title="' + esc(title) + '">'
       + '<span class="material-symbols-outlined text-[12px]">vpn_lock</span>' + esc(label) + '</button>';
   }
 
-  function trendResultsHtml(){
-    var job = state.trend.job;
-    if(!job || job.status === 'idle') return trendEmptyState();
-    var html = '';
-    var running = job.status === 'running';
-    var done = (job.progress && job.progress.done) || 0;
-    var total = (job.progress && job.progress.total) || 0;
-    var merged = [];
-    var errors = [];
-    var empties = [];
-    job.tasks.forEach(function(task){
-      (task.items || []).forEach(function(it){ merged.push(it); });
-      if(task.status === 'error') errors.push(task);
-      if(task.status === 'done' && !(task.items || []).length) empties.push(task);
-    });
-    merged.sort(function(a, b){
-      return (Number(b.heat) || 0) - (Number(a.heat) || 0) || (Number(b.likes) || 0) - (Number(a.likes) || 0);
-    });
+  function benchWorkById(id){
+    var list = state.trend.works || [];
+    for(var i = 0; i < list.length; i++) if(String(list[i].id) === String(id)) return list[i];
+    return null;
+  }
 
-    var restored = !running && !!job.restored;
-    html += '<div class="flex items-center justify-between mb-2">';
-    html += '<span class="text-label-sm text-on-surface-variant">' + (running ? '搜索中 ' + done + '/' + total : (restored ? '上次搜索 · 共 ' : '共 ') + merged.length + ' 条结果 · 按热度排序') + '</span>';
-    if(running) html += '<span class="chip chip-honey inline-flex items-center gap-1"><span class="material-symbols-outlined text-[13px] animate-spin">progress_activity</span>抓取中</span>';
-    else if(restored) html += '<span class="chip chip-mint">上次结果</span>';
-    else html += '<span class="chip chip-mint">' + (job.tasks.some(function(t){ return t.cached; }) ? '含缓存结果' : '实时抓取') + '</span>';
-    html += '</div>';
+  function rerenderTrendInspector(force){
+    if(state.view !== 'topics') return;
+    // 后台轮询刷新面板时不要打断正在输入的账号链接
+    if(!force && document.activeElement && document.activeElement.id === 'benchUrl') return;
+    var box = $('trendInspector');
+    if(box) box.innerHTML = trendPanel();
+  }
 
-    if(running){
-      var currentTask = null;
-      job.tasks.forEach(function(t){ if(!currentTask && (t.status === 'running' || t.status === 'pending')) currentTask = t; });
-      if(currentTask) html += '<p class="text-label-sm text-on-surface-variant mb-3">正在抓取「' + esc(currentTask.platform) + ' · ' + esc(currentTask.keyword) + '」…</p>';
+  function setBenchError(msg){
+    state.trend.error = msg || '';
+    var el = $('benchError');
+    if(el){
+      el.textContent = state.trend.error;
+      el.style.display = state.trend.error ? '' : 'none';
     }
+  }
 
-    if(errors.length){
-      html += '<div class="rounded-lg bg-error-container/50 px-3 py-2 text-label-sm text-on-error-container mb-2">';
-      errors.forEach(function(task, i){
-        if(i) html += '<br>';
-        html += esc(task.platform + ' · ' + task.keyword + '：' + (task.error || '搜索失败'));
+  function loadBenchmarks(){
+    return request('/benchmarks?days=7&limit=500').then(function(res){
+      res = res || {};
+      var t = state.trend;
+      t.accounts = res.accounts || [];
+      t.works = res.works || [];
+      t.status = res.status || null;
+      t.platforms = res.platforms || [];
+      if(t.platforms.length) t.proxy = t.platforms[0].proxy || t.proxy;
+      rerenderTrendInspector();
+      if(t.status && t.status.running) startBenchmarkPoll();
+    }).catch(function(err){
+      if(state.view === 'topics') setBenchError('对标账号数据读取失败：' + errMsg(err));
+    });
+  }
+
+  function startBenchmarkPoll(){
+    if(trendTimer) return;
+    trendTimer = setInterval(function(){
+      request('/benchmarks/status').then(function(st){
+        state.trend.status = st;
+        if(st && st.running){
+          rerenderTrendInspector();
+          return;
+        }
+        clearInterval(trendTimer);
+        trendTimer = null;
+        if(st && st.status === 'error'){
+          setBenchError(st.error || '更新失败');
+          toast('对标账号更新失败：' + (st.error || '未知错误'), 'err');
+        } else {
+          var n = 0;
+          ((st && st.results) || []).forEach(function(r){ n += Number(r.count) || 0; });
+          setBenchError('');
+          toast('对标账号更新完成 · 共 ' + n + ' 条作品', 'ok');
+        }
+        loadBenchmarks();
+      }).catch(function(err){
+        clearInterval(trendTimer);
+        trendTimer = null;
+        setBenchError('更新状态读取失败：' + errMsg(err));
       });
-      html += '</div>';
-    }
-    if(empties.length){
-      html += '<p class="text-label-sm text-on-surface-variant mb-2">' + esc(empties.map(function(t){ return t.platform + ' · ' + t.keyword; }).join('、')) + ' 没有搜到内容</p>';
-    }
-
-    merged.forEach(function(it){ html += trendItemCard(it); });
-    return html;
-  }
-
-  function trendEmptyState(){
-    return '<div class="rounded-xl border border-dashed border-surface-container-high px-4 py-8 text-center">' +
-      '<span class="material-symbols-outlined text-3xl text-outline">lightbulb</span>' +
-      '<p class="mt-2 text-label-md font-semibold text-on-surface">输入关键词，发现正在爆的内容</p>' +
-      '<p class="mt-1 text-label-sm text-on-surface-variant">结果按热度从高到低整体排序，点「转选题」即可带入标题、角度和参考链接。</p></div>';
-  }
-
-  function trendItemCard(it){
-    var metrics = [];
-    if(it.likes) metrics.push('赞 ' + compactNum(it.likes));
-    if(it.comments) metrics.push('评 ' + compactNum(it.comments));
-    if(it.collects) metrics.push('藏 ' + compactNum(it.collects));
-    if(it.reads) metrics.push('播 ' + compactNum(it.reads));
-    var heatColor = it.heat >= 80 ? '#c25454' : it.heat >= 55 ? '#b8863b' : '#82877e';
-    var html = '<div class="rounded-xl bg-surface-container-low px-3 py-2.5 mb-2">';
-    html += '<div class="flex items-start gap-2">';
-    html += '<div class="min-w-0 flex-1"><p class="text-[13px] font-semibold text-on-surface leading-snug line-clamp-2">' + esc(it.title) + '</p>';
-    var pColor = PLATFORM_COLOR[it.platform] || '#82877e';
-    html += '<div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[11px] text-on-surface-variant">';
-    html += '<span class="inline-flex items-center gap-1 font-semibold" style="color:' + pColor + '"><i style="width:5px;height:5px;border-radius:9999px;background:' + pColor + ';display:inline-block"></i>' + esc(it.platform) + '</span>';
-    html += '<span>' + (it.itemType === 'video' ? '视频' : '图文') + '</span>';
-    if(it.author) html += '<span>· ' + esc(it.author) + '</span>';
-    if(metrics.length) html += '<span>· ' + esc(metrics.join(' / ')) + '</span>';
-    html += '</div></div>';
-    html += '<span class="chip shrink-0" style="background:' + heatColor + '1a;color:' + heatColor + '">热度 ' + Number(it.heat).toFixed(0) + '</span>';
-    html += '</div>';
-    html += '<div class="flex items-center gap-2 mt-2">';
-    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold hover:opacity-90" data-act="trendToTopic" data-id="' + esc(it.id) + '" type="button"><span class="material-symbols-outlined text-[13px]">add_task</span>转选题</button>';
-    if(it.itemUrl) html += '<a href="' + esc(it.itemUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 text-[10px] text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[13px]">open_in_new</span>看原作</a>';
-    html += '</div></div>';
-    return html;
+    }, 1500);
   }
 
   function compactNum(n){
@@ -1962,122 +2094,127 @@
     return String(Math.round(v));
   }
 
-  function parseTrendKeywords(raw){
-    return String(raw || '').split(/[\s,，、;；]+/).map(function(s){ return s.trim(); }).filter(function(s, i, arr){ return s && arr.indexOf(s) === i; }).slice(0, 5);
-  }
-
-  function trendItemById(id){
-    var job = state.trend.job;
-    if(!job || !job.tasks) return null;
-    for(var i = 0; i < job.tasks.length; i++){
-      var items = job.tasks[i].items || [];
-      for(var j = 0; j < items.length; j++) if(items[j].id === id) return items[j];
-    }
-    return null;
-  }
-
-  function renderTrendPanel(){
-    var box = $('trendResults');
-    if(box) box.innerHTML = trendResultsHtml();
-  }
-
-  function startTrendPoll(){
-    if(trendTimer) return;
-    trendTimer = setInterval(function(){
-      request('/trends/status').then(function(job){
-        state.trend.job = job;
-        if(job.status !== 'running'){
-          clearInterval(trendTimer);
-          trendTimer = null;
-          if(job.status === 'done'){
-            var n = 0;
-            job.tasks.forEach(function(t){ n += (t.items || []).length; });
-            toast('爆款搜索完成 · 共 ' + n + ' 条结果', 'ok');
-          } else if(job.status === 'error'){
-            toast('搜索失败：' + (job.error || '未知错误'), 'err');
-          }
-        }
-        renderTrendPanel();
-      }).catch(function(err){
-        clearInterval(trendTimer);
-        trendTimer = null;
-        toast('搜索状态读取失败：' + errMsg(err), 'err');
-      });
-    }, 1400);
-  }
-
-  function loadTrendPlatforms(){
-    return request('/trends/platforms').then(function(res){
-      state.trend.platforms = (res && res.platforms) || [];
-      var first = state.trend.platforms[0];
-      state.trend.proxy = (first && first.proxy) || null;
-      if(state.view === 'topics'){
-        var box = $('trendInspector');
-        if(box) box.innerHTML = trendPanel();
-      }
-    }).catch(function(){ /* 旧服务没有该接口时保持默认状态 */ });
-  }
-
-  /* 刷新/重开页面后恢复上一次搜索的关键词和结果 */
-  function loadTrendLatest(){
-    return request('/trends/latest').then(function(res){
-      var job = res && res.job;
-      if(!job) return;
-      if(!state.trend.job) state.trend.job = job;
-      if(!state.trend.keywords && job.keywords && job.keywords.length){
-        state.trend.keywords = job.keywords.join(' ');
-        var input = $('trendKeywords');
-        if(input && !input.value) input.value = state.trend.keywords;
-      }
-      if(state.view === 'topics'){
-        var box = $('trendInspector');
-        if(box) box.innerHTML = trendPanel();
-      }
-    }).catch(function(){ /* 旧服务没有该接口时忽略 */ });
-  }
-
-  function setTrendError(msg){
-    state.trend.error = msg || '';
-    var el = $('trendError');
-    if(el){
-      el.textContent = state.trend.error;
-      el.style.display = state.trend.error ? '' : 'none';
-    }
-  }
-
-  function startTrendSearch(force){
-    var keywords = parseTrendKeywords(state.trend.keywords);
-    if(!keywords.length){
-      toast('请先输入关键词', 'err');
-      var input = $('trendKeywords');
-      if(input) input.focus();
-      return;
-    }
-    var platforms = TREND_PLATFORMS.filter(function(p){ return state.trend.sel[p]; });
-    if(!platforms.length){ toast('请至少选择一个平台', 'err'); return; }
-    setTrendError('');
-    var btn = document.querySelector('[data-act="trendSearch"]:not([data-force])');
-    if(btn) btn.disabled = true;
-    request('/trends/search', {
-      method: 'POST',
-      body: JSON.stringify({ keywords: keywords, platforms: platforms, force: !!force })
-    }).then(function(job){
-      state.trend.job = job;
-      renderTrendPanel();
-      startTrendPoll();
+  function startBenchJob(pending){
+    var t = state.trend;
+    setBenchError('');
+    if(t.status) t.status.running = true;
+    rerenderTrendInspector();
+    pending.then(function(){
+      return loadBenchmarks();
+    }).then(function(){
+      startBenchmarkPoll();
     }).catch(function(err){
-      setTrendError(errMsg(err));
-      toast('发起搜索失败：' + errMsg(err), 'err');
-    }).finally(function(){
-      if(btn) btn.disabled = false;
+      if(t.status) t.status.running = false;
+      setBenchError(errMsg(err));
+      toast('发起更新失败：' + errMsg(err), 'err');
+      loadBenchmarks();
     });
   }
 
-  function trendAngle(it){
-    var hot = it.heat >= 80 ? '高互动' : '互动表现稳定';
-    return '参考' + it.platform + '同关键词结果中的' + hot + '内容：原作者从「' + it.title + '」切入，' +
-      '收获 ' + compactNum(it.likes) + ' 赞、' + compactNum(it.comments) + ' 评论。' +
-      '可保留其反常识结论，换成本账号的实操步骤和真实案例。';
+  function refreshBenchmarks(id){
+    var path = id
+      ? '/benchmarks/accounts/' + encodeURIComponent(id) + '/refresh'
+      : '/benchmarks/refresh';
+    startBenchJob(request(path, { method: 'POST', body: '{}' }));
+  }
+
+  function addBenchmarkAccount(){
+    var t = state.trend;
+    var url = String(t.addUrl || '').trim();
+    var platform = t.addPlatform === '抖音' || t.addPlatform === 'B站' ? t.addPlatform : '小红书';
+    if(!url){
+      toast(platform === '小红书' ? '请输入小红书博主昵称' : '请粘贴对标账号主页链接', 'err');
+      var inp = $('benchUrl');
+      if(inp) inp.focus();
+      return;
+    }
+    t.adding = true;
+    setBenchError('');
+    rerenderTrendInspector();
+    request('/benchmarks/accounts', { method: 'POST', body: JSON.stringify({ url: url, platform: platform }) }).then(function(res){
+      t.adding = false;
+      t.addUrl = '';
+      var acc = res && res.account;
+      toast((res && res.created === false ? '该账号已在监控列表中：' : '已添加「') +
+        (acc ? benchAccountName(acc) + '」' : '对标账号') +
+        (res && res.created === false ? '' : '，开始抓取最近 7 天作品'), 'ok');
+      if(res && res.warning) toast(res.warning, 'err');
+      if(acc && acc.id){
+        if(t.status && t.status.running) loadBenchmarks();
+        else refreshBenchmarks(acc.id);
+      } else {
+        loadBenchmarks();
+      }
+    }).catch(function(err){
+      t.adding = false;
+      setBenchError(errMsg(err));
+      toast('添加失败：' + errMsg(err), 'err');
+      rerenderTrendInspector();
+    });
+  }
+
+  function toggleBenchmarkAccount(id, enabled){
+    request('/benchmarks/accounts/' + encodeURIComponent(id), {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled: !!enabled })
+    }).then(function(){
+      toast(enabled ? '已启用自动抓取' : '已暂停自动抓取', 'ok');
+      loadBenchmarks();
+    }).catch(function(err){
+      toast('操作失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function deleteBenchmarkAccount(id, name){
+    if(!window.confirm('确定删除对标账号「' + (name || '') + '」及其已抓取的作品吗？')) return;
+    request('/benchmarks/accounts/' + encodeURIComponent(id), { method: 'DELETE' }).then(function(){
+      toast('已删除对标账号', 'ok');
+      loadBenchmarks();
+    }).catch(function(err){
+      toast('删除失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function benchToTopic(work){
+    if(!work){ toast('作品已刷新，请重试', 'err'); return; }
+    var score = Math.round(Math.min(9.6, Math.max(6.5, 5.5 + num(work.heat) / 25)) * 10) / 10;
+    var tags = ['热点'];
+    if(work.itemType === 'video') tags.push('干货');
+    var metrics = [];
+    if(work.likes) metrics.push(compactNum(work.likes) + ' 赞');
+    if(work.comments) metrics.push(compactNum(work.comments) + ' 评论');
+    if(work.collects) metrics.push(compactNum(work.collects) + ' 收藏');
+    if(work.reads) metrics.push(compactNum(work.reads) + ' 播放');
+    openEditor('topic', null, {
+      subText: '来自' + work.platform + '对标账号 · 确认后保存为选题',
+      fill: {
+        '选题': String(work.title || '').slice(0, 60),
+        '状态': '待写',
+        '切入角度': '参考' + work.platform + '对标账号「' + (work.accountName || '') + '」的' +
+          (work.itemType === 'video' ? '视频' : '图文') + '：' + (work.title || '') +
+          (metrics.length ? '（' + metrics.join(' / ') + '）' : '') +
+          '。可借鉴其选题角度和结构，换成本账号的实操步骤与真实案例。',
+        '爆款潜力评分': score,
+        '标签': tags,
+        '参考链接': work.itemUrl || ''
+      }
+    });
+  }
+
+  function benchTranscript(work){
+    if(!work){ toast('作品已刷新，请重试', 'err'); return; }
+    if(!work.itemUrl){ toast('这条作品没有可用的链接', 'err'); return; }
+    var tx = state.trend.tx;
+    tx.url = work.itemUrl;
+    tx.job = null;
+    tx.error = '';
+    tx.fileId = '';
+    tx.fileName = '';
+    tx.fileSize = 0;
+    state.trend.tab = 'transcript';
+    rerenderTrendInspector(true);
+    loadAsrStatus();
+    startTranscript();
   }
 
   /* ---------- view: calendar ---------- */
@@ -2983,13 +3120,15 @@
 
   var CONN_ICON = {
     '公众号':'chat', '小红书':'auto_stories', '视频号':'play_circle', '抖音':'music_note',
-    'B站':'smart_display', '知乎':'forum', '微博':'public', '快手':'videocam'
+    'B站':'smart_display', '知乎':'forum', '微博':'public', '快手':'videocam',
+    '灰豚数据':'insights'
   };
   var CONN_TINT = {
     '公众号':'bg-[#DCF3E5] text-[#23583A]', '小红书':'bg-[#FCE3DD] text-[#8E3B26]',
     '视频号':'bg-[#D5EAF7] text-[#2C495E]', '抖音':'bg-[#E2DFFF] text-[#444465]',
     'B站':'bg-[#D5EAF7] text-[#2C495E]', '知乎':'bg-[#E2DFFF] text-[#444465]',
-    '微博':'bg-[#FFDF91] text-[#594400]', '快手':'bg-[#FFE3D3] text-[#8A3B0F]'
+    '微博':'bg-[#FFDF91] text-[#594400]', '快手':'bg-[#FFE3D3] text-[#8A3B0F]',
+    '灰豚数据':'bg-[#FFE9CC] text-[#7A4A00]'
   };
   var CONN_MODE = {
     cookie:   { label:'Cookie 登录', cls:'chip-honey' },
@@ -3003,6 +3142,9 @@
     }
     var d = connData;
     var platforms = d.platforms.filter(function(p){
+      var def = d.defs[p] || {};
+      // 数据源类连接（灰豚数据）不属于具体发布渠道，任何筛选下都展示
+      if(def.group === 'data') return true;
       return state.platform === 'all' || state.platform === p;
     });
     var enabledCount = d.platforms.filter(function(p){
@@ -3076,7 +3218,9 @@
     var def = d.defs[p];
     var conn = d.connections[p] || { enabled:false, fields:{}, updatedAt:null };
     var enabled = conn.enabled === true;
-    var mode = CONN_MODE[def.apiMode] || CONN_MODE.custom;
+    var mode = def.group === 'data'
+      ? { label:'数据源', cls:'chip-mint' }
+      : (CONN_MODE[def.apiMode] || CONN_MODE.custom);
     var required = def.fields.filter(function(f){ return !f.optional; });
     var filled = required.filter(function(f){
       var fv = conn.fields[f.key];
@@ -3245,7 +3389,7 @@
     request('/proxy', { method: 'PUT', body: JSON.stringify(payload) }).then(function(){
       connData = null;
       loadConnections();
-      loadTrendPlatforms();
+      loadBenchmarks();
       toast('网络代理配置已保存', 'ok');
     }).catch(function(err){
       toast('保存失败：' + err.message, 'err');
@@ -3273,7 +3417,7 @@
     request('/proxy/rotate', { method: 'POST', body: '{}' }).then(function(resp){
       connData = null;
       loadConnections();
-      loadTrendPlatforms();
+      loadBenchmarks();
       var sid = resp && resp.proxy && resp.proxy.sessionId ? '（新会话 ' + resp.proxy.sessionId + '）' : '';
       toast('已更换出口 IP ' + sid, 'ok');
     }).catch(function(err){
@@ -3287,7 +3431,7 @@
     request('/proxy', { method: 'PUT', body: JSON.stringify(payload) }).then(function(){
       connData = null;
       loadConnections();
-      loadTrendPlatforms();
+      loadBenchmarks();
       toast(payload.enabled ? '网络代理已启用' : '网络代理已停用', 'ok');
     }).catch(function(err){
       toast('操作失败：' + err.message, 'err');
@@ -4854,7 +4998,7 @@
     if(location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
     render();
     scrollTop();
-    if(view === 'topics') loadTrendPlatforms();
+    if(view === 'topics') loadBenchmarks();
     if(view === 'publish'){
       loadPublishData().then(render).catch(function(err){
         toast('发布队列加载失败：' + errMsg(err), 'err');
@@ -4972,6 +5116,13 @@
     }
     if(t.id === 'statusFilter'){ state.status = t.value; render(); return; }
   });
+  viewEl.addEventListener('keydown', function(e){
+    if(e.isComposing || e.keyCode === 229) return;
+    if(e.target && e.target.id === 'benchUrl' && e.key === 'Enter'){
+      e.preventDefault();
+      addBenchmarkAccount();
+    }
+  });
   viewEl.addEventListener('input', function(e){
     var t = e.target;
     if(t.id === 'qTopic' || t.id === 'qAsset'){
@@ -4982,9 +5133,8 @@
       if(again){ again.focus(); again.setSelectionRange(pos, pos); }
       return;
     }
-    if(t.id === 'trendKeywords'){
-      state.trend.keywords = t.value;
-      try{ localStorage.setItem(TREND_DRAFT_KEY, t.value); }catch(err){ /* 隐私模式下忽略 */ }
+    if(t.id === 'benchUrl'){
+      state.trend.addUrl = t.value;
       return;
     }
     if(t.id === 'transcriptUrl'){
@@ -4994,11 +5144,6 @@
   });
   viewEl.addEventListener('change', function(e){
     var t = e.target;
-    var trendPlatform = t.getAttribute ? t.getAttribute('data-trend-platform') : null;
-    if(trendPlatform){
-      state.trend.sel[trendPlatform] = !!t.checked;
-      return;
-    }
     if(t.id === 'transcriptFile'){
       var picked = t.files && t.files[0];
       t.value = '';
@@ -5191,9 +5336,66 @@
       switchView('connections');
       return;
     }
-    if(act === 'trendSearch'){
+    if(act === 'benchAddPlatform'){
       e.preventDefault();
-      startTrendSearch(actEl.getAttribute('data-force') === '1');
+      var addPlat = actEl.getAttribute('data-val');
+      if(addPlat === '小红书' || addPlat === '抖音' || addPlat === 'B站'){
+        state.trend.addPlatform = addPlat;
+        rerenderTrendInspector();
+        var platInput = $('benchUrl');
+        if(platInput) platInput.focus();
+      }
+      return;
+    }
+    if(act === 'benchAdd'){
+      e.preventDefault();
+      addBenchmarkAccount();
+      return;
+    }
+    if(act === 'benchRefreshAll'){
+      e.preventDefault();
+      refreshBenchmarks(null);
+      return;
+    }
+    if(act === 'benchRefresh'){
+      e.preventDefault();
+      refreshBenchmarks(id);
+      return;
+    }
+    if(act === 'benchToggle'){
+      e.preventDefault();
+      toggleBenchmarkAccount(id, actEl.getAttribute('data-enabled') !== '1');
+      return;
+    }
+    if(act === 'benchDelete'){
+      e.preventDefault();
+      deleteBenchmarkAccount(id, actEl.getAttribute('data-name'));
+      return;
+    }
+    if(act === 'benchFilter'){
+      state.trend.filter = actEl.getAttribute('data-val') || 'all';
+      var worksBox = $('benchWorks');
+      if(worksBox) worksBox.innerHTML = benchWorksHtml();
+      var filterBtns = document.querySelectorAll('[data-act="benchFilter"]');
+      for(var fi = 0; fi < filterBtns.length; fi++){
+        var on = filterBtns[fi].getAttribute('data-val') === state.trend.filter;
+        filterBtns[fi].className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold ' + (on ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container');
+      }
+      return;
+    }
+    if(act === 'benchSort'){
+      state.trend.sort = state.trend.sort === 'heat' ? 'latest' : 'heat';
+      rerenderTrendInspector();
+      return;
+    }
+    if(act === 'benchToTopic'){
+      e.preventDefault();
+      benchToTopic(benchWorkById(id));
+      return;
+    }
+    if(act === 'benchTranscript'){
+      e.preventDefault();
+      benchTranscript(benchWorkById(id));
       return;
     }
     if(act === 'trendTab'){
@@ -5239,26 +5441,6 @@
     if(act === 'transcriptSaveAsset'){
       e.preventDefault();
       transcriptSaveAsset();
-      return;
-    }
-    if(act === 'trendToTopic'){
-      e.preventDefault();
-      var trendItem = trendItemById(id);
-      if(!trendItem){ toast('结果已过期，请重新搜索', 'err'); return; }
-      var trendScore = Math.round(Math.min(9.6, Math.max(6.5, 5.5 + trendItem.heat / 25)) * 10) / 10;
-      var trendTagList = ['热点'];
-      if(trendItem.itemType === 'video') trendTagList.push('干货');
-      openEditor('topic', null, {
-        subText: '来自' + trendItem.platform + '爆款 · 确认后保存为选题',
-        fill: {
-          '选题': String(trendItem.title).slice(0, 60),
-          '状态': '待写',
-          '切入角度': trendAngle(trendItem),
-          '爆款潜力评分': trendScore,
-          '标签': trendTagList,
-          '参考链接': trendItem.itemUrl
-        }
-      });
       return;
     }
     if(act === 'editProfile'){
@@ -6965,7 +7147,17 @@
     try{
       var es = new EventSource(API + '/events');
       es.addEventListener('ready', function(){ setSync('实时同步已连接', 'ok'); });
-      es.addEventListener('change', function(){
+      es.addEventListener('change', function(e){
+        var payload = null;
+        try{ payload = e && e.data ? JSON.parse(e.data) : null; }catch(err){ payload = null; }
+        if(payload && payload.type === 'benchmarks'){
+          if(payload.job){
+            state.trend.status = payload.job;
+            if(state.view === 'topics') rerenderTrendInspector();
+            if(payload.job.running) startBenchmarkPoll();
+          }
+          return;
+        }
         if(Date.now() < suppressUntil) return;
         if(editing.dbKey){ staleWhileEditing = true; return; }
         scheduleReload();
@@ -6979,15 +7171,10 @@
     if(['home','topics','calendar','publish','review','assets','connections'].indexOf(initial) >= 0) state.view = initial;
     setSync('正在连接…', '');
     subscribe();
-    try{
-      var draft = localStorage.getItem(TREND_DRAFT_KEY);
-      if(draft) state.trend.keywords = draft;
-    }catch(err){ /* 隐私模式下忽略 */ }
     Promise.all([
       loadProfile().catch(function(){ /* 旧服务没有 profile 接口时保持默认资料 */ }),
       loadVoiceRecordings(),
-      loadTrendPlatforms(),
-      loadTrendLatest(),
+      loadBenchmarks(),
       loadLicenseStatus(),
       loadPublishData().catch(function(){ /* 发布服务不可用时不影响其它页面 */ })
     ]).then(loadAllData);

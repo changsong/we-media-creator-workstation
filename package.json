@@ -18,12 +18,13 @@
     "dist:mac": "npm run vendor:ffmpeg && npm run vendor:whisper:mac && electron-builder --mac --x64 --arm64",
     "dist:linux": "npm run vendor:ffmpeg && node tools/fetch-whisper.js --platform linux --arch x64 && electron-builder --linux --x64",
     "migrate": "node --disable-warning=ExperimentalWarning tools/migrate-json-to-sqlite.js",
+    "verify:huitun": "node tools/verify-huitun.js",
     "site:build": "node website/build.mjs",
     "site:test": "node --test website/test/*.test.mjs",
     "site:serve": "node website/server.mjs",
     "site:deploy": "node website/scripts/deploy.mjs",
     "site:releases": "node website/scripts/sync-releases.mjs",
-    "check": "node --check server.js && node --check public/app.js && node --check lib/db.js && node --check lib/store.js && node --check lib/migrate.js && node --check lib/license.js && node --check lib/proxy-tunnel.js && node --check lib/proxy-config.js && node --check lib/trends/transcript.js && node --check lib/asr.js && node --check desktop/main.js && node --check desktop/updater.js && node --check tools/upload-oss.js && node --check tools/verify-proxy.js && node --check tools/prepare-vendor.js && node --check tools/fetch-whisper.js && node --check tools/build-whisper-mac.js && node --check tools/ci-vendor.js",
+    "check": "node --check server.js && node --check public/app.js && node --check lib/db.js && node --check lib/store.js && node --check lib/migrate.js && node --check lib/license.js && node --check lib/channel-connections.js && node --check lib/huitun.js && node --check lib/proxy-tunnel.js && node --check lib/proxy-config.js && node --check lib/benchmarks/index.js && node --check lib/benchmarks/adapters/capture.js && node --check lib/benchmarks/adapters/xiaohongshu.js && node --check lib/benchmarks/adapters/douyin.js && node --check lib/benchmarks/adapters/bilibili.js && node --check lib/trends/browser.js && node --check lib/trends/transcript.js && node --check lib/asr.js && node --check desktop/main.js && node --check desktop/updater.js && node --check tools/upload-oss.js && node --check tools/verify-proxy.js && node --check tools/verify-huitun.js && node --check tools/prepare-vendor.js && node --check tools/fetch-whisper.js && node --check tools/build-whisper-mac.js && node --check tools/ci-vendor.js",
     "test": "node --test tools/license-test.js && node tools/smoke-test.js && node tools/sync-test.js && node tools/verify-proxy.js"
   },
   "engines": {

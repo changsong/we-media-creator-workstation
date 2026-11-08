@@ -10,4 +10,5 @@ release/
 .codex/
 website/site/
 website/data/
+website/certs/
 .tmp-*/
