@@ -544,7 +544,11 @@ function downloadPage(lang) {
             <a class="block text-primary underline decoration-gold-accent underline-offset-2" href="${esc(macX64Zip.url)}" download>${esc(macX64Zip.name)} · ${formatSize(macX64Zip.size)}</a>
           </div>
         </details>
-        <p class="font-body-sm text-[11px] text-on-surface-variant">${isEn ? 'Unsigned build: right-click the app and choose Open the first time. macOS does not auto-update.' : '构建未签名：首次打开请右键应用选择“打开”。macOS 版不启用自动更新，需要手动下载新版本。'}</p>`,
+        <div class="mt-2 space-y-2 font-body-sm text-[11px] text-on-surface-variant">
+          <p>${isEn ? 'Unsigned build. On Apple Silicon, if macOS says the app “is damaged and can’t be opened”, move it into Applications first, then run this in Terminal and open it again:' : '构建未签名。Apple Silicon 机型若提示“已损坏，无法打开”，请先把应用拖入「应用程序」，再在终端执行下面的命令后重新打开：'}</p>
+          <code class="block break-all rounded-lg bg-surface-container-low p-2 text-[10px] text-on-surface-variant">xattr -cr "/Applications/WeMedia Creator Workstation.app"</code>
+          <p>${isEn ? 'Intel Macs may instead say the developer cannot be verified; right-click the app and choose Open. If macOS still blocks it, allow it under System Settings → Privacy & Security. macOS does not auto-update; download new versions manually.' : 'Intel 机型若提示“无法验证开发者”，右键应用选择“打开”即可。若系统仍拦截，可在「系统设置 → 隐私与安全性」中允许打开。macOS 版不启用自动更新，需要手动下载新版本。'}</p>
+        </div>`,
     }),
     downloadCard({
       lang,
@@ -619,12 +623,12 @@ function downloadPage(lang) {
           items: isEn
             ? [
                 ['Is it free to try?', 'The download is free. You can organize ideas and schedules without a license; publishing requires an active license.'],
-                ['Why is the macOS build unsigned?', 'We do not yet have an Apple developer account. The dmg works, but macOS blocks automatic updates and asks you to confirm the first launch.'],
+                ['macOS says the app “is damaged and can’t be opened”. What should I do?', 'That is the system blocking an unsigned build, not a corrupt file (the DMG mounting means the image is intact). Move the app into Applications, run xattr -cr "/Applications/WeMedia Creator Workstation.app" in Terminal, then open it again. The build is not signed yet because we do not have an Apple developer account; macOS also does not auto-update.'],
                 ['Will installing remove my old data?', 'No. Reinstalling keeps the data directory. Back it up before switching computers or clearing the app.'],
               ]
             : [
                 ['可以免费试用吗？', '下载免费。没有授权也可以整理选题与排期；执行自动发布需要有效授权。'],
-                ['macOS 为什么未签名？', '目前还没有 Apple 开发者账号。dmg 可以正常安装，但系统会拦截自动更新，首次打开需要手动确认。'],
+                ['macOS 提示 App 已损坏打不开怎么办？', '这是未签名构建触发的系统拦截，并非文件损坏（DMG 能挂载即说明镜像完整）。把应用拖入「应用程序」后，在终端执行 xattr -cr "/Applications/WeMedia Creator Workstation.app"，再双击打开即可。构建暂未签名是因为还没有 Apple 开发者账号；macOS 版也不启用自动更新。'],
                 ['重装会删除旧数据吗？', '不会。重装会保留数据目录；换电脑或清理应用前请先备份。'],
               ],
         })}</div>

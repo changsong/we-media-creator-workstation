@@ -253,7 +253,7 @@ export const faqTopics = {
       group: '限制',
       items: [
         { q: '为什么不支持多人协作？', a: '当前定位是单机单用户的本地工作台，数据不经过云端，因此暂不提供多人实时协作。小团队可以共用同一台机器或分别导出 CSV 汇总。' },
-        { q: 'macOS 为什么不能自动更新？', a: '当前 macOS 构建未签名，自动更新会被系统拦截。需要手动下载新版本；功能与 Windows 版本一致。' },
+        { q: 'macOS 为什么不能自动更新？', a: '当前 macOS 构建未签名，自动更新会被系统拦截。若首次打开提示“已损坏”，把应用拖入「应用程序」后在终端执行 xattr -cr "/Applications/WeMedia Creator Workstation.app" 即可解除；新版本需要手动下载。' },
         { q: '英文界面有吗？', a: '桌面应用当前为简体中文界面。英文站用于产品介绍与购买，FAQ 已明确说明这一限制。' },
       ],
     },
@@ -298,7 +298,7 @@ export const faqTopics = {
       group: 'Limitations',
       items: [
         { q: 'Why is there no team collaboration?', a: 'The product is a single-user, local-first workspace and does not route data through a cloud, so real-time multi-user collaboration is not available. Small teams can share a machine or combine CSV exports.' },
-        { q: 'Why does macOS not auto-update?', a: 'The current macOS build is unsigned, so the system blocks automatic updates. Download new versions manually; features match the Windows build.' },
+        { q: 'Why does macOS not auto-update?', a: 'The current macOS build is unsigned, so the system blocks automatic updates. If the first launch says the app is damaged, move it into Applications and run xattr -cr "/Applications/WeMedia Creator Workstation.app" in Terminal; new versions must be downloaded manually.' },
         { q: 'Is there an English interface?', a: 'The desktop app currently uses a Simplified Chinese interface. The English site covers the product and purchasing; this limitation is noted in the FAQ.' },
       ],
     },

@@ -385,7 +385,7 @@ export function desktopSection({ lang, hasVideo = false }) {
   const points = [
     ['minimize', isEn ? 'Minimize to the tray' : '最小化到托盘', isEn ? 'Scheduled publishing and data sync keep running after you close the window.' : '关闭窗口后，定时发布与数据同步继续执行，不必让浏览器一直开着。'],
     ['autorenew', isEn ? 'Updates as platforms change' : '平台改版跟着适配', isEn ? 'The client auto-updates on Windows and Linux with compatibility patches.' : 'Windows 与 Linux 客户端自动更新，平台改版时持续推送适配补丁。'],
-    ['devices', isEn ? 'Windows, macOS, Linux' : 'Windows / macOS / Linux', isEn ? 'Native installers for all three. macOS builds are unsigned and open via right-click.' : '三套系统原生安装包。macOS 当前未签名，首次打开需右键「打开」。'],
+    ['devices', isEn ? 'Windows, macOS, Linux' : 'Windows / macOS / Linux', isEn ? 'Native installers for all three. macOS builds are unsigned; if macOS reports damage, a one-line Terminal command clears it.' : '三套系统原生安装包。macOS 当前未签名，若提示已损坏，可用一条终端命令解除后打开。'],
   ].map(([ic, title, body]) => `<div class="flex items-start gap-3">
     <div class="w-10 h-10 shrink-0 rounded-full bg-surface-container-low flex items-center justify-center text-primary">${icon(ic, 'text-[20px]')}</div>
     <div><div class="font-headline-sm text-[16px] text-on-surface font-semibold">${esc(title)}</div><p class="font-body-sm text-body-sm text-on-surface-variant mt-1">${esc(body)}</p></div>
