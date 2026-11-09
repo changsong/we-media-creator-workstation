@@ -693,7 +693,8 @@
     if(state.q){
       var q = state.q.toLowerCase();
       rows = rows.filter(function(r){
-        return (String(r['选题']||'') + String(r['切入角度']||'') + String(r['选题ID']||'')).toLowerCase().indexOf(q) >= 0;
+        var hay = [r['选题'], r['切入角度'], r['选题ID'], gsText(r['标签']), r['参考来源'], r['状态']].join(' ');
+        return hay.toLowerCase().indexOf(q) >= 0;
       });
     }
     return rows;
@@ -1471,7 +1472,7 @@
 
     /* 对标账号面板 */
     html += '<div data-trend-panel="accounts"' + (tab === 'accounts' ? '' : ' class="hidden"') + '>';
-    html += '<div class="px-space-lg py-space-md border-b border-surface-container-low">';
+    html += '<div id="benchAddBlock" class="px-space-lg py-space-md border-b border-surface-container-low">';
     var addPlatform = t.addPlatform === '抖音' || t.addPlatform === 'B站' ? t.addPlatform : '小红书';
     html += '<div class="fld"><label class="lab">添加对标账号</label>';
     html += '<div class="flex items-center gap-1 mb-1.5">';
@@ -2230,6 +2231,7 @@
     var todayKey = isoDay(new Date());
 
     var stage = state.stage || 'all';
+    var q = String(state.q || '').trim().toLowerCase();
     var calRows = byPlatform(DATA.calendar).filter(function(r){
       return stage === 'all' || r['当前阶段'] === stage;
     });
@@ -2258,8 +2260,18 @@
     var monthReviewed = monthAll.filter(function(r){ return r['当前阶段'] === '已复盘'; }).length;
     var reviewRate = monthPublished ? (monthReviewed / monthPublished * 100) : 0;
 
+    if(q){
+      monthRows = byPlatform(DATA.calendar).filter(function(r){
+        var hay = [r['标题'], r['排期ID'], r['选题ID'], r['备注'], gsText(r['平台']), gsText(r['标签']), r['内容形式'], r['当前阶段'], r['负责人']].join(' ');
+        return hay.toLowerCase().indexOf(q) >= 0;
+      }).sort(function(a,b){ return parseDate(a['计划发布时间']) - parseDate(b['计划发布时间']); });
+    }
+
     var html = '';
     html += '<div class="fade-in">';
+    if(q){
+      html += '<div class="search-chip-bar"><span class="material-symbols-outlined text-base">search</span><span>全库搜索「' + esc(state.q) + '」· 命中 ' + monthRows.length + ' 条排期</span><button data-act="clearSearch" type="button">清除搜索</button></div>';
+    }
 
     /* banners */
     html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md mb-space-lg">';
@@ -2372,12 +2384,13 @@
     /* monthly table */
     html += '<div class="col-span-12 soft-card overflow-hidden">';
     html += '<div class="flex flex-wrap items-center justify-between gap-2 px-space-lg pt-space-lg pb-space-sm">';
-    html += '<div><h3 class="text-headline-sm font-headline-sm text-on-surface">本月排期进度详表</h3><p class="text-label-sm text-on-surface-variant">' + monthRows.length + ' 条排期 · 阶段可直接下拉更新</p></div>';
+    html += '<div><h3 class="text-headline-sm font-headline-sm text-on-surface">' + (q ? '排期搜索结果' : '本月排期进度详表') + '</h3><p class="text-label-sm text-on-surface-variant">' + monthRows.length + ' 条排期 · ' + (q ? '跨月份匹配' : '阶段可直接下拉更新') + '</p></div>';
     html += '<div class="flex items-center gap-2"><button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface hover:bg-surface-container-high" data-act="exportCal" type="button"><span class="material-symbols-outlined text-base">download</span>导出 CSV</button>';
     html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90" data-act="new" data-db="calendar" type="button"><span class="material-symbols-outlined text-base">add</span>新建</button></div>';
     html += '</div>';
     if(!monthRows.length){
-      html += emptyState('这个月还没有排期', '点日历格子里的 + 直接排一条，或使用「新建排期计划」', 'calendar_month');
+      if(q) html += emptyState('没有找到与「' + state.q + '」相关的排期', '换个关键词试试，或清除搜索查看本月全部排期', 'search_off');
+      else html += emptyState('这个月还没有排期', '点日历格子里的 + 直接排一条，或使用「新建排期计划」', 'calendar_month');
     } else {
       html += '<div class="overflow-x-auto"><table class="w-full text-[12px]"><thead><tr class="text-label-sm text-on-surface-variant bg-surface-container-low/60">';
       html += '<th class="text-left font-semibold py-2.5 pl-4 pr-2 whitespace-nowrap">计划发布时间</th>';
@@ -2469,7 +2482,7 @@
     html += '<div class="fade-in">';
 
     /* control banner */
-    html += '<div class="soft-card px-space-lg py-space-md mb-space-lg flex flex-wrap items-center justify-between gap-space-md">';
+    html += '<div id="reviewControls" class="soft-card px-space-lg py-space-md mb-space-lg flex flex-wrap items-center justify-between gap-space-md">';
     html += '<div class="seg">';
     html += '<button class="' + (state.reviewMode === 'agg' ? 'on' : '') + '" data-act="rvMode" data-mode="agg" type="button">按排期聚合视图 (生命周期)</button>';
     html += '<button class="' + (state.reviewMode !== 'agg' ? 'on' : '') + '" data-act="rvMode" data-mode="list" type="button">日常流水账快照 (时间序)</button>';
@@ -2680,11 +2693,10 @@
 
   /* ---------- view: assets ---------- */
   function viewAssets(){
+    var editRec = null;
     if(state.assetEdit){
-      var editRec = null;
       DATA.asset.forEach(function(r){ if(r['_id'] === state.assetEdit.id) editRec = r; });
-      if(editRec) return viewAssetEditor(editRec);
-      state.assetEdit = null;
+      if(!editRec) state.assetEdit = null;
     }
     var base = byPlatform(DATA.asset);
     var kw = state.assetKeyword;
@@ -2705,6 +2717,7 @@
     if(rows.length && !rows.some(function(r){ return r['_id'] === state.assetId; })) state.assetId = rows[0]['_id'];
     var selected = null;
     rows.forEach(function(r){ if(r['_id'] === state.assetId) selected = r; });
+    if(editRec){ selected = editRec; state.assetId = editRec['_id']; }
 
     var visualCount = base.filter(function(r){ return !!String(r['配图说明'] || '').trim(); }).length;
     var allKw = {};
@@ -2745,10 +2758,10 @@
     html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-primary text-on-primary rounded-full text-label-sm font-semibold shadow-sm hover:opacity-90" data-act="new" data-db="asset" type="button"><span class="material-symbols-outlined text-base">add</span>归档一篇成稿</button>';
     html += '</div></div>';
 
-    html += '<div class="grid grid-cols-12 gap-space-md items-start">';
+    html += '<div class="grid asset-split gap-space-md items-start">';
 
     /* left list */
-    html += '<div class="col-span-12 xl:col-span-5 flex flex-col gap-space-md min-w-0">';
+    html += '<div class="flex flex-col gap-space-md min-w-0">';
     if(!rows.length){
       html += '<div class="soft-card">' + emptyState('还没有匹配的素材', '换个关键词，或归档一篇成稿', 'auto_stories') + '</div>';
     } else {
@@ -2783,8 +2796,11 @@
     html += '</div></div>';
     html += '</div>';
 
-    /* right detail */
-    html += '<div class="col-span-12 xl:col-span-7 min-w-0">';
+    /* right detail / inline editor */
+    html += '<div class="min-w-0">';
+    if(editRec){
+      html += viewAssetEditor(editRec);
+    } else {
     html += '<div class="soft-card overflow-hidden">';
     if(!selected){
       html += emptyState('选择左侧一张成稿卡片', '这里会显示 Markdown 正文、配图说明与规范视口', 'article');
@@ -2816,7 +2832,7 @@
       html += '</div></div>';
       html += '<div class="col-span-12 lg:col-span-5 flex flex-col gap-space-md">';
       html += '<div class="rounded-xl border border-surface-container-low p-space-md">';
-      html += '<div class="flex items-center justify-between mb-2"><h4 class="text-label-md font-label-md uppercase tracking-wide text-on-surface-variant">配图说明</h4><span class="chip chip-line">' + esc(selected['平台'] || '通用') + '</span></div>';
+      html += '<div class="flex items-center justify-between mb-2"><h4 class="text-label-md font-label-md uppercase tracking-wide text-on-surface-variant">配图说明</h4><span class="chip chip-line">' + esc(platformList(selected['平台']).join('、') || '通用') + '</span></div>';
       html += '<img alt="配图预览" class="w-full h-28 object-cover rounded-lg mb-2" src="/assets/img-3.jpg">';
       html += '<div class="md-body text-[12px] line-clamp-3">' + mdToHtml(selected['配图说明']) + '</div>';
       html += '<div class="mt-2 pt-2 border-t border-surface-container-low text-label-sm text-on-surface-variant flex items-center justify-between"><span>构图：主体居中偏右</span><span>色板：#FFD975 / #E2DFFF</span></div>';
@@ -2869,7 +2885,9 @@
       html += '</div>';
       html += '</div></div>';
     }
-    html += '</div></div>';
+    html += '</div>';
+    }
+    html += '</div>';
 
     html += '</div></div>';
     return html;
@@ -2883,7 +2901,7 @@
     function val(name){
       return Object.prototype.hasOwnProperty.call(draft, name) ? draft[name] : rec[name];
     }
-    var skip = { '成稿Markdown': true, '配图说明': true };
+    var skip = { '成稿Markdown': true, '配图说明': true, '语音复盘': true, '归档日期': true, '字数': true, '发布链接': true, '成稿文档链接': true, '配图文档链接': true };
     var html = '<div class="fade-in" id="assetEditRoot">';
     html += '<div class="soft-card px-space-lg py-space-md mb-space-md">';
     html += '<div class="flex flex-wrap items-center justify-between gap-space-sm">';
@@ -2893,22 +2911,22 @@
     html += '<p class="text-label-sm text-on-surface-variant mt-0.5">' + esc(rec['素材ID'] || '') + ' · 关联选题 ' + esc(rec['关联选题ID'] || '—') + ' · 关联排期 ' + esc(rec['关联排期ID'] || '—') + '</p>';
     html += '</div>';
     html += '<div class="flex items-center gap-2 shrink-0">';
-    html += '<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface hover:bg-surface-container-high" data-act="assetEditCancel" type="button">取消</button>';
-    html += '<button id="assetEditSaveBtn" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90" data-act="assetEditSave" type="button"><span class="material-symbols-outlined text-base">check</span>保存</button>';
+    html += '<span id="assetSaveState" class="text-label-sm text-on-surface-variant mr-1">自动保存已开启</span>';
+    html += '<button id="assetEditSaveBtn" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90" data-act="assetEditSave" type="button"><span class="material-symbols-outlined text-base">check</span>完成</button>';
     html += '</div></div></div>';
 
-    html += '<div class="grid grid-cols-12 gap-space-md items-start">';
-
-    html += '<div class="col-span-12 xl:col-span-3">';
-    html += '<div class="soft-card p-space-md">';
-    html += '<h3 class="text-headline-sm font-headline-sm text-on-surface mb-2">基本信息</h3>';
+    html += '<div class="soft-card p-space-md mb-space-md">';
+    html += '<div class="flex items-center justify-between mb-2"><h3 class="text-headline-sm font-headline-sm text-on-surface">基本信息</h3><span class="text-label-sm text-on-surface-variant">常用字段</span></div>';
+    html += '<div class="asset-basic-grid">';
     (SCHEMAS.asset || []).forEach(function(p){
       if(p.readonly || skip[p.name]) return;
-      html += fieldHtml(p, val(p.name), 'asset', null, true);
+      html += fieldHtml(p, val(p.name), 'asset', null, p.name === '平台' || p.name === '关键词');
     });
     html += '</div></div>';
 
-    html += '<div class="col-span-12 xl:col-span-5 flex flex-col gap-space-md">';
+    html += '<div class="grid grid-cols-12 gap-space-md items-start">';
+
+    html += '<div class="col-span-12 xl:col-span-7 flex flex-col gap-space-md">';
     html += '<div class="soft-card p-space-md">';
     html += '<div class="flex items-center justify-between mb-2"><h3 class="text-headline-sm font-headline-sm text-on-surface">成稿 Markdown</h3><span class="chip chip-mint">右侧实时预览</span></div>';
     html += '<div class="md-tools mb-1.5"><button type="button" data-md="h2">H2 小标题</button><button type="button" data-md="quote">引用</button><button type="button" data-md="code">代码块</button><button type="button" data-md="list">列表</button></div>';
@@ -2919,7 +2937,7 @@
     html += '<textarea class="ta" rows="6" data-field="配图说明">' + esc(val('配图说明') || '') + '</textarea>';
     html += '</div></div>';
 
-    html += '<div class="col-span-12 xl:col-span-4">';
+    html += '<div class="col-span-12 xl:col-span-5">';
     html += '<div class="soft-card p-space-md xl:sticky xl:top-4">';
     html += '<div class="flex items-center justify-between mb-2"><h3 class="text-headline-sm font-headline-sm text-on-surface">实时预览</h3><span class="chip chip-line">Markdown</span></div>';
     html += '<h4 id="assetPreviewTitle" class="text-headline-sm font-headline-sm text-on-surface leading-snug mb-2">' + esc(val('标题') || '（未命名）') + '</h4>';
@@ -2927,7 +2945,7 @@
     html += '<div id="assetPreviewMd" class="md-body">' + mdToHtml(val('成稿Markdown')) + '</div>';
     html += '</div>';
     html += '<div class="mt-space-md pt-space-md border-t border-surface-container-low">';
-    html += '<div class="flex items-center justify-between mb-2"><h4 class="text-label-md font-label-md uppercase tracking-wide text-on-surface-variant">配图说明</h4><span id="assetPreviewPlatform" class="chip chip-line">' + esc(val('平台') || '通用') + '</span></div>';
+    html += '<div class="flex items-center justify-between mb-2"><h4 class="text-label-md font-label-md uppercase tracking-wide text-on-surface-variant">配图说明</h4><span id="assetPreviewPlatform" class="chip chip-line">' + esc(platformList(val('平台')).join('、') || '通用') + '</span></div>';
     html += '<img alt="配图预览" class="w-full h-24 object-cover rounded-lg mb-2" src="/assets/img-3.jpg">';
     html += '<div id="assetPreviewDesc" class="md-body text-[12px] max-h-40 overflow-y-auto">' + mdToHtml(val('配图说明')) + '</div>';
     html += '</div></div></div>';
@@ -2992,37 +3010,94 @@
     return out;
   }
 
-  function saveAssetInline(){
-    var root = $('assetEditRoot');
-    if(!root || !state.assetEdit) return;
+  var assetAutoTimer = null;
+  var assetAutoSeq = 0;
+  var assetSaveChain = Promise.resolve();
+
+  function setAssetSaveState(text, cls){
+    var el = $('assetSaveState');
+    if(!el) return;
+    el.textContent = text;
+    el.className = 'text-label-sm ' + (cls || 'text-on-surface-variant');
+  }
+
+  function readAssetForm(root, focusOnError){
     var titleEl = root.querySelector('[data-field="标题"]');
     var title = titleEl ? String(titleEl.value || '').trim() : '';
     if(!title){
-      toast('「标题」不能为空', 'err');
-      if(titleEl){ titleEl.classList.add('err'); titleEl.focus(); }
-      return;
+      setAssetSaveState('标题不能为空，暂未保存', 'text-[#ba1a1a]');
+      if(focusOnError && titleEl){ titleEl.classList.add('err'); titleEl.focus(); }
+      return null;
     }
     if(titleEl) titleEl.classList.remove('err');
-    var props;
     try{
-      props = collectAssetProps(root);
+      return collectAssetProps(root);
     } catch(err){
-      toast(errMsg(err), 'err');
-      return;
+      setAssetSaveState('暂未保存：' + errMsg(err), 'text-[#ba1a1a]');
+      return null;
     }
-    var btn = $('assetEditSaveBtn');
-    if(btn) btn.disabled = true;
-    suppressUntil = Date.now() + 1500;
-    OPS.asset.upd(state.assetEdit.id, props).then(function(){
-      return loadTable('asset');
+  }
+
+  function doAssetSave(props, exitAfter){
+    if(!props || !state.assetEdit) return;
+    var editId = state.assetEdit.id;
+    var seq = ++assetAutoSeq;
+    setAssetSaveState('保存中…');
+    suppressUntil = Date.now() + 2000;
+    assetSaveChain = assetSaveChain.then(function(){
+      return OPS.asset.upd(editId, props).then(function(){ return loadTable('asset'); });
     }).then(function(){
-      state.assetEdit = null;
-      render();
-      toast('素材已保存 · ' + hhmm(), 'ok');
-    }).catch(function(err){
+      if(seq !== assetAutoSeq) return;
+      setAssetSaveState('已自动保存 ' + hhmm(), 'text-[#2f8f5b]');
+      if(exitAfter && state.assetEdit && state.assetEdit.id === editId){
+        state.assetEdit = null;
+        render();
+        toast('素材已保存 · ' + hhmm(), 'ok');
+      }
+    }, function(err){
+      if(seq !== assetAutoSeq) return;
+      setAssetSaveState('保存失败：' + errMsg(err), 'text-[#ba1a1a]');
+      var btn = $('assetEditSaveBtn');
       if(btn) btn.disabled = false;
-      toast('保存失败：' + errMsg(err), 'err');
     });
+  }
+
+  function flushAssetEdit(){
+    clearTimeout(assetAutoTimer);
+    assetAutoTimer = null;
+    if(!state.assetEdit) return;
+    var root = $('assetEditRoot');
+    if(!root) return;
+    var props = readAssetForm(root, false);
+    if(props) doAssetSave(props, false);
+  }
+
+  function assetAutosaveSoon(){
+    if(!state.assetEdit) return;
+    clearTimeout(assetAutoTimer);
+    setAssetSaveState('编辑中…');
+    assetAutoTimer = setTimeout(function(){
+      assetAutoTimer = null;
+      if(!state.assetEdit) return;
+      var root = $('assetEditRoot');
+      if(!root) return;
+      var props = readAssetForm(root, false);
+      if(props) doAssetSave(props, false);
+    }, 700);
+  }
+
+  function saveAssetInline(){
+    clearTimeout(assetAutoTimer);
+    assetAutoTimer = null;
+    if(!state.assetEdit) return;
+    var root = $('assetEditRoot');
+    if(!root) { state.assetEdit = null; render(); return; }
+    var btn = $('assetEditSaveBtn');
+    if(btn && btn.disabled) return;
+    var props = readAssetForm(root, true);
+    if(!props) return;
+    if(btn) btn.disabled = true;
+    doAssetSave(props, true);
   }
 
   function onAssetEditInput(el){
@@ -3055,8 +3130,9 @@
       if(t) t.textContent = shown;
     } else if(field === '平台'){
       var pf = $('assetPreviewPlatform');
-      if(pf) pf.textContent = String(el.value || '') || '通用';
+      if(pf) pf.textContent = platformList(draft[field]).join('、') || '通用';
     }
+    assetAutosaveSoon();
   }
 
   /* ---------- markdown ---------- */
@@ -3159,7 +3235,7 @@
       + '</div>';
 
     // 概览 + 安全提示
-    html += '<div class="rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm p-space-md mb-space-lg flex items-center justify-between gap-space-md flex-wrap">'
+    html += '<div id="connSecurity" class="rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm p-space-md mb-space-lg flex items-center justify-between gap-space-md flex-wrap">'
       + '<div class="flex items-center gap-3 min-w-0">'
       + '<span class="w-10 h-10 rounded-2xl bg-[#E2DFFF] text-[#444465] flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-xl">shield_lock</span></span>'
       + '<div class="min-w-0"><p class="text-label-md font-label-md text-on-surface">凭证只保存在本机，读取时自动掩码</p>'
@@ -3232,7 +3308,7 @@
       ? '<a class="chip ' + mode.cls + ' hover:opacity-90 transition-opacity" href="' + esc(def.docs) + '" target="_blank" rel="noopener" title="打开官方文档 / 数据入口">' + mode.label + '<span class="material-symbols-outlined text-[12px]">open_in_new</span></a>'
       : '<span class="chip ' + mode.cls + '">' + mode.label + '</span>';
     var html = '';
-    html += '<div class="rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm p-space-lg flex flex-col gap-space-md">';
+    html += '<div data-conn-card="' + esc(p) + '" class="rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm p-space-lg flex flex-col gap-space-md">';
     // 头部：图标 + 平台 + 模式 + 启用开关
     html += '<div class="flex items-start justify-between gap-3">';
     html += '<div class="flex items-center gap-3 min-w-0">'
@@ -3766,7 +3842,7 @@
     var html = '';
     html += '<div class="fade-in">';
 
-    html += '<div class="soft-card px-space-lg py-space-md mb-space-lg flex flex-wrap items-center justify-between gap-space-md">';
+    html += '<div id="publishHero" class="soft-card px-space-lg py-space-md mb-space-lg flex flex-wrap items-center justify-between gap-space-md">';
     html += '<div class="min-w-0"><div class="flex items-center gap-2 mb-1"><span class="kicker-dot"></span><span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Publish Center</span></div>';
     html += '<h2 class="text-headline-md font-headline-md text-on-surface">发布中心</h2>';
     html += '<p class="text-label-sm text-on-surface-variant mt-1">' + (running ? ('正在执行「' + esc(running.title) + '」（' + esc(running.code) + '）') : '队列空闲 · 每 30 秒巡检一次到点任务') + '</p></div>';
@@ -4990,10 +5066,12 @@
     armPublishPoll();
   }
 
-  function switchView(view){
+  function switchView(view, opts){
+    opts = opts || {};
     state.view = view;
-    state.q = '';
-    state.assetId = null;
+    if(!opts.keepQuery) state.q = '';
+    state.assetId = opts.assetId || null;
+    if(state.assetEdit) flushAssetEdit();
     state.assetEdit = null;
     if(location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
     render();
@@ -5050,17 +5128,154 @@
     openInfo('本地数据服务', '工作台数据保存在 data/workbench.db（SQLite）。\nCSV 备份可通过右上角「导出 CSV」或 /api/tables/{topic|calendar|review|asset}/export.csv 获取。');
   });
 
+  /* ---------- 全局搜索：选题 / 排期 / 素材 ---------- */
   var globalSearch = $('globalSearch');
+  var globalSearchWrap = $('globalSearchWrap');
+  var globalResults = $('globalResults');
+  var GS = { items:[], active:-1, timer:null };
+
+  function gsText(v){
+    if(v == null) return '';
+    if(Object.prototype.toString.call(v) === '[object Array]') return v.join(' ');
+    return String(v);
+  }
+  function gsMatch(rec, fields, q){
+    var hay = '';
+    for(var i = 0; i < fields.length; i++) hay += ' ' + gsText(rec[fields[i]]);
+    return hay.toLowerCase().indexOf(q) >= 0;
+  }
+  function gsCollect(raw){
+    var q = String(raw || '').trim().toLowerCase();
+    var out = [];
+    if(!q) return out;
+    DATA.topic.forEach(function(r){
+      if(gsMatch(r, ['选题','切入角度','选题ID','标签','参考来源','状态'], q)){
+        out.push({ module:'topic', id:r['_id'], title:r['选题'] || '（未命名选题）', meta:[r['选题ID'], r['状态']].filter(Boolean).join(' · '), rec:r });
+      }
+    });
+    DATA.calendar.forEach(function(r){
+      if(gsMatch(r, ['标题','排期ID','选题ID','备注','平台','标签','内容形式','当前阶段','负责人'], q)){
+        out.push({ module:'calendar', id:r['_id'], title:r['标题'] || '（未命名排期）', meta:[r['排期ID'], fmtDateTime(r['计划发布时间'])].filter(Boolean).join(' · '), rec:r });
+      }
+    });
+    DATA.asset.forEach(function(r){
+      if(gsMatch(r, ['标题','成稿Markdown','配图说明','语音复盘','素材ID','关联选题ID','关联排期ID','关键词','平台'], q)){
+        out.push({ module:'asset', id:r['_id'], title:r['标题'] || '（未命名素材）', meta:[r['素材ID'], gsText(r['平台'])].filter(Boolean).join(' · '), rec:r });
+      }
+    });
+    return out;
+  }
+  function gsClose(){
+    GS.items = [];
+    GS.active = -1;
+    if(globalResults){ globalResults.classList.remove('on'); globalResults.innerHTML = ''; }
+  }
+  function gsRender(){
+    if(!globalSearch || !globalResults) return;
+    var q = globalSearch.value.trim();
+    if(!q){ gsClose(); return; }
+    var all = gsCollect(q);
+    var groups = { topic:[], calendar:[], asset:[] };
+    all.forEach(function(it){
+      if(groups[it.module].length < 4) groups[it.module].push(it);
+    });
+    GS.items = groups.topic.concat(groups.calendar, groups.asset);
+    if(!GS.items.length){
+      globalResults.innerHTML = '<div class="gs-empty">没有找到「' + esc(q) + '」相关的选题、排期或素材</div>';
+      globalResults.classList.add('on');
+      GS.active = -1;
+      return;
+    }
+    if(GS.active >= GS.items.length) GS.active = GS.items.length - 1;
+    var labels = { topic:'选题池', calendar:'内容排期', asset:'素材库' };
+    var icons = { topic:'lightbulb', calendar:'calendar_month', asset:'grid_view' };
+    var html = '';
+    ['topic','calendar','asset'].forEach(function(mod){
+      if(!groups[mod].length) return;
+      html += '<div class="gs-group">' + labels[mod] + '</div>';
+      groups[mod].forEach(function(it){
+        var idx = GS.items.indexOf(it);
+        html += '<button class="gs-item' + (idx === GS.active ? ' on' : '') + '" data-gs="' + idx + '" type="button" role="option">'
+          + '<span class="material-symbols-outlined">' + icons[mod] + '</span>'
+          + '<span class="gs-main"><b>' + esc(it.title) + '</b><i>' + esc(it.meta) + '</i></span></button>';
+      });
+    });
+    globalResults.innerHTML = html;
+    globalResults.classList.add('on');
+  }
+  function gsOpen(item){
+    if(!item) return;
+    gsClose();
+    if(item.module === 'asset'){
+      state.q = '';
+      switchView('assets', { assetId:item.id });
+      return;
+    }
+    if(item.module === 'topic'){
+      switchView('topics');
+      openEditor('topic', item.id);
+      return;
+    }
+    switchView('calendar');
+    openEditor('calendar', item.id);
+  }
+  function gsSubmit(){
+    if(!globalSearch) return;
+    var q = globalSearch.value.trim();
+    if(!q){ gsClose(); return; }
+    if(GS.active >= 0 && GS.items[GS.active]){ gsOpen(GS.items[GS.active]); return; }
+    var all = gsCollect(q);
+    if(!all.length){ toast('没有找到与「' + q + '」相关的记录', 'err'); return; }
+    var counts = { topic:0, calendar:0, asset:0 };
+    all.forEach(function(it){ counts[it.module]++; });
+    var current = { topics:'topic', calendar:'calendar', assets:'asset' }[state.view];
+    var module = 'topic';
+    if(current && counts[current]) module = current;
+    else if(counts.calendar > counts.topic && counts.calendar >= counts.asset) module = 'calendar';
+    else if(counts.asset > counts.topic && counts.asset > counts.calendar) module = 'asset';
+    var view = module === 'topic' ? 'topics' : module === 'calendar' ? 'calendar' : 'assets';
+    gsClose();
+    state.q = q;
+    switchView(view, { keepQuery:true });
+  }
+
   if(globalSearch){
+    globalSearch.addEventListener('input', function(){
+      clearTimeout(GS.timer);
+      GS.timer = setTimeout(gsRender, 140);
+    });
+    globalSearch.addEventListener('focus', function(){
+      if(this.value.trim()) gsRender();
+    });
     globalSearch.addEventListener('keydown', function(e){
-      if(e.key === 'Enter'){
-        var q = this.value.trim();
-        if(state.view !== 'topics' && state.view !== 'assets') state.view = 'topics';
-        state.q = q;
-        render();
+      if(e.isComposing || e.keyCode === 229) return;
+      if(e.key === 'Enter'){ e.preventDefault(); gsSubmit(); return; }
+      if(e.key === 'Escape'){ gsClose(); this.blur(); return; }
+      if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+        if(!GS.items.length) gsRender();
+        if(!GS.items.length) return;
+        e.preventDefault();
+        GS.active = e.key === 'ArrowDown'
+          ? (GS.active + 1) % GS.items.length
+          : (GS.active <= 0 ? GS.items.length - 1 : GS.active - 1);
+        gsRender();
+        var onEl = globalResults ? globalResults.querySelector('.gs-item.on') : null;
+        if(onEl && onEl.scrollIntoView) onEl.scrollIntoView({ block:'nearest' });
       }
     });
   }
+  if(globalResults){
+    globalResults.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    globalResults.addEventListener('click', function(e){
+      var btn = e.target && e.target.closest ? e.target.closest('[data-gs]') : null;
+      if(!btn) return;
+      var idx = Number(btn.getAttribute('data-gs'));
+      gsOpen(GS.items[idx]);
+    });
+  }
+  document.addEventListener('click', function(e){
+    if(globalSearchWrap && e.target && !globalSearchWrap.contains(e.target)) gsClose();
+  });
   document.addEventListener('keydown', function(e){
     if((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')){
       e.preventDefault();
@@ -5216,6 +5431,7 @@
       state.assetEdit.draft['成稿Markdown'] = mdTa.value;
       var mdPreview = $('assetPreviewMd');
       if(mdPreview) mdPreview.innerHTML = mdToHtml(mdTa.value);
+      assetAutosaveSoon();
       return;
     }
     var actEl = t.closest ? t.closest('[data-act]') : null;
@@ -5238,19 +5454,35 @@
     if(act === 'prevMonth'){ shiftMonth(-1); return; }
     if(act === 'nextMonth'){ shiftMonth(1); return; }
     if(act === 'todayMonth'){ var n = new Date(); state.month = { y:n.getFullYear(), m:n.getMonth() }; render(); return; }
-    if(act === 'openAsset'){ e.preventDefault(); state.assetId = id; render(); return; }
+    if(act === 'openAsset'){
+      e.preventDefault();
+      if(state.assetEdit && state.assetEdit.id !== id){
+        flushAssetEdit();
+        state.assetEdit = null;
+      }
+      state.assetId = id;
+      render();
+      return;
+    }
     if(act === 'assetEdit'){
       e.preventDefault();
       var targetAsset = null;
       DATA.asset.forEach(function(r){ if(r['_id'] === id) targetAsset = r; });
       if(!targetAsset) return;
+      clearTimeout(assetAutoTimer);
+      assetAutoTimer = null;
       state.assetEdit = { id: id, draft: {} };
       state.assetId = id;
       render();
-      scrollTop();
       return;
     }
-    if(act === 'assetEditCancel'){ e.preventDefault(); state.assetEdit = null; render(); return; }
+    if(act === 'assetEditCancel'){
+      e.preventDefault();
+      flushAssetEdit();
+      state.assetEdit = null;
+      render();
+      return;
+    }
     if(act === 'assetEditSave'){ e.preventDefault(); saveAssetInline(); return; }
     if(act === 'publish'){ e.preventDefault(); markPublished(id); return; }
     if(act === 'postpone'){ e.preventDefault(); postpone(id); return; }
@@ -5304,6 +5536,15 @@
     }
     if(act === 'statusTab'){
       state.status = actEl.getAttribute('data-val') || 'all';
+      render();
+      return;
+    }
+    if(act === 'clearSearch'){
+      e.preventDefault();
+      state.q = '';
+      var gsInput = $('globalSearch');
+      if(gsInput) gsInput.value = '';
+      gsClose();
       render();
       return;
     }
@@ -7166,6 +7407,287 @@
     }catch(err){ /* 浏览器不支持时退化为手动刷新 */ }
   }
 
+  /* ---------- 新手操作指引 ---------- */
+  var TOUR_DELAY = 6500;
+  var TOUR_TOTAL = 7;
+  var TOUR = { on:false, index:0, timer:null, manualPause:false, hover:false, prevPlatform:null, retimer:null };
+
+  var TOUR_STEPS = [
+    {
+      step:1, view:'home', title:'总览：一条内容流水线',
+      text:'选题 → 排期 → 发布 → 复盘 → 沉淀，一个页面管好你的内容全流程。左侧图标切换模块，所有数据都保存在本机。',
+      target:'#flowTagline'
+    },
+    {
+      step:2, beat:'1/4', view:'topics', title:'添加对标账号',
+      text:'在选题池右侧点「抖音」切换平台，粘贴对标账号主页链接后点「添加」。系统每天自动抓取最近 7 天的作品。',
+      target:'#benchAddBlock',
+      before:function(){ state.trend.addPlatform = '抖音'; rerenderTrendInspector(true); }
+    },
+    {
+      step:2, beat:'2/4', view:'topics', title:'视频出现后一键转选题',
+      text:'抓取到的视频会出现在下方列表。点「转选题」就能带着标题、链接和切入角度保存进选题池，不用手动复制。',
+      target:'[data-act="benchToTopic"]', fallback:'#benchWorks'
+    },
+    {
+      step:2, beat:'3/4', view:'topics', title:'也可以手动录入新选题',
+      text:'没有对标账号也没关系，点「录入新选题」直接新建，填写选题名称、切入角度和爆款潜力评分即可。',
+      target:'[data-act="topicNew"]'
+    },
+    {
+      step:2, beat:'4/4', view:'topics', title:'确定选题后就可以排期',
+      text:'选题确定后点行内「排期」，选择计划发布时间，并更新当前状态。排期会同步出现在内容日历里。',
+      target:'[data-act="toSchedule"]'
+    },
+    {
+      step:3, view:'calendar', title:'新增排期计划',
+      text:'在内容日历点「新建排期计划」，填写标题、平台和计划发布时间。把「当前阶段」选到「待发布」，发布中心就会自动生成发布任务。',
+      target:'[data-act="new"][data-db="calendar"]'
+    },
+    {
+      step:4, view:'publish', title:'发布中心：到点自动发布',
+      text:'排期更新为「待发布」后，这里会自动生成发布计划；到了计划时间，视频或图文会自动发布到已登录的平台。也可以点「扫描待发布排期」立即补生成。',
+      target:'#publishHero'
+    },
+    {
+      step:5, view:'review', title:'数据复盘',
+      text:'右上角可以切换「近 7 / 14 / 30 天」的数据范围，再点各平台的同步按钮，就能把最近这段时间的视频数据拉回来对比。',
+      target:'#reviewControls'
+    },
+    {
+      step:6, view:'assets', title:'素材库沉淀',
+      text:'成稿会沉淀在这里。选中素材可以编辑内容、点「关联排期」挂到对应内容上，也可以补录语音复盘。',
+      target:'[data-act="linkSchedule"]', fallback:'[data-act="new"][data-db="asset"]'
+    },
+    {
+      step:7, view:'connections', title:'连接管理：一键登录',
+      text:'在连接设置为抖音等渠道点「一键登录获取 Cookie」，登录一次后，数据采集和自动发布都会复用这个登录态。Cookie 只保存在本机，不会上传或泄露。',
+      target:'[data-conn-card="抖音"] [data-act="connLogin"]', fallback:'#connSecurity'
+    }
+  ];
+
+  function tourEls(){
+    return {
+      layer:$('tourLayer'), spot:$('tourSpot'), cursor:$('tourCursor'), card:$('tourCard'),
+      title:$('tourTitle'), text:$('tourText'), step:$('tourStep'), bar:$('tourBar'),
+      prev:$('tourPrev'), pause:$('tourPause'), next:$('tourNext')
+    };
+  }
+
+  function tourStart(){
+    var els = tourEls();
+    if(!els.layer || !els.card) return;
+    try{ localStorage.setItem('wmc.tour.onboarded', '1'); }catch(err){}
+    clearTimeout(TOUR.retimer);
+    TOUR.on = true;
+    TOUR.manualPause = false;
+    TOUR.hover = false;
+    TOUR.prevPlatform = state.trend.addPlatform;
+    els.layer.classList.add('on');
+    els.layer.setAttribute('aria-hidden', 'false');
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    tourGo(0);
+  }
+
+  function tourStop(){
+    var els = tourEls();
+    TOUR.on = false;
+    clearTimeout(TOUR.timer);
+    clearTimeout(TOUR.retimer);
+    TOUR.timer = null;
+    TOUR.retimer = null;
+    TOUR.manualPause = false;
+    TOUR.hover = false;
+    if(els.layer){
+      els.layer.classList.remove('on', 'paused', 'playing', 'no-target');
+      els.layer.setAttribute('aria-hidden', 'true');
+    }
+    if(els.spot) els.spot.style.opacity = '0';
+    if(els.cursor) els.cursor.classList.remove('on', 'tap');
+    if(TOUR.prevPlatform != null && state.trend){
+      state.trend.addPlatform = TOUR.prevPlatform;
+      TOUR.prevPlatform = null;
+      if(state.view === 'topics') rerenderTrendInspector(true);
+    }
+  }
+
+  function tourGo(i){
+    var els = tourEls();
+    if(!els.layer || !TOUR.on) return;
+    if(i >= TOUR_STEPS.length){
+      tourStop();
+      toast('新手引导已完成，点右下角「新手指引」可以随时重播', 'ok');
+      return;
+    }
+    if(i < 0) i = 0;
+    clearTimeout(TOUR.timer);
+    clearTimeout(TOUR.retimer);
+    TOUR.index = i;
+    var step = TOUR_STEPS[i];
+    if(state.view !== step.view) switchView(step.view);
+
+    els.step.textContent = '第 ' + step.step + ' 步 / 共 ' + TOUR_TOTAL + ' 步' + (step.beat ? ' · ' + step.beat : '');
+    els.title.textContent = step.title;
+    els.text.textContent = step.text;
+    els.prev.disabled = i === 0;
+    els.next.textContent = i === TOUR_STEPS.length - 1 ? '完成' : '下一步';
+    els.pause.textContent = TOUR.manualPause ? '继续' : '暂停';
+
+    els.layer.classList.remove('playing', 'paused');
+    if(els.bar){
+      els.bar.style.animation = 'none';
+      void els.bar.offsetWidth;
+      els.bar.style.animation = '';
+    }
+
+    var settle = state.view === step.view ? 60 : 380;
+    setTimeout(function(){
+      if(!TOUR.on || TOUR.index !== i) return;
+      if(step.before) step.before();
+      setTimeout(function(){
+        if(!TOUR.on || TOUR.index !== i) return;
+        tourPaint(step, i, true);
+        tourArm();
+        TOUR.retimer = setTimeout(function(){
+          if(TOUR.on && TOUR.index === i) tourPaint(step, i, false);
+        }, 850);
+      }, 120);
+    }, settle);
+  }
+
+  function tourTarget(step){
+    var el = null;
+    try{ el = document.querySelector(step.target); }catch(err){ el = null; }
+    if(!el && step.fallback){
+      try{ el = document.querySelector(step.fallback); }catch(err2){ el = null; }
+    }
+    return el;
+  }
+
+  function tourPaint(step, index, withTap){
+    var els = tourEls();
+    if(!els.layer || !els.spot || !els.card || !TOUR.on) return;
+    var el = tourTarget(step);
+    var rect = null;
+    if(el){
+      try{ el.scrollIntoView({ block:'center', inline:'nearest' }); }catch(err){}
+      void document.body.offsetHeight;
+      rect = el.getBoundingClientRect();
+      if(rect.width < 2 && rect.height < 2) rect = null;
+    }
+
+    var vw = window.innerWidth, vh = window.innerHeight, pad = 8;
+    var sx = 0, sy = 0, sw = 0, sh = 0;
+    if(rect){
+      sx = Math.max(4, rect.left - pad);
+      sy = Math.max(4, rect.top - pad);
+      sw = Math.min(vw - sx - 4, rect.width + pad * 2);
+      sh = Math.min(vh - sy - 4, rect.height + pad * 2);
+      els.spot.style.opacity = '1';
+      els.spot.style.left = sx + 'px';
+      els.spot.style.top = sy + 'px';
+      els.spot.style.width = sw + 'px';
+      els.spot.style.height = sh + 'px';
+      els.layer.classList.remove('no-target');
+      els.cursor.style.left = (sx + sw / 2) + 'px';
+      els.cursor.style.top = (sy + sh / 2) + 'px';
+      els.cursor.classList.add('on');
+      if(withTap){
+        els.cursor.classList.remove('tap');
+        void els.cursor.offsetWidth;
+        setTimeout(function(){
+          if(TOUR.on && TOUR.index === index) els.cursor.classList.add('tap');
+        }, 460);
+      }
+    } else {
+      els.spot.style.opacity = '0';
+      els.cursor.classList.remove('on', 'tap');
+      els.layer.classList.add('no-target');
+    }
+
+    var CW = 340, CH = els.card.offsetHeight || 210, gap = 18, topBar = 88;
+    var left, top;
+    var spaceRight = vw - (sx + sw) - gap;
+    var spaceLeft = sx - gap;
+    var spaceBelow = vh - (sy + sh) - gap;
+    var spaceAbove = sy - gap;
+    if(rect && spaceRight >= CW){ left = sx + sw + gap; top = sy; }
+    else if(rect && spaceLeft >= CW){ left = sx - gap - CW; top = sy; }
+    else if(rect && spaceBelow >= CH + 8){ left = sx; top = sy + sh + gap; }
+    else if(rect && spaceAbove >= CH + 8){ left = sx; top = Math.max(topBar, sy - gap - CH); }
+    else if(rect){ left = Math.max(12, vw - CW - 16); top = Math.max(topBar, Math.min(sy, vh - CH - 24)); }
+    else { left = (vw - CW) / 2; top = Math.max(topBar, vh - CH - 120); }
+    left = Math.max(12, Math.min(left, vw - CW - 12));
+    top = Math.max(topBar, Math.min(top, vh - CH - 24));
+    els.card.style.left = left + 'px';
+    els.card.style.top = top + 'px';
+  }
+
+  function tourArm(){
+    var els = tourEls();
+    if(!TOUR.on || !els.layer) return;
+    clearTimeout(TOUR.timer);
+    TOUR.timer = null;
+    if(TOUR.manualPause || TOUR.hover){
+      els.layer.classList.remove('playing');
+      els.layer.classList.add('paused');
+      return;
+    }
+    els.layer.classList.remove('paused');
+    els.layer.classList.add('playing');
+    TOUR.timer = setTimeout(function(){ tourGo(TOUR.index + 1); }, TOUR_DELAY);
+  }
+
+  var tourFabEl = $('tourFab');
+  if(tourFabEl){
+    tourFabEl.addEventListener('click', function(){
+      if(TOUR.on) tourStop();
+      tourStart();
+    });
+  }
+  var tourCardEl = $('tourCard');
+  if(tourCardEl){
+    tourCardEl.addEventListener('click', function(e){
+      var t = e.target;
+      if(!t || !t.closest) return;
+      if(t.closest('#tourClose')){ tourStop(); return; }
+      if(t.closest('#tourPrev')){ if(TOUR.on) tourGo(TOUR.index - 1); return; }
+      if(t.closest('#tourNext')){ if(TOUR.on) tourGo(TOUR.index + 1); return; }
+      if(t.closest('#tourPause')){
+        if(!TOUR.on) return;
+        TOUR.manualPause = !TOUR.manualPause;
+        var pauseBtn = $('tourPause');
+        if(pauseBtn) pauseBtn.textContent = TOUR.manualPause ? '继续' : '暂停';
+        tourArm();
+        return;
+      }
+    });
+    tourCardEl.addEventListener('mouseenter', function(){
+      TOUR.hover = true;
+      tourArm();
+    });
+    tourCardEl.addEventListener('mouseleave', function(){
+      TOUR.hover = false;
+      tourArm();
+    });
+  }
+  document.addEventListener('keydown', function(e){
+    if(!TOUR.on) return;
+    if(e.key === 'Escape'){ tourStop(); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); tourGo(TOUR.index + 1); }
+    else if(e.key === 'ArrowLeft'){ e.preventDefault(); tourGo(TOUR.index - 1); }
+  });
+  window.addEventListener('resize', function(){
+    if(TOUR.on && TOUR_STEPS[TOUR.index]) tourPaint(TOUR_STEPS[TOUR.index], TOUR.index, false);
+  });
+
+  function tourMaybeAutoStart(){
+    var seen = '';
+    try{ seen = localStorage.getItem('wmc.tour.onboarded') || ''; }catch(err){ seen = ''; }
+    if(seen) return;
+    setTimeout(function(){ if(!TOUR.on) tourStart(); }, 900);
+  }
+
   function boot(){
     var initial = (location.hash || '').replace(/^#/, '');
     if(['home','topics','calendar','publish','review','assets','connections'].indexOf(initial) >= 0) state.view = initial;
@@ -7177,7 +7699,7 @@
       loadBenchmarks(),
       loadLicenseStatus(),
       loadPublishData().catch(function(){ /* 发布服务不可用时不影响其它页面 */ })
-    ]).then(loadAllData);
+    ]).then(loadAllData).then(tourMaybeAutoStart);
   }
   boot();
 })();

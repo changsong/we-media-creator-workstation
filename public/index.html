@@ -74,14 +74,15 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
   <header class="fixed top-0 left-20 right-0 h-20 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-space-lg flex items-center justify-between gap-space-md">
     <div class="flex flex-col justify-center min-w-0 pr-space-md">
       <h1 class="text-headline-sm font-headline-sm text-on-surface tracking-tight truncate">媒管家</h1>
-      <p class="text-label-sm font-label-sm text-on-surface-variant truncate">选题 → 排期 → 发布 → 复盘 → 沉淀，一个页面管好你的内容全流程</p>
+      <p id="flowTagline" class="text-label-sm font-label-sm text-on-surface-variant truncate">选题 → 排期 → 发布 → 复盘 → 沉淀，一个页面管好你的内容全流程</p>
     </div>
-    <div class="hidden xl:flex items-center max-w-xs w-full">
+    <div id="globalSearchWrap" class="hidden xl:flex items-center max-w-xs w-full relative">
       <div class="flex items-center w-full bg-surface-container-lowest rounded-full px-space-md py-space-xs shadow-sm">
         <span class="material-symbols-outlined text-on-surface-variant text-lg mr-space-xs">search</span>
-        <input id="globalSearch" class="w-full bg-transparent text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant focus:outline-none" placeholder="搜索全库选题、内容或排期..." type="text">
+        <input id="globalSearch" class="w-full bg-transparent text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant focus:outline-none" placeholder="搜索全库选题、内容或排期..." type="text" autocomplete="off">
         <span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">⌘K</span>
       </div>
+      <div id="globalResults" class="global-results" role="listbox"></div>
     </div>
     <div class="flex items-center gap-space-md flex-shrink-0">
       <div id="sync" class="hidden lg:flex items-center gap-space-xs bg-surface-container-lowest px-space-md py-1.5 rounded-full shadow-sm">
@@ -324,6 +325,31 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
 </div>
 
 <div id="toasts"></div>
+
+<button id="tourFab" class="tour-fab" type="button" aria-label="新手操作指引" title="新手操作指引">
+  <span class="material-symbols-outlined">school</span>
+  <span class="tour-fab-text">新手指引</span>
+</button>
+
+<div id="tourLayer" aria-hidden="true">
+  <div id="tourSpot"></div>
+  <div id="tourCursor"><span class="material-symbols-outlined">touch_app</span></div>
+  <div id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+    <div class="tour-head">
+      <span class="tour-kicker">新手操作指引</span>
+      <span id="tourStep" class="tour-step"></span>
+      <button id="tourClose" class="tour-x" type="button" aria-label="关闭指引"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <h3 id="tourTitle" class="tour-title"></h3>
+    <p id="tourText" class="tour-text"></p>
+    <div class="tour-progress"><i id="tourBar"></i></div>
+    <div class="tour-foot">
+      <button id="tourPrev" class="tour-btn" type="button">上一步</button>
+      <button id="tourPause" class="tour-btn" type="button">暂停</button>
+      <button id="tourNext" class="tour-btn tour-btn-primary" type="button">下一步</button>
+    </div>
+  </div>
+</div>
 
 <script src="/app.js"></script>
 </body>
