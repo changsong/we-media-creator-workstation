@@ -1,8 +1,31 @@
 export const CHANGELOG = [
   {
+    version: '2.2.0',
+    date: '2026-11-09',
+    current: true,
+    titleZh: '全局搜索与素材库内联编辑',
+    titleEn: 'Global search and inline asset editing',
+    itemsZh: [
+      '顶部搜索可跨选题池、内容日历与素材库检索，结果支持一键跳转，⌘K / Ctrl+K 随时唤起。',
+      '素材库「编辑此素材」改为当前页内联编辑，成稿列表与详情/编辑区按 30% / 70% 分栏，不再跳转页面。',
+      '素材编辑自动保存：输入后约 0.7 秒写入本地库，右上角实时显示保存状态，点「完成」退出编辑。',
+      '素材平台支持多选，关键词保持多选；平台、关键词两个控件各占一整行，选择更清晰。',
+      '内容日历搜索时会按关键词过滤排期，并提供一键清除搜索条件。',
+      '新增新手操作指引，可随时从右下角重新播放。',
+    ],
+    itemsEn: [
+      'The header search now covers the idea pool, content calendar, and asset library, with one-click jump to results and ⌘K / Ctrl+K to focus.',
+      '“Edit this asset” now edits inline on the current page: the manuscript list and detail/editor are split 30% / 70% instead of opening a separate page.',
+      'Asset edits save automatically about 0.7 seconds after typing, with live save status in the header; click Done to leave the editor.',
+      'Asset platforms support multi-select, keywords stay multi-select, and both controls span a full row for clearer choices.',
+      'Calendar search now filters schedules by keyword with a one-click clear button.',
+      'Added an onboarding guide that can be replayed from the bottom-right corner at any time.',
+    ],
+  },
+  {
     version: '2.1.0',
     date: '2026-11-08',
-    current: true,
+    current: false,
     titleZh: '对标账号监控与灰豚数据源',
     titleEn: 'Competitor account monitoring and Huitun data',
     itemsZh: [
