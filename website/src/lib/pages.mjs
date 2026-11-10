@@ -382,7 +382,7 @@ function pricingPage(lang, checkout = '') {
   const purchase = faqTopics[lang].find((group) => group.group === (isEn ? 'Purchasing' : '购买'))?.items || [];
   const included = isEn ? PLAN_FEATURES_EN : PLAN_FEATURES_ZH;
   const stats = isEn
-    ? [['$120', '12 months paid monthly'], ['$100', 'yearly — save $20'], ['$200', 'lifetime — about 20 months of monthly']]
+    ? [['$120', '12 months paid monthly'], ['$100', 'yearly, save $20'], ['$200', 'lifetime, about 20 months of monthly']]
     : [['¥598.8', '按月付满一年'], ['¥500', '年付，省 ¥98.8'], ['¥980', '终身，约等于 20 个月月付']];
 
   const body = [
@@ -391,7 +391,7 @@ function pricingPage(lang, checkout = '') {
       eyebrow: isEn ? 'Pricing' : '价格方案',
       title: isEn ? 'One license. Three ways to pay.' : '一份授权，三种买法',
       description: isEn
-        ? 'Every plan includes all features and all eight platforms. Only the billing rhythm and duration differ — no cut-down tiers.'
+        ? 'Every plan includes all features and all eight platforms. Only the billing rhythm and duration differ, with no cut-down tiers.'
         : '所有方案都包含全部功能与八个平台，区别只在付费周期与有效期。没有功能阉割版本，也没有隐藏加价。',
       breadcrumbHtml: bc.html,
       actions: primaryButton({ href: routeTo('/download/', lang), label: isEn ? 'Download free first' : '先免费下载体验', download: true })
@@ -401,8 +401,8 @@ function pricingPage(lang, checkout = '') {
       body: `<div class="max-w-6xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter items-stretch">${pricingCards({ lang, detailed: true, checkout })}</div>
         <p class="mt-6 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'Prices are in USD. A license activates up to three devices. Checkout shows the final refund terms.' : '价格为人民币（CNY）。每份授权最多同时激活 3 台设备，退款条款以购买页为准。'}</p>
-        <p class="mt-2 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'Not decided yet? Claim a free trial license with your email — auto-publishing works during the trial, and you can upgrade any time.' : '还没决定？可以先用邮箱领取免费试用授权，试用期内自动发布可用，之后随时升级付费方案。'} <a class="text-primary underline decoration-gold-accent decoration-2 underline-offset-2" href="${KEYGATE_TRIAL_URL}" target="_blank" rel="noopener">${isEn ? 'Claim free trial' : '免费领取试用授权'}</a></p>
-        <p class="mt-2 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'After purchase, open the desktop app, go to “Account &amp; License” in the lower-left corner, and sign in with your purchase email to activate — or paste the license key.' : '购买后打开桌面端，点击左下角「账号与授权」，用购买邮箱接收验证码登录即可自动激活；也可以直接粘贴授权码。'} <a class="text-primary underline decoration-gold-accent decoration-2 underline-offset-2" href="${KEYGATE_PORTAL_URL}" target="_blank" rel="noopener">${isEn ? 'Manage my licenses' : '管理我的授权'}</a></p>
+        <p class="mt-2 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'Not decided yet? Claim a free trial license with your email. Auto-publishing works during the trial, and you can upgrade any time.' : '还没决定？可以先用邮箱领取免费试用授权，试用期内自动发布可用，之后随时升级付费方案。'} <a class="text-primary underline decoration-gold-accent decoration-2 underline-offset-2" href="${KEYGATE_TRIAL_URL}" target="_blank" rel="noopener">${isEn ? 'Claim free trial' : '免费领取试用授权'}</a></p>
+        <p class="mt-2 text-center font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'After purchase, open the desktop app, go to “Account &amp; License” in the lower-left corner, and sign in with your purchase email to activate, or paste the license key.' : '购买后打开桌面端，点击左下角「账号与授权」，用购买邮箱接收验证码登录即可自动激活；也可以直接粘贴授权码。'} <a class="text-primary underline decoration-gold-accent decoration-2 underline-offset-2" href="${KEYGATE_PORTAL_URL}" target="_blank" rel="noopener">${isEn ? 'Manage my licenses' : '管理我的授权'}</a></p>
       </div>`,
     }),
     contentSection({
@@ -1115,7 +1115,7 @@ function feedbackPage(lang) {
         </div>
         <div class="rounded-2xl bg-surface-container-low p-5">
           <div class="font-label-capsule text-label-capsule text-on-surface mb-1">${isEn ? 'Need pricing first?' : '想先看价格？'}</div>
-          <p class="font-body-sm text-body-sm text-on-surface-variant mb-3">${isEn ? 'Monthly $10, yearly $100, lifetime $200 — same features in every plan.' : '月付 ¥49.9、年付 ¥500、终身 ¥980，所有方案功能一致。'}</p>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mb-3">${isEn ? 'Monthly $10, yearly $100, lifetime $200, with the same features in every plan.' : '月付 ¥49.9、年付 ¥500、终身 ¥980，所有方案功能一致。'}</p>
           <a class="font-label-capsule text-body-sm text-primary underline decoration-gold-accent underline-offset-2" href="${routeTo('/pricing/', lang)}">${isEn ? 'See pricing' : '查看价格方案'}</a>
         </div>
       </aside>

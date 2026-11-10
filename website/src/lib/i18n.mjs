@@ -161,7 +161,7 @@ export const UI = {
     closeMenu: 'Close menu',
     language: 'Language',
     footer: {
-      desc: 'A content operations workbench for serious creators. Local storage, eight-platform publishing, and automatic analytics — without tab overload or copying numbers by hand.',
+      desc: 'A content operations workbench for serious creators. Local storage, eight-platform publishing, and automatic analytics, without tab overload or copying numbers by hand.',
       status: 'Running locally',
       stack: 'Electron 45 + SQLite',
       cols: [

@@ -160,14 +160,14 @@ const PAIN = {
       win: 'Reclaim 2–3 hours of mechanical work every day',
     },
     {
-      pain: 'Numbers are scattered across dashboards. Reviews mean copying figures by hand — and when you get busy, reviews stop.',
+      pain: 'Numbers are scattered across dashboards. Reviews mean copying figures by hand, so when you get busy, reviews stop.',
       title: 'Analytics come back to you.',
       body: 'Views, likes, and follower growth from Douyin, Xiaohongshu, WeChat Channels, and Official Accounts land in one review table, with rates calculated for you.',
       icon: 'query_stats',
       win: 'No more manual copy-paste; your data stays',
     },
     {
-      pain: 'Cloud tools make you worry about cookie leaks, bans, and privacy — while platform APIs are out of reach for individual creators.',
+      pain: 'Cloud tools make you worry about cookie leaks, bans, and privacy, and platform APIs are out of reach for individual creators.',
       title: 'Your data stays on your computer.',
       body: 'Built local-first. Login cookies, assets, and review databases live in SQLite on your machine, with no cloud hosting.',
       icon: 'encrypted',
@@ -222,7 +222,7 @@ const STEPS = {
   ],
   en: [
     ['Build an idea pool', 'Check competitive heat with the viral radar, then store the angle and score. Search, filter, and export whenever you need.', 'lightbulb'],
-    ['Plan the month', 'Nine production stages — copy, rough cut, fine cut, final, review — on one timeline.', 'calendar_view_month'],
+    ['Plan the month', 'Nine production stages on one timeline: copy, rough cut, fine cut, final, and review.', 'calendar_view_month'],
     ['Run the publish queue', 'Schedule all eight platforms with multi-ratio covers. It wakes up on time and verifies the result.', 'rocket_launch'],
     ['Review automatically', 'Metrics from all eight platforms land in your local reports, with engagement, growth, and cadence calculated.', 'monitoring'],
     ['Archive and reuse', 'Final copy, image notes, keywords, and voice memos stay linked to ideas and schedules.', 'inventory_2'],
@@ -244,7 +244,7 @@ export function workflow({ lang }) {
     ${sectionHeading({
       lang,
       eyebrow: isEn ? 'One continuous loop' : '全流程贯通',
-      title: isEn ? 'From first idea to review, in five simple steps' : '从灵感到复盘，五步极简闭环',
+      title: isEn ? 'From first idea to review, in five simple steps' : '从灵感到复盘，五个步骤走完整个流程',
       desc: isEn
         ? 'Stop stitching together scattered tools. Every key moment of a creator’s day is covered.'
         : '不再四处拼凑碎片工具，完整覆盖专业创作者日常的每一个关键节点。',
@@ -268,9 +268,9 @@ const BENEFITS = {
     ['桌面常驻：关窗也在跑', '最小化到托盘，定时发布和数据同步继续；客户端自动更新，平台改版跟着适配。', 'laptop_mac'],
   ],
   en: [
-    ['A home for every idea', 'Check competitive heat with the viral radar, then capture angle, tags, and potential score. Search, filter, export — never dig through notes again.', 'psychology'],
+    ['A home for every idea', 'Check competitive heat with the viral radar, then capture angle, tags, and potential score. Search, filter, and export instead of digging through notes.', 'psychology'],
     ['See the whole month', 'Nine production stages, owners, formats, and publish times on one timeline.', 'date_range'],
-    ['Queue it. It publishes', 'All eight platforms at once — video, image posts, multi-ratio covers. Retry failures, verify results.', 'queue'],
+    ['Queue it. It publishes', 'All eight platforms at once: video, image posts, and multi-ratio covers. Retry failures, verify results.', 'queue'],
     ['Stop copying numbers', 'All eight platforms flow back automatically (Zhihu currently covers video works), with engagement, growth, and cadence calculated.', 'insights'],
     ['Reuse what works', 'Manuscripts, image notes, keywords, and voice memos archived and linked to ideas and schedules.', 'library_books'],
     ['No API keys required', 'Sign in through an isolated browser window. Cookies stay local; sign in again when they expire.', 'vpn_key'],
@@ -313,7 +313,7 @@ const LIMITS = {
     ['devices', 'Needs a local browser', 'Publishing and some data collection rely on Chrome or Edge installed on your machine.'],
     ['verified_user', 'Sign in with a scan', 'Log in to each platform once in an isolated window. Cookies stay local; sign in again when they expire.'],
     ['update', 'Platform changes happen', 'Pages change and may cause brief failures. We ship compatibility updates and let you retry safely.'],
-    ['person', 'Built for one person', 'This version is designed for individual creators — no cloud team collaboration or remote sharing yet.'],
+    ['person', 'Built for one person', 'This version is designed for individual creators, with no cloud team collaboration or remote sharing yet.'],
   ],
 };
 
@@ -430,7 +430,7 @@ const PREVIEW_LABELS = {
   en: {
     eyebrow: 'Transparent pricing',
     title: 'One license, three ways to pay. Same features in every plan.',
-    desc: 'No cut-down tiers. Every feature included — choose the rhythm that fits your cash flow.',
+    desc: 'No cut-down tiers. Every plan includes every feature, so choose the billing rhythm that fits your cash flow.',
     cta: { monthly: 'Start monthly', yearly: 'Subscribe yearly', lifetime: 'Buy lifetime' },
     popular: 'Most popular · Save $20',
     once: 'one-time',
@@ -536,11 +536,11 @@ export const FAQ_PREVIEW = {
     ['月付、年付与终身买断的功能有差异吗？', '功能完全一致，不设功能墙或低价阉割。唯一的差异是付费周期与授权期限：年付最具性价比，终身买断一次付费、终身免续费。'],
   ],
   en: [
-    ['Could my account get banned?', 'The app talks to platforms through Chrome or Edge on your own machine, using your own IP and signed-in session — never a shared relay. We add pacing and gentle retries. Automation is still subject to platform access restrictions, so we cannot promise zero risk.'],
+    ['Could my account get banned?', 'The app talks to platforms through Chrome or Edge on your own machine, using your own IP and signed-in session, never a shared relay. We add pacing and gentle retries. Automation is still subject to platform access restrictions, so we cannot promise zero risk.'],
     ['Where are my assets and data stored?', 'In a local SQLite database on your computer. Nothing is uploaded. You can browse schedules and reviews offline, and export CSV at any time.'],
     ['Do I need developer API credentials?', 'No. Individual creators cannot usually obtain enterprise API access anyway. Sign in with a QR code in an isolated browser window; the session stays on your machine.'],
     ['What if a platform redesign breaks automation?', 'We monitor platform changes and ship compatibility updates. Every publish is verified, and failed tasks can be retried safely without losing the schedule.'],
-    ['How many computers can use one license?', 'Each license activates up to three devices — a desktop, a laptop, and a spare, for example. You can unbind an old device in the client when you move.'],
+    ['How many computers can use one license?', 'Each license activates up to three devices, for example a desktop, a laptop, and a spare. You can unbind an old device in the client when you move.'],
     ['Are the three plans different in features?', 'No. Features are identical; only billing and duration differ. Yearly offers the best value, and lifetime is a one-time payment with no renewals.'],
   ],
 };
