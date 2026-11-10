@@ -1,0 +1,3 @@
+data/
+outreach/lists/*.csv
+!outreach/lists/douyin-sample.csv
