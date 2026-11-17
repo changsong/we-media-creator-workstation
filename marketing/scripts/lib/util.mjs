@@ -25,11 +25,89 @@ export function render(text, vars) {
   );
 }
 
+// 五个渠道的归一化标识、中文名和主页域名（含常见子域/短链）。
+export const PLATFORMS = [
+  { key: 'douyin', label: '抖音', hosts: ['douyin.com'] },
+  { key: 'kuaishou', label: '快手', hosts: ['kuaishou.com'] },
+  { key: 'xiaohongshu', label: '小红书', hosts: ['xiaohongshu.com', 'xhslink.com'] },
+  { key: 'channels', label: '视频号', hosts: ['channels.weixin.qq.com', 'weixin.qq.com'] },
+  { key: 'bilibili', label: 'B站', hosts: ['bilibili.com', 'b23.tv'] },
+];
+
+const PLATFORM_ALIASES = {
+  douyin: 'douyin', dy: 'douyin', '抖音': 'douyin',
+  kuaishou: 'kuaishou', ks: 'kuaishou', '快手': 'kuaishou',
+  xiaohongshu: 'xiaohongshu', xhs: 'xiaohongshu', red: 'xiaohongshu', redbook: 'xiaohongshu', '小红书': 'xiaohongshu',
+  channels: 'channels', shipinhao: 'channels', sph: 'channels', weixin: 'channels', '视频号': 'channels',
+  bilibili: 'bilibili', bili: 'bilibili', bzhan: 'bilibili', b23: 'bilibili', 'b站': 'bilibili',
+};
+
+export function normalizePlatform(value) {
+  const key = String(value || '').trim().toLowerCase();
+  if (!key) return '';
+  return PLATFORM_ALIASES[key] || (PLATFORMS.some((p) => p.key === key) ? key : '');
+}
+
+export function detectPlatform(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    const hit = PLATFORMS.find((p) => p.hosts.some((h) => host === h || host.endsWith('.' + h)));
+    return hit ? hit.key : '';
+  } catch (err) {
+    return '';
+  }
+}
+
+export function platformLabel(key) {
+  const hit = PLATFORMS.find((p) => p.key === key);
+  return hit ? hit.label : (key || '未知');
+}
+
 export function createPrompter() {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   return {
     ask: (question) => rl.question(question),
     close: () => rl.close(),
+  };
+}
+
+// 单键读取：终端里按一个键立即返回，不用回车；非 TTY 环境回退成按行读取。
+export function createKeyReader() {
+  const stdin = process.stdin;
+  return {
+    async key(question = '') {
+      if (question) process.stdout.write(question);
+      if (!stdin.isTTY) {
+        const rl = readline.createInterface({ input: stdin, output: process.stdout });
+        try {
+          const line = (await rl.question('')).trim().toLowerCase();
+          return line ? line[0] : '\r';
+        } finally {
+          rl.close();
+        }
+      }
+      return new Promise((resolve) => {
+        const wasRaw = stdin.isRaw;
+        const finish = (value) => {
+          stdin.removeListener('data', onData);
+          if (!wasRaw) stdin.setRawMode(false);
+          stdin.pause();
+          resolve(value);
+        };
+        const onData = (buf) => {
+          const raw = buf.toString('utf8');
+          if (raw === '\u0003') return finish('\u0003'); // Ctrl+C
+          if (raw === '\r' || raw === '\n') return finish('\r');
+          if (raw === '\u001b[D') return finish('k'); // ← 上一条
+          if (raw === '\u001b[C') return finish('j'); // → 下一条
+          if (raw.startsWith('\u001b')) return finish('\u001b'); // 其他方向键，忽略
+          finish(raw.toLowerCase()[0]);
+        };
+        stdin.setRawMode(true);
+        stdin.resume();
+        stdin.on('data', onData);
+      });
+    },
   };
 }
 

@@ -229,6 +229,39 @@ export async function openSession(url) {
       const raw = await this.eval(`(document.body && document.body.innerText ? document.body.innerText : '').slice(0, ${limit})`);
       return String(raw || '');
     },
+    // 尽力点击主页上的「私信」按钮，只打开面板，不填内容、不发送。
+    // 用 CDP 派发真实鼠标事件：合成 el.click() 抖音的 semi/React 组件不响应。
+    async openDm() {
+      const coords = await this.eval(`(() => {
+        const label = '私信';
+        const visible = (el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 1 && r.height > 1;
+        };
+        const nodes = Array.from(document.querySelectorAll('button, [role="button"], a, span, div'));
+        const hits = nodes.filter((el) => (el.textContent || '').trim() === label && visible(el));
+        if (!hits.length) return null;
+        let target = hits.find((el) => el.tagName === 'BUTTON' || el.tagName === 'A' || el.getAttribute('role') === 'button') || hits[0];
+        let node = target;
+        for (let i = 0; i < 4 && node; i++) {
+          if (node.tagName === 'BUTTON' || node.tagName === 'A' || (node.getAttribute && node.getAttribute('role') === 'button')) {
+            target = node;
+            break;
+          }
+          node = node.parentElement;
+        }
+        target.scrollIntoView({ block: 'center', inline: 'center' });
+        const r = target.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) return null;
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
+      })()`);
+      if (!coords) return false;
+      await cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x: coords.x, y: coords.y });
+      await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', x: coords.x, y: coords.y, button: 'left', buttons: 1, clickCount: 1 });
+      await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x: coords.x, y: coords.y, button: 'left', buttons: 0, clickCount: 1 });
+      await sleep(1200);
+      return true;
+    },
     async screenshot(file) {
       const shot = await cdp('Page.captureScreenshot', { format: 'png' });
       ensureDir(path.dirname(file));

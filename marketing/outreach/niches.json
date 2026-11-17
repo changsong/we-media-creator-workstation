@@ -1,0 +1,33 @@
+{
+  "note": "统一领域清单。各采集脚本不带 --keyword 时默认遍历这里的所有领域；keywords 可按平台覆盖搜索词，未覆盖时用 default。",
+  "domains": [
+    { "domain": "露营", "keywords": { "default": "露营" } },
+    { "domain": "咖啡", "keywords": { "default": "咖啡" } },
+    { "domain": "数码家电评测", "keywords": { "default": "数码测评", "douyin": "家电评测", "bilibili": "数码测评", "xiaohongshu": "数码测评" } },
+    { "domain": "摄影教程", "keywords": { "default": "摄影教程", "xiaohongshu": "摄影技巧" } },
+    { "domain": "视频剪辑", "keywords": { "default": "视频剪辑" } },
+    { "domain": "影视解说", "keywords": { "default": "影视解说" } },
+    { "domain": "动漫解说", "keywords": { "default": "动漫解说" } },
+    { "domain": "游戏实况", "keywords": { "default": "游戏实况" } },
+    { "domain": "AI教程", "keywords": { "default": "AI教程" } },
+    { "domain": "编程教程", "keywords": { "default": "编程教程" } },
+    { "domain": "英语学习", "keywords": { "default": "英语学习" } },
+    { "domain": "办公软件", "keywords": { "default": "Excel教程", "douyin": "PPT模板", "xiaohongshu": "PPT教程" } },
+    { "domain": "手工DIY", "keywords": { "default": "手工DIY" } },
+    { "domain": "家居好物", "keywords": { "default": "家居好物" } },
+    { "domain": "美食探店", "keywords": { "default": "美食探店" } },
+    { "domain": "美食制作", "keywords": { "default": "美食制作" } },
+    { "domain": "读书分享", "keywords": { "default": "读书分享", "douyin": "读书博主" } },
+    { "domain": "学习方法", "keywords": { "default": "学习方法", "douyin": "知识分享", "xiaohongshu": "个人成长" } },
+    { "domain": "职场干货", "keywords": { "default": "职场干货" } },
+    { "domain": "副业赚钱", "keywords": { "default": "副业赚钱" } },
+    { "domain": "母婴育儿", "keywords": { "default": "母婴育儿", "bilibili": "育儿知识" } },
+    { "domain": "健身减脂", "keywords": { "default": "健身减脂", "bilibili": "减脂餐", "douyin": "减脂餐" } },
+    { "domain": "美妆护肤", "keywords": { "default": "美妆护肤", "bilibili": "美妆博主", "douyin": "美妆博主" } },
+    { "domain": "穿搭分享", "keywords": { "default": "穿搭分享", "xiaohongshu": "穿搭博主" } },
+    { "domain": "旅行攻略", "keywords": { "default": "旅行攻略", "bilibili": "旅游vlog" } },
+    { "domain": "宠物日常", "keywords": { "default": "宠物日常" } },
+    { "domain": "情感心理", "keywords": { "default": "情感心理" } },
+    { "domain": "汽车评测", "keywords": { "default": "汽车评测" } }
+  ]
+}

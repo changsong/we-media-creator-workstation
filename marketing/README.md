@@ -1,11 +1,11 @@
 # 营销工作台（Marketing）
 
-面向抖音创作者的半自动触达工具：名单管理 → 文案起草 → 人工确认发送 → 回复建议 → 转化记录。
+面向多平台创作者（抖音/快手/小红书/视频号/B站）的营销工作台：名单归一化 → 话术起草 → 人工发送 → 回复建议 → 转化看板。
 
 ## 合规边界（先读）
 
-- 只联系公开主页的创作者，不抓取手机号、微信、私域联系方式。
-- **不做全自动群发**：每条消息由运营人员在浏览器里确认后发出，脚本负责排队、起草、复制和记录。
+- 只联系公开主页的创作者，只使用主页上公开的资料（简介里公开的商务邮箱/微信可以保留）；不抓取私信、粉丝列表或非公开联系方式。
+- **不做全自动群发**：每条消息由运营人员在浏览器里粘贴并亲手发送，脚本只负责排队、起草、复制文案、自动打开私信面板和记录。
 - 单账号每天最多 20 条（硬上限 30），同一人 30 天内只触达一次；遇到平台验证提示立即停止。
 - 不承诺“不会被封”“100% 安全”；对方表示不需要时不再联系。
 - 收到投诉或明确拒绝的账号，把状态改为 `blocked`（数据库里手动更新即可）。
@@ -16,12 +16,26 @@
 marketing/
   outreach/
     templates.json          私信话术 + 回复知识库 + 限额配置
-    lists/douyin-sample.csv 名单模板（真实名单不要提交到 git）
+    niches.json             统一领域清单（各采集脚本默认遍历的领域与平台搜索词）
+    lists/douyin-sample.csv 抖音名单模板（真实名单不要提交到 git）
+    lists/multi-sample.csv  多平台名单模板（含 platform 列）
   scripts/
-    leads.mjs               导入名单、查看统计与队列
-    send.mjs                半自动私信（登录 / dry-run / --live）
+    leads.mjs               导入名单、平台看板、状态流转
+    collect-douyin.mjs      按关键词采集公开创作者主页
+    collect-bilibili.mjs    B站 UP 主采集（公开搜索接口）
+    collect-kuaishou.mjs    快手用户采集（浏览器登录后抓搜索页）
+    fill-kuaishou-followers.mjs 补全快手名单粉丝数（顺序请求主页 SSR）
+    collect-xiaohongshu.mjs 小红书达人采集（灰豚数据接口）
+    detail-xiaohongshu.mjs  小红书达人灰豚详情补全（按粉丝数从高到低，受每日额度限制）
+    fix-xhs-links.mjs       把回退的灰豚达人页链接补换成真实小红书主页
+    send.mjs                抖音半自动私信（登录 / dry-run / --live）
+    send-live.cmd           在 PowerShell 新窗口启动抖音 --live
     reply.mjs               回复建议（关键词模板，可选 Claude）
-    lib/                    SQLite、浏览器会话、工具函数
+    serve.mjs               本地营销看板服务（HTTP + JSON API）
+    lib/                    SQLite、浏览器会话、领域清单加载、工具函数
+  web/
+    index.html              看板页面（平台概览 + 名单）
+    send.html               发送台（待发队列 + 平台轮询 + 复制/记录）
   content/
     douyin-content-plan.md  抖音内容选题与账号包装
   data/                     数据库、浏览器 profile、截图（已 gitignore）
@@ -35,17 +49,18 @@ marketing/
 # 1. 首次登录（扫码，登录态保存在 marketing/data/chrome-profile）
 node marketing/scripts/send.mjs --login
 
-# 2. 导入名单
-node marketing/scripts/leads.mjs import marketing/outreach/lists/douyin-sample.csv
+# 2. 导入名单（多平台用 multi-sample.csv，按 URL 自动识别平台）
+node marketing/scripts/leads.mjs import marketing/outreach/lists/multi-sample.csv
 
-# 3. 预览今天的名单和文案（不会发送）
+# 3. 预览今天要发的抖音名单和文案（不会发送）
 node marketing/scripts/send.mjs --limit 5
 
-# 4. 正式逐条发送（每条发送后回车记录）
+# 4. 正式逐条发送
 node marketing/scripts/send.mjs --live --limit 10
+#    或双击 / 运行 send-live.cmd，在新 PowerShell 窗口里跑
 ```
 
-`--live` 流程：脚本打开目标主页 → 把文案复制到剪贴板 → 你在浏览器点「私信」粘贴发送 → 回终端按 Enter 记录。输入 `s` 跳过，`q` 退出。
+`--live` 流程：脚本打开目标主页并尝试自动点开「私信」面板 → 文案已复制到剪贴板 → 你在私信框 Ctrl+V 后亲手点发送 → 回终端按 `y`/Enter 记录。快捷键：`j`/`k` 上下切换名单、`s` 跳过、`r` 重新复制、`o` 重开私信面板、`q` 退出（←/→ 等同 `k`/`j`）。全程单键操作，但发送动作始终由你完成。
 
 常用参数：
 
@@ -54,21 +69,152 @@ node marketing/scripts/send.mjs --live --limit 10
 | `--limit N` | 本次最多处理几条（默认 10，最多 20） |
 | `--cap N` | 覆盖每日上限（硬上限 30） |
 | `--min-followers N` | 只看粉丝数不低于 N 的名单 |
+| `--max-followers N` | 只看粉丝数不高于 N 的名单（冷启动建议先跑 1w–10w） |
 | `--template A-pain` | 固定使用某套话术（默认按名单轮换） |
 | `--no-wait` | 跳过条目间的随机等待（不建议） |
 | `--id N --force` | 对已标记发送的名单再发一次 |
 
-## 名单格式
+## 统一领域清单
 
-CSV 表头：
+所有采集脚本共用 `outreach/niches.json` 里的领域清单。不带 `--keyword` 运行时，脚本会按清单顺序遍历全部领域；不同平台需要不同搜索词时，用 `keywords` 覆盖。
 
-```csv
-nickname,profile_url,followers,last_active,niche,source,note
+```json
+{ "domain": "读书分享", "keywords": { "default": "读书分享", "douyin": "读书博主" } }
 ```
 
-- `profile_url` 必须是 `https://www.douyin.com/user/...`，否则导入或发送时跳过。
+- `domain` 是领域名，记录到名单的 `niche` 字段；`keywords.default` 是默认搜索词，平台键（`douyin` / `bilibili` / `xiaohongshu` / `kuaishou`）可单独覆盖。
+- 增删领域只改这个文件，四个采集脚本自动生效。
+- 跑全部领域：`node marketing/scripts/collect-douyin.mjs --import --yes`（或对应平台的采集脚本，省略 `--keyword` 即可）。名单的 `niche` 记领域名（如 `办公软件`），搜索用平台关键词（如抖音的 `PPT模板`）；`--limit` 按每个关键词分别计数，多个领域互不挤占。
+
+## 采集抖音名单
+
+在已登录的浏览器里按关键词搜索，滚动收集公开主页，自动按粉丝数过滤并去重。
+
+```bash
+# 首次登录（和 send.mjs 共用同一个浏览器 profile）
+node marketing/scripts/collect-douyin.mjs --login
+
+# 搜用户：每个词滚动 4 屏，最多保留 50 个 1k–50w 粉的主页
+node marketing/scripts/collect-douyin.mjs --keyword "自媒体运营,职场口播" --limit 50
+
+# 搜视频作者：结果更偏近期活跃，适合找还在更新的账号
+node marketing/scripts/collect-douyin.mjs --keyword "美食探店" --mode video --import
+```
+
+- 输出到 `outreach/lists/douyin-collected-日期-时间.csv`；加 `--import` 直接导入名单库。
+- 只读取搜索结果里公开的昵称、粉丝数、简介片段和主页链接，不采集手机号、粉丝列表或私信。
+- 每屏滚动间隔 1.6–3.2 秒，关键词间隔 10–18 秒；遇到“安全验证/操作频繁”立即停止并截图。
+- 每个关键词最多保留 100 个主页（`--limit` 按领域分别计数，多个关键词互不挤占），建议每天不超过一轮；粉丝数解析失败的账号默认丢弃，可用 `--keep-unknown` 保留。
+- 已登录后加 `--yes` 可跳过确认，适合放进任务计划程序每天自动采集。
+- 采集结果只是候选，发送前仍要人工看主页确认内容方向是否匹配。
+
+## 采集其他平台名单
+
+| 平台 | 采集方式 | 现状 |
+| --- | --- | --- |
+| B站 | `collect-bilibili.mjs`，复用主应用「连接设置 · B站」的 SESSDATA 调公开搜索接口；接口 -412 时自动回退网页搜索页解析 | 可用；B站限流很严（错误码 -412），需低频、每个关键词单独跑 |
+| 小红书 | `collect-xiaohongshu.mjs`，走灰豚数据 `searchAnchor`（站内抓取风控严重，按既定方案走灰豚） | 脚本就绪；需先在「连接设置 · 灰豚数据」重新登录 |
+| 快手 | `collect-kuaishou.mjs`，在自动化浏览器里登录后抓搜索用户页 | 脚本就绪；需先 `--login` 扫码（网页搜索必须登录） |
+| 视频号 | 无公开的创作者搜索 | 网页端不可采集；走官方互选/广告平台或人工名单 |
+
+```bash
+# B站：按关键词搜 UP 主，粉丝默认 1000–50 万，导出 CSV 并导入
+node marketing/scripts/collect-bilibili.mjs --keyword "母婴育儿" --pages 2 --import
+
+# 每个关键词单独跑一次，避免像一次跑多个词那样触发 -412
+node marketing/scripts/collect-bilibili.mjs --keyword "知识分享" --pages 1 --import
+```
+
+- 输出 `outreach/lists/bilibili-collected-日期-时间.csv`，加 `--import` 直接入库。
+- 只采公开信息（昵称、粉丝、简介、主页链接），不含手机号/私信。
+- 接口遇到 `-412` 会自动改用网页搜索页解析（仍拿公开卡片资料）；两边都失败才停止，建议等 10 分钟再换关键词。
+- 入库前默认用公开卡片接口逐条核验主页（`space.bilibili.com/<mid>`）：昵称、粉丝以接口为准，昵称不一致的条目直接丢弃；已入库的 `profile_url` 不再重复核验、沿用原资料；核验接口被限流时跳过剩余核验并提示。不想核验可加 `--no-verify`。
+
+```bash
+# 小红书：先在「连接设置 · 灰豚数据」扫码登录，再按关键词搜达人
+node marketing/scripts/collect-xiaohongshu.mjs --keyword "母婴育儿" --limit 30 --import
+
+# 快手：首次先在自动化浏览器里扫码登录（和抖音采集共用 chrome-profile）
+node marketing/scripts/collect-kuaishou.mjs --login
+node marketing/scripts/collect-kuaishou.mjs --keyword "美食探店" --limit 30 --import
+
+# 快手：补全已有名单的粉丝数（顺序 1.2–2.2 秒一条，遇到限流自动暂停，可重复跑到补完）
+node marketing/scripts/fill-kuaishou-followers.mjs
+node marketing/scripts/fill-kuaishou-followers.mjs --limit 200
+```
+
+- 小红书走灰豚接口，输出 `xiaohongshu-collected-日期-时间.csv`；能拿到小红书 userId 时用小红书主页链接，否则回退灰豚达人页链接（可用 `fix-xhs-links.mjs` 次日补换）。
+- 灰豚免费版额度：`anchor/queryId` 500 次/天、`anchor/detail` 100 次/天，额度用完后接口返回「每天最多可以访问 100 次」，等到第二天再跑即可。
+- 每条名单的 `note` 是简介原文（保留博主公开的商务邮箱/微信/QQ）+ 一行 `[灰豚]` 数据摘要（类型、职业、标签、小红书号、地域、获赞、笔记数、图文/视频报价、MCN、评分）；`extra` 列存灰豚返回的完整公开字段 JSON，详情补全后字段更全（粉丝画像、注册时间、CPM/CPE 等）。
+- 快手是浏览器采集，输出 `kuaishou-collected-日期-时间.csv`；搜索页必须登录，未登录会提示先跑 `--login`。
+- 快手搜索页现在分「视频 / 用户」两个 tab，脚本会自动切到「用户」再解析 `.user-card`；主页链接用卡片上的快手号拼成 `kuaishou.com/profile/<快手号>`。
+- 卡片本身不显示粉丝数，脚本会再用登录 Cookie 批量请求各自详情页（读取服务端 HTML 里的 `ownerCount.fan`），3 路并发；遇到验证/限流、或连续多次拿到 200 但页面没有粉丝数据（疑似限流降级页）会自动停止，剩余账号按粉丝未知处理。加 `--no-followers` 可跳过这一步。
+- 快手主页接口有滚动配额，短时间内大量请求后会对后续请求返回没有数据的页面；跑完后若大量名单粉丝为 0，用 `fill-kuaishou-followers.mjs` 隔一段时间补全（可反复跑，已补过的自动跳过）。
+- 粉丝未知的账号默认保留（`--drop-unknown` 可丢弃）；`--min-followers` / `--max-followers` 照常生效。
+- 两者都只采公开资料（昵称、粉丝、简介、主页链接）；简介原样保留，包含博主自己公开的商务邮箱/微信。
+- 小红书主页链接通过灰豚 `anchor/queryId` 换成真实 userId（`xiaohongshu.com/user/profile/<userId>`）；个别取不到时回退灰豚达人页，备注里始终保留小红书号。
+
+```bash
+# 次日额度恢复后：把回退成灰豚达人页的名单补换成真实小红书主页
+node marketing/scripts/fix-xhs-links.mjs
+
+# 给已有小红书名单补全灰豚详情（每天最多 100 条，按粉丝数从高到低，额度用完自动停）
+node marketing/scripts/detail-xiaohongshu.mjs --limit 100
+node marketing/scripts/detail-xiaohongshu.mjs --limit 50 --min-followers 10000
+```
+
+
+## 多平台名单与转化看板
+
+一个 SQLite 工作台统管抖音 / 快手 / 小红书 / 视频号 / B站：名单归一化、状态流转、回复知识库、回复率与转化率统计。
+
+CSV 表头（新增 `platform` 列，可省略，按 URL 自动识别）：
+
+```csv
+platform,nickname,profile_url,followers,last_active,niche,source,note,extra
+```
+
+- `extra` 可省略，存平台返回的完整公开字段 JSON（灰豚采集会写全量字段到这一列）。
+
+- `platform` 取值：`douyin` / `kuaishou` / `xiaohongshu` / `channels` / `bilibili`；留空时按域名自动识别（douyin.com、kuaishou.com、xiaohongshu.com/xhslink.com、channels.weixin.qq.com、bilibili.com/b23.tv），识别不了记为 `unknown`。
+- CLI 里 `--platform` 同时接受中文别名（抖音/快手/小红书/视频号/B站）和简写（dy/ks/xhs/sph/bili）。
 - 重复导入按 `profile_url` 更新资料，不会重置发送状态。
-- 名单来源建议：关键词搜索作者、热门视频评论区活跃用户、公开榜单；筛选 1k–50w 粉、近 7 天更新、简介含运营/矩阵/接单。
+- 名单来源建议：关键词搜索作者、官方达人平台（蒲公英/磁力聚星/花火/互选）、热门评论区；筛选 1k–50w 粉、近 7 天更新。
+
+```bash
+# 导入（multi-sample.csv 演示 platform 列）
+node marketing/scripts/leads.mjs import marketing/outreach/lists/multi-sample.csv
+
+# 按平台查看
+node marketing/scripts/leads.mjs list --platform xiaohongshu --status new --limit 20
+
+# 看板：各平台 总数 / 已触达 / 回复 / 转化 / 回复率 / 转化率
+node marketing/scripts/leads.mjs stats
+
+# 状态流转：new → queued → sent → replied → converted；拒绝或投诉标 blocked
+node marketing/scripts/leads.mjs mark --id 12 --status converted
+```
+
+口径：`已触达 = sent + replied + converted`，回复率 = `(replied + converted) / 已触达`，转化率 = `converted / 已触达`。
+
+> 发送自动化目前只有抖音（人工确认的 `send.mjs`）。快手/小红书/视频号/B站请走官方达人平台或人工私信；工作台只负责名单、话术与转化统计，不做跨平台自动群发。
+
+## 本地看板服务
+
+```bash
+node marketing/scripts/serve.mjs               # http://127.0.0.1:4173
+node marketing/scripts/serve.mjs --port 8080   # 换端口
+node marketing/scripts/serve.mjs --host 0.0.0.0 # 局域网可访问（自行评估隐私）
+```
+
+- 看板页 `/`：顶部看板（总数/今日已发/回复/转化）+ 平台概览表（已触达、回复率、转化率）+ 名单表（按平台/状态/关键词筛选，行内改状态）。
+- 发送台 `/send.html`：按平台轮询排出待发队列（抖音 → B站 → 小红书 → 视频号 循环，每个平台各自取候选，避免抖音大户挤占）；页面加载后自动准备第一条（复制文案 → 打开主页 → 抖音自动开私信）；你在平台 Ctrl+V 粘贴并亲手点发送，发出后点「我已确认发送」，60–120 秒倒计时结束自动准备下一条，到今日上限自动停。主按钮「开始这条」可随时手动重做这一串动作。
+- 暂时不参与发送的平台在 `templates.json` 的 `settings.sendExcludePlatforms` 里配置（默认 `["kuaishou"]`，因为快手没有网页端私信）；发送台顶部会显示本轮跳过的平台，改完配置重启 `serve.mjs` 生效。
+- 抖音「打开主页」走服务端 CDP：复用 `lib/browser.mjs` 打开主页并尝试点开私信面板，面板出现在 `marketing/data/chrome-profile` 那个 Chrome 窗口（与 `send.mjs` 同一登录态，需先 `--login`）；其它平台仍是新标签打开、手动点私信。
+- JSON API：`GET /api/overview`、`GET /api/leads?...`、`GET /api/queue?limit=`、`POST /api/leads/:id/open`（仅抖音）、`POST /api/leads/:id/status`、`POST /api/leads/:id/sent`、`POST /api/leads/:id/skip`。
+- **发送动作始终由人完成**：服务只做排队、生成文案、复制、记录状态，不自动填入或发送。
+- 关于「自动核验是否发送成功」：网页无法读取其它平台的标签页（跨域限制），所以「我已确认发送」就是人工核对后的确认点，服务据此把状态改为 `sent`。
+- 默认只绑定 `127.0.0.1`，不加 `--host` 外部访问不到。
 
 ## 回复建议
 
@@ -86,7 +232,7 @@ node marketing/scripts/reply.mjs --ai --log 12 --text "支持哪些平台？"
 
 1. 补 10–20 条新名单，导入。
 2. `send.mjs` 跑 dry-run 检查文案和人群。
-3. `--live --limit 10` 逐条确认发送，间隔 3–8 分钟。
+3. `--live --limit 10` 逐条发送（每条按 `y` 记录），间隔 3–8 分钟。
 4. 有新回复时用 `reply.mjs` 生成回复，手工发送。
 5. 每周看一次统计：`leads.mjs stats`，记录回复率和试用领取数。
 

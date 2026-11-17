@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>媒管家 · 发送台</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #fff; --ink: #1f2430; --muted: #6b7280; --line: #e5e7eb;
+    --accent: #4f46e5; --accent-soft: #eef2ff; --green: #059669; --amber: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--ink); font-size: 14px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 20px 60px; }
+  header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  header.top h1 { font-size: 20px; margin: 0; }
+  header.top a { color: var(--accent); text-decoration: none; font-size: 13px; }
+  header.top a:hover { text-decoration: underline; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .controls label { color: var(--muted); font-size: 13px; }
+  input[type="number"] {
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 13px; width: 80px;
+  }
+  .meta { color: var(--muted); font-size: 13px; margin-left: auto; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; background: #f1f5f9; color: #475569; }
+  .tag.douyin { background: #eef6ff; color: #2563eb; }
+  .tag.kuaishou { background: #fff4e6; color: #d97706; }
+  .tag.xiaohongshu { background: #ffe9ec; color: #e11d48; }
+  .tag.channels { background: #e8f7ee; color: var(--green); }
+  .tag.bilibili { background: #e8f1ff; color: #0ea5e9; }
+  .card-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .name { font-weight: 600; font-size: 15px; }
+  .pos { margin-left: auto; color: var(--muted); font-size: 13px; }
+  pre.draft {
+    white-space: pre-wrap; word-break: break-word; background: #fbfbfd; border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px; margin: 0 0 14px; font-family: inherit; font-size: 14px; line-height: 1.7;
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 12px; }
+  .wait { text-align: center; padding: 40px 18px; }
+  .wait .big { font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+  .wait .sub { color: var(--muted); margin: 8px 0 18px; }
+  .done { text-align: center; padding: 36px 18px; }
+  .done .big { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: #111827; color: #fff; padding: 9px 16px; border-radius: 8px; font-size: 13px;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .cap-warn { color: var(--amber); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>发送台</h1>
+    <a href="/">← 返回看板</a>
+  </header>
+
+  <section class="panel">
+    <div class="controls">
+      <label>本批条数 <input type="number" id="limit" value="20" min="1" max="100" /></label>
+      <button class="btn" id="reloadBtn">加载 / 刷新</button>
+      <span class="meta" id="meta">—</span>
+      <span class="meta" id="excluded"></span>
+    </div>
+    <div class="hint">
+      流程：页面打开后自动准备第一条（复制文案 → 打开主页 → 抖音自动开私信），你在平台里 Ctrl+V 粘贴并亲手点发送，
+      发出后点「我已确认发送」，倒计时结束会自动准备下一条。发送动作始终由你完成。
+      抖音的私信面板开在 marketing/data/chrome-profile 那个 Chrome 窗口；其它平台会新标签打开，需手动点私信。
+      如果自动复制没成功，点「开始这条」再复制一次。
+    </div>
+  </section>
+
+  <section id="body" class="panel">
+    <div class="empty">加载中…</div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const PLATFORM_LABELS = { douyin: '抖音', kuaishou: '快手', xiaohongshu: '小红书', channels: '视频号', bilibili: 'B站', unknown: '未知' };
+  const el = (id) => document.getElementById(id);
+  const fmt = (n) => Number(n || 0).toLocaleString('zh-CN');
+  const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  const state = {
+    items: [], index: 0, sentToday: 0, dailyCap: 20,
+    interval: { min: 60, max: 120 }, sentCount: 0, skippedCount: 0,
+    waiting: false, waitUntil: 0, timer: null,
+    prepared: new Set(), preparing: new Set(),
+  };
+
+  let toastTimer = null;
+  function toast(text) {
+    const node = el('toast');
+    node.textContent = text;
+    node.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => node.classList.remove('show'), 1800);
+  }
+
+  async function loadQueue() {
+    clearWait();
+    const limit = Math.max(1, Math.min(Number(el('limit').value) || 20, 100));
+    el('body').innerHTML = '<div class="empty">加载中…</div>';
+    try {
+      const res = await fetch('/api/queue?limit=' + limit);
+      const data = await res.json();
+      state.items = data.items || [];
+      state.index = 0;
+      state.sentCount = 0;
+      state.skippedCount = 0;
+      state.sentToday = Number(data.sentToday) || 0;
+      state.dailyCap = Number(data.dailyCap) || 20;
+      state.interval = data.intervalSeconds || { min: 60, max: 120 };
+      state.prepared.clear();
+      state.preparing.clear();
+      const excluded = (data.excludedPlatforms || []).map((item) => item.label || item.key);
+      el('excluded').textContent = excluded.length ? `本轮跳过：${excluded.join('、')}` : '';
+      render();
+    } catch (err) {
+      el('body').innerHTML = '<div class="empty">加载失败：' + err.message + '</div>';
+    }
+  }
+
+  function updateMeta() {
+    el('meta').textContent = `今日已发 ${state.sentToday} / ${state.dailyCap}`;
+    if (state.sentToday >= state.dailyCap) el('meta').classList.add('cap-warn');
+    else el('meta').classList.remove('cap-warn');
+  }
+
+  function render() {
+    updateMeta();
+    const body = el('body');
+    body.textContent = '';
+    if (!state.items.length) {
+      body.innerHTML = '<div class="empty">没有待发送的名单。先到「看板」导入 CSV，或等待冷却期结束。</div>';
+      return;
+    }
+    if (state.index >= state.items.length) {
+      body.appendChild(doneNode());
+      return;
+    }
+    if (state.waiting) {
+      body.appendChild(waitNode());
+      return;
+    }
+    const item = state.items[state.index];
+    body.appendChild(cardNode(item));
+    // 自动准备当前条：复制文案 → 打开主页 → 抖音自动开私信，做到一条接一条自动往下走。
+    if (!state.prepared.has(item.id) && !state.preparing.has(item.id)) {
+      state.preparing.add(item.id);
+      setTimeout(() => {
+        if (state.items[state.index] !== item) { state.preparing.delete(item.id); return; }
+        prepareItem(item, { auto: true }).finally(() => state.preparing.delete(item.id));
+      }, 350);
+    }
+  }
+
+  function tagNode(platform) {
+    const span = document.createElement('span');
+    span.className = 'tag ' + (platform || 'unknown');
+    span.textContent = PLATFORM_LABELS[platform] || platform || '未知';
+    return span;
+  }
+
+  function cardNode(item) {
+    const wrap = document.createElement('div');
+
+    const row = document.createElement('div');
+    row.className = 'card-row';
+    row.appendChild(tagNode(item.platform));
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = '#' + item.id + ' ' + (item.nickname || '');
+    row.appendChild(name);
+    const info = document.createElement('span');
+    info.className = 'pos';
+    info.textContent = `粉丝 ${fmt(item.followers)} · ${item.niche || '未标注'}`;
+    row.appendChild(info);
+    const pos = document.createElement('span');
+    pos.className = 'pos';
+    pos.textContent = `第 ${state.index + 1} / ${state.items.length} 条`;
+    row.appendChild(pos);
+    wrap.appendChild(row);
+
+    const draft = document.createElement('pre');
+    draft.className = 'draft';
+    draft.textContent = item.draft || '';
+    wrap.appendChild(draft);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const startBtn = Object.assign(document.createElement('button'), { className: 'btn primary', textContent: '开始这条（复制 + 打开主页 + 开私信）' });
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      startBtn.textContent = '正在处理…';
+      try {
+        await prepareItem(item);
+      } finally {
+        startBtn.disabled = false;
+        startBtn.textContent = '开始这条（复制 + 打开主页 + 开私信）';
+      }
+    });
+    actions.appendChild(startBtn);
+
+    const reopenBtn = Object.assign(document.createElement('button'), { className: 'btn', textContent: '重新打开主页' });
+    reopenBtn.addEventListener('click', async () => {
+      reopenBtn.disabled = true;
+      try {
+        await prepareItem(item, { copy: false, force: true });
+      } finally {
+        reopenBtn.disabled = false;
+      }
+    });
+    actions.appendChild(reopenBtn);
+
+    const sentBtn = Object.assign(document.createElement('button'), { className: 'btn primary', textContent: '我已确认发送' });
+    sentBtn.style.background = 'var(--green)';
+    sentBtn.style.borderColor = 'var(--green)';
+    sentBtn.addEventListener('click', () => markSent(item));
+    actions.appendChild(sentBtn);
+
+    const skipBtn = Object.assign(document.createElement('button'), { className: 'btn', textContent: '跳过' });
+    skipBtn.addEventListener('click', () => markSkip(item));
+    actions.appendChild(skipBtn);
+
+    wrap.appendChild(actions);
+
+    if (item.profile_url) {
+      const hint = document.createElement('div');
+      hint.className = 'hint';
+      hint.textContent = item.profile_url;
+      wrap.appendChild(hint);
+    }
+    return wrap;
+  }
+
+  function waitNode() {
+    const wrap = document.createElement('div');
+    wrap.className = 'wait';
+    const big = document.createElement('div');
+    big.className = 'big';
+    big.id = 'countdown';
+    wrap.appendChild(big);
+    const sub = document.createElement('div');
+    sub.className = 'sub';
+    sub.textContent = '已记录，倒计时结束后自动准备下一条（复制文案 + 打开主页 + 开私信）。';
+    wrap.appendChild(sub);
+    const skip = Object.assign(document.createElement('button'), { className: 'btn', id: 'skipWait', textContent: '跳过等待并继续' });
+    skip.addEventListener('click', () => finishWait());
+    wrap.appendChild(skip);
+    requestAnimationFrame(() => tickCountdown());
+    return wrap;
+  }
+
+  function doneNode() {
+    const wrap = document.createElement('div');
+    wrap.className = 'done';
+    const big = document.createElement('div');
+    big.className = 'big';
+    big.textContent = `本批已处理完（发送 ${state.sentCount}，跳过 ${state.skippedCount}）`;
+    wrap.appendChild(big);
+    const reload = Object.assign(document.createElement('button'), { className: 'btn', textContent: '再来一批' });
+    reload.addEventListener('click', loadQueue);
+    wrap.appendChild(reload);
+    return wrap;
+  }
+
+  function tickCountdown() {
+    if (!state.waiting) return;
+    const left = Math.max(0, Math.ceil((state.waitUntil - Date.now()) / 1000));
+    const node = el('countdown');
+    if (node) node.textContent = left + 's';
+    if (left <= 0) {
+      finishWait();
+      return;
+    }
+    setTimeout(tickCountdown, 500);
+  }
+
+  function startWait() {
+    const secs = randomInt(state.interval.min || 60, state.interval.max || 120);
+    state.waiting = true;
+    state.waitUntil = Date.now() + secs * 1000;
+    render();
+  }
+
+  function finishWait() {
+    clearWait();
+    state.index += 1;
+    render();
+  }
+
+  function clearWait() {
+    state.waiting = false;
+    state.waitUntil = 0;
+    if (state.timer) { clearTimeout(state.timer); state.timer = null; }
+  }
+
+  async function copyText(text, { silent = false } = {}) {
+    if (!text) { if (!silent) toast('没有可复制的文案'); return false; }
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      if (!silent) toast('文案已复制，去平台粘贴');
+      return true;
+    } catch (err) {
+      if (!silent) toast('复制失败，请手动选中文案复制');
+      return false;
+    }
+  }
+
+  // 一条龙：复制文案 → 打开主页（抖音会自动点开私信）。
+  // auto=true 时用于自动准备，复制失败保持安静，由用户点「开始这条」补一次。
+  async function prepareItem(item, { force = false, copy = true, auto = false } = {}) {
+    if (!item) return;
+    let copied = false;
+    if (copy) copied = await copyText(item.draft, { silent: auto });
+
+    const hasUrl = typeof item.profile_url === 'string' && /^https?:\/\//i.test(item.profile_url);
+    const alreadyOpen = state.prepared.has(item.id);
+
+    if (hasUrl && (force || !alreadyOpen)) {
+      if (item.platform === 'douyin') {
+        try {
+          const res = await fetch(`/api/leads/${item.id}/open`, { method: 'POST' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+          state.prepared.add(item.id);
+          if (!auto) {
+            toast((copied ? '文案已复制，' : '') + (data.dmClicked ? '已打开私信，去 Ctrl+V 粘贴' : '已打开主页（未定位私信）'));
+          }
+        } catch (err) {
+          state.prepared.add(item.id);
+          toast('自动打开失败：' + err.message);
+          window.open(item.profile_url, '_blank', 'noopener');
+        }
+      } else {
+        const win = window.open(item.profile_url, '_blank', 'noopener');
+        state.prepared.add(item.id);
+        if (!auto) {
+          if (!win) toast('浏览器拦截了新标签，请手动打开主页');
+          else toast((copied ? '文案已复制，' : '') + '已打开主页，记得手动点私信');
+        }
+      }
+    } else if (!auto) {
+      if (!hasUrl) toast('该名单没有可打开的主页链接');
+      else if (copied) toast('文案已复制，去平台粘贴');
+    }
+
+    if (auto && copy && !copied) toast('自动复制失败，请点「开始这条」或手动选中文案复制');
+  }
+
+  async function markSent(item) {
+    if (!confirm('确认这条私信已经在平台成功发出？\n（页面无法读取平台标签页，这一步由你人工核对）')) return;
+    try {
+      const res = await fetch(`/api/leads/${item.id}/sent`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      state.sentCount += 1;
+      state.sentToday = Number(data.sentToday) || state.sentToday + 1;
+      updateMeta();
+      if (state.sentToday >= state.dailyCap) {
+        toast('已达到今日上限，停止');
+        state.index = state.items.length;
+        render();
+        return;
+      }
+      startWait();
+    } catch (err) {
+      alert('记录失败：' + err.message);
+    }
+  }
+
+  async function markSkip(item) {
+    try {
+      const res = await fetch(`/api/leads/${item.id}/skip`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      state.skippedCount += 1;
+      state.index += 1;
+      render();
+    } catch (err) {
+      alert('跳过失败：' + err.message);
+    }
+  }
+
+  el('reloadBtn').addEventListener('click', loadQueue);
+  el('limit').addEventListener('change', loadQueue);
+  loadQueue();
+</script>
+</body>
+</html>

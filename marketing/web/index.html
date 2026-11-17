@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>媒管家 · 营销工作台</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #4f46e5;
+    --accent-soft: #eef2ff;
+    --green: #059669;
+    --amber: #d97706;
+    --red: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 60px; }
+  header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+  header.top h1 { font-size: 20px; margin: 0; }
+  header.top .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+    text-decoration: none; display: inline-block;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card .label { color: var(--muted); font-size: 12px; }
+  .card .value { font-size: 30px; font-weight: 700; margin-top: 6px; letter-spacing: -.5px; }
+  .card .value.green { color: var(--green); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+  .panel h2 { font-size: 15px; margin: 0 0 14px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  tbody tr:hover { background: #fafafa; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .rate { font-variant-numeric: tabular-nums; }
+  .rate.hi { color: var(--green); font-weight: 600; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  select, input[type="search"] {
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 13px; background: #fff; color: var(--ink);
+  }
+  input[type="search"] { min-width: 220px; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: #f1f5f9; color: #475569; }
+  .tag.douyin { background: #eef6ff; color: #2563eb; }
+  .tag.kuaishou { background: #fff4e6; color: #d97706; }
+  .tag.xiaohongshu { background: #ffe9ec; color: #e11d48; }
+  .tag.channels { background: #e8f7ee; color: #059669; }
+  .tag.bilibili { background: #e8f1ff; color: #0ea5e9; }
+  .status-select { border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; font-size: 12px; background: #fff; }
+  a.link { color: var(--accent); text-decoration: none; }
+  a.link:hover { text-decoration: underline; }
+  .muted { color: var(--muted); }
+  .empty { color: var(--muted); padding: 20px 0; text-align: center; }
+  .right { text-align: right; }
+  @media (max-width: 780px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    td, th { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>媒管家 · 营销工作台</h1>
+      <div class="sub" id="dbPath">加载中…</div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <a class="btn" href="/send.html">发送台 →</a>
+      <button class="btn" id="refreshBtn">刷新</button>
+    </div>
+  </header>
+
+  <section class="cards">
+    <div class="card"><div class="label">名单总数</div><div class="value" id="kpiTotal">–</div></div>
+    <div class="card"><div class="label">今日已发送</div><div class="value" id="kpiSent">–</div></div>
+    <div class="card"><div class="label">有回复</div><div class="value" id="kpiReplied">–</div></div>
+    <div class="card"><div class="label">已转化</div><div class="value green" id="kpiConverted">–</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>平台概览</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>平台</th><th class="right">总数</th><th class="right">已触达</th>
+          <th class="right">回复</th><th class="right">转化</th><th class="right">拉黑</th>
+          <th class="right">回复率</th><th class="right">转化率</th>
+        </tr>
+      </thead>
+      <tbody id="platformBody"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>名单</h2>
+    <div class="filters">
+      <select id="filterPlatform">
+        <option value="">全部平台</option>
+        <option value="douyin">抖音</option>
+        <option value="kuaishou">快手</option>
+        <option value="xiaohongshu">小红书</option>
+        <option value="channels">视频号</option>
+        <option value="bilibili">B站</option>
+        <option value="unknown">未知</option>
+      </select>
+      <select id="filterStatus">
+        <option value="">全部状态</option>
+        <option value="new">待发 new</option>
+        <option value="queued">排队 queued</option>
+        <option value="sent">已发 sent</option>
+        <option value="replied">已回复 replied</option>
+        <option value="converted">已转化 converted</option>
+        <option value="blocked">已拉黑 blocked</option>
+      </select>
+      <input type="search" id="filterSearch" placeholder="搜索昵称 / 链接 / 方向" />
+      <span class="muted" id="leadCount"></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>平台</th><th>昵称</th><th class="right">粉丝</th>
+          <th>方向</th><th>状态</th><th>主页</th><th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="leadBody"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
+    </table>
+  </section>
+</div>
+
+<script>
+  const PLATFORM_LABELS = {
+    douyin: '抖音', kuaishou: '快手', xiaohongshu: '小红书',
+    channels: '视频号', bilibili: 'B站', unknown: '未知',
+  };
+  const STATUS_LABELS = {
+    new: '待发', queued: '排队', sent: '已发',
+    replied: '已回复', converted: '已转化', blocked: '已拉黑',
+  };
+  const STATUS_OPTIONS = ['new', 'queued', 'sent', 'replied', 'converted', 'blocked'];
+
+  const el = (id) => document.getElementById(id);
+  const fmt = (n) => Number(n || 0).toLocaleString('zh-CN');
+
+  function ratePct(numerator, denominator) {
+    if (!denominator) return { text: '—', hi: false };
+    const pct = (numerator / denominator) * 100;
+    return { text: pct.toFixed(1) + '%', hi: pct >= 5 };
+  }
+
+  async function loadOverview() {
+    const res = await fetch('/api/overview');
+    const data = await res.json();
+    el('dbPath').textContent = '数据库：' + (data.db || '');
+    el('kpiTotal').textContent = fmt(data.total);
+    el('kpiSent').textContent = fmt(data.sentToday);
+    el('kpiReplied').textContent = fmt(data.replied);
+    el('kpiConverted').textContent = fmt(data.converted);
+
+    const body = el('platformBody');
+    body.textContent = '';
+    const rows = data.byPlatform || [];
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="8" class="empty">还没有名单，先导入 CSV</td></tr>';
+      return;
+    }
+    for (const row of rows) {
+      const reply = ratePct(Number(row.replied), Number(row.contacted));
+      const conv = ratePct(Number(row.converted), Number(row.contacted));
+      const tr = document.createElement('tr');
+      tr.appendChild(cell(tag(row.platform)));
+      tr.appendChild(cell(fmt(row.total), 'num'));
+      tr.appendChild(cell(fmt(row.contacted), 'num'));
+      tr.appendChild(cell(fmt(row.replied), 'num'));
+      tr.appendChild(cell(fmt(row.converted), 'num'));
+      tr.appendChild(cell(fmt(row.blocked), 'num'));
+      tr.appendChild(cell(reply.text, 'num rate' + (reply.hi ? ' hi' : '')));
+      tr.appendChild(cell(conv.text, 'num rate' + (conv.hi ? ' hi' : '')));
+      body.appendChild(tr);
+    }
+  }
+
+  async function loadLeads() {
+    const params = new URLSearchParams();
+    const platform = el('filterPlatform').value;
+    const status = el('filterStatus').value;
+    const q = el('filterSearch').value.trim();
+    if (platform) params.set('platform', platform);
+    if (status) params.set('status', status);
+    if (q) params.set('q', q);
+    params.set('limit', '200');
+
+    const res = await fetch('/api/leads?' + params.toString());
+    const rows = await res.json();
+    const body = el('leadBody');
+    body.textContent = '';
+    el('leadCount').textContent = `共 ${rows.length} 条`;
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="8" class="empty">没有匹配的名单</td></tr>';
+      return;
+    }
+    for (const lead of rows) {
+      const tr = document.createElement('tr');
+      tr.appendChild(cell('#' + lead.id));
+      tr.appendChild(cell(tag(lead.platform)));
+      tr.appendChild(cell(lead.nickname || ''));
+      tr.appendChild(cell(fmt(lead.followers), 'num'));
+      tr.appendChild(cell(lead.niche || '—'));
+      tr.appendChild(cell(lead.status, '', STATUS_LABELS[lead.status] || ''));
+      tr.appendChild(cell(linkCell(lead.profile_url)));
+      tr.appendChild(cell(statusSelect(lead)));
+      body.appendChild(tr);
+    }
+  }
+
+  function cell(content, className, title) {
+    const td = document.createElement('td');
+    if (className) td.className = className;
+    if (title) td.title = title;
+    if (content instanceof Node) td.appendChild(content);
+    else td.textContent = content == null ? '' : content;
+    return td;
+  }
+
+  function tag(platform) {
+    const span = document.createElement('span');
+    span.className = 'tag ' + (platform || 'unknown');
+    span.textContent = PLATFORM_LABELS[platform] || platform || '未知';
+    return span;
+  }
+
+  function linkCell(url) {
+    if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
+      const a = document.createElement('a');
+      a.className = 'link';
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = '打开';
+      return a;
+    }
+    return document.createTextNode('—');
+  }
+
+  function statusSelect(lead) {
+    const select = document.createElement('select');
+    select.className = 'status-select';
+    for (const key of STATUS_OPTIONS) {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = STATUS_LABELS[key];
+      if (key === lead.status) opt.selected = true;
+      select.appendChild(opt);
+    }
+    select.addEventListener('change', async () => {
+      select.disabled = true;
+      try {
+        const res = await fetch(`/api/leads/${lead.id}/status`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ status: select.value }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || ('HTTP ' + res.status));
+        }
+        await Promise.all([loadOverview(), loadLeads()]);
+      } catch (err) {
+        alert('更新失败：' + err.message);
+      } finally {
+        select.disabled = false;
+      }
+    });
+    return select;
+  }
+
+  let searchTimer = null;
+  el('filterSearch').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadLeads, 250);
+  });
+  el('filterPlatform').addEventListener('change', loadLeads);
+  el('filterStatus').addEventListener('change', loadLeads);
+  el('refreshBtn').addEventListener('click', () => Promise.all([loadOverview(), loadLeads()]));
+
+  Promise.all([loadOverview(), loadLeads()]).catch((err) => {
+    el('dbPath').textContent = '加载失败：' + err.message;
+  });
+</script>
+</body>
+</html>

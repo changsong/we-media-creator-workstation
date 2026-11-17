@@ -49,7 +49,7 @@ async function aiReply(message) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('未设置 ANTHROPIC_API_KEY，改用模板');
   const system = [
-    `你在帮「${cfg.productName}」回复抖音私信。产品是桌面端自媒体多平台发布工具，支持 8 个平台，数据本地存储，提供 ${cfg.trialDays} 天免费试用。`,
+    `你在帮「${cfg.productName}」回复创作者私信（抖音/快手/小红书/视频号/B站）。产品是桌面端自媒体多平台发布工具，支持 8 个平台，数据本地存储，提供 ${cfg.trialDays} 天免费试用。`,
     '要求：中文，2 到 3 句，口语化，不群发感；只回答对方问题；不要承诺“不会被封”“100% 安全”“永久免费”；',
     `需要链接时用试用入口 ${cfg.trialUrl}，详细功能用 ${cfg.siteUrl}/features/。`,
   ].join('');

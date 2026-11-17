@@ -6,23 +6,24 @@
     "trialDays": 31,
     "dailyCap": 20,
     "cooldownDays": 30,
-    "intervalMinutes": [3, 8]
+    "intervalMinutes": [3, 8],
+    "sendExcludePlatforms": ["kuaishou"]
   },
   "openers": [
     {
       "id": "A-pain",
       "title": "痛点型",
-      "text": "{nickname}你好，看到你在做{niche}。多平台分发是不是每天要来回切好几个后台、手动抄数据？我们做了个桌面端「媒管家」：一次排期发到抖音、快手、小红书等 8 个平台，数据自动回流到本地报表。免费试用 31 天，不用绑卡：{trial_url}"
+      "text": "{nickname}您好，看到您在做{niche}。多平台分发是不是每天要来回切好几个后台、手动抄数据？我们做了个桌面端「媒管家」(https://wemediacreator.com)：一次排期发到抖音、快手、小红书等 8 个平台，数据自动回流到本地报表。免费试用 31 天：{trial_url}"
     },
     {
       "id": "B-trial",
       "title": "试用邀请型",
-      "text": "你好{nickname}，冒昧打扰。我们在做一个自媒体多平台发布工具，想找一批{niche}创作者试用。核心是省掉重复上传和手动记数据，授权后 31 天内全功能免费。愿意的话可以看看：{trial_url}　不合适直接忽略就好。"
+      "text": "您好{nickname}，冒昧打扰。我们在做一个自媒体多平台发布工具:「媒管家」(https://wemediacreator.com)，想找一批{niche}方向的创作者试用。核心是省掉重复上传和手动记数据，授权后 31 天内全功能免费。愿意的话可以看看：{trial_url}　不合适直接忽略就好。"
     },
     {
       "id": "C-tool",
       "title": "工具分享型",
-      "text": "看到你的{niche}内容，分享个我们自用的小工具：桌面端排期，到点自动发到 8 个平台，发布后自动核验，数据回到本地。免费试用 31 天，链接在这里：{trial_url}。不合适直接忽略，不打扰。"
+      "text": "看到您的{niche}账号，分享个我们自用的小工具：「媒管家」(https://wemediacreator.com),桌面端排期，到点自动发到 8 个平台，发布后自动核验，数据回到本地。免费试用 31 天，链接在这里：{trial_url}。不合适直接忽略，不打扰。"
     }
   ],
   "replies": [
