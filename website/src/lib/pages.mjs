@@ -7,6 +7,7 @@ import { LEGAL } from '../data/legal.mjs';
 import { CHANGELOG } from '../data/changelog.mjs';
 import { absolute, asset, assetAbsolute, breadcrumbs, clampText, esc, layout, routeTo, siteRoot } from './layout.mjs';
 import { ui } from './i18n.mjs';
+import { jiayouzhanRoutes } from './jiayouzhan.mjs';
 import {
   checkoutUrl,
   faqList,
@@ -1571,6 +1572,7 @@ export function renderRoutes({ checkout = '' } = {}) {
     pages.push(legalPage(lang, 'privacy'));
     pages.push(legalPage(lang, 'terms'));
   }
+  pages.push(...jiayouzhanRoutes());
   pages.push(checkoutPage('zh'));
   pages.push(checkoutReturnPage('zh'));
   return pages.filter(Boolean);
@@ -1656,6 +1658,7 @@ export function renderLlms() {
 - [Download](${base}/download/): Windows, macOS, and Linux installers.
 - [Use cases](${base}/use-cases/solo/): solo creators, small teams, creators abroad.
 - [Blog](${base}/blog/): publishing workflows and analytics notes.
+- [Jiayouzhan](${base}/jiayouzhan/): daily Chinese guides on shooting, editing, and account operations (AI-assisted, sources cited).
 - [FAQ](${base}/faq/): accounts, data, pricing, limitations.
 - [Changelog](${base}/changelog/): release history.
 

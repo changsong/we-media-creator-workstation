@@ -11,4 +11,10 @@ release/
 website/site/
 website/data/
 website/certs/
+website/.baidu.json
+website/.baidu-submitted.json
+website/.ai.json
+website/content/
+website/site.next/
+website/site.old/
 .tmp-*/

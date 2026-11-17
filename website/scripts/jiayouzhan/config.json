@@ -1,0 +1,43 @@
+{
+  "feeds": [
+    { "name": "少数派", "url": "https://sspai.com/feed" },
+    { "name": "人人都是产品经理", "url": "https://www.woshipm.com/feed" },
+    { "name": "运营派", "url": "https://www.yunyingpai.com/feed" },
+    { "name": "爱范儿", "url": "https://www.ifanr.com/feed" },
+    { "name": "极客公园", "url": "https://www.geekpark.net/rss" },
+    { "name": "雷峰网", "url": "https://www.leiphone.com/feed" },
+    { "name": "钛媒体", "url": "https://www.tmtpost.com/rss" },
+    { "name": "IT之家", "url": "https://www.ithome.com/rss/" },
+    { "name": "Readhub", "url": "https://readhub.cn/rss" }
+  ],
+  "bilibiliQueries": [
+    "剪辑技巧", "手机拍摄 教程", "口播 收音", "短视频 运镜",
+    "视频封面 设计", "小红书 起号", "短视频 脚本", "直播 运营"
+  ],
+  "skillKeywords": [
+    "拍摄", "运镜", "剪辑", "调色", "收音", "麦克风",
+    "灯光", "布光", "封面", "选题", "涨粉", "起号",
+    "完播", "脚本", "口播", "转场", "分镜", "字幕",
+    "剪映", "Vlog", "vlog", "UP主"
+  ],
+  "platformKeywords": [
+    "短视频", "自媒体", "创作者", "博主", "主播", "视频号",
+    "小红书", "抖音", "快手", "B站", "哔哩哔哩", "公众号",
+    "短剧", "种草", "直播带货", "内容创作", "账号", "直播"
+  ],
+  "practicalKeywords": ["教程", "攻略", "技巧", "指南", "方法", "实操", "复盘", "案例", "如何", "怎么"],
+  "excludeKeywords": [
+    "财报", "营收", "净利润", "融资", "收购", "上市", "市值",
+    "股价", "投资", "品牌", "商家", "电商", "商城", "大促",
+    "双11", "双十二", "发布会", "销量", "拼多多", "淘宝",
+    "天猫", "京东", "1688", "亚马逊"
+  ],
+  "maxAgeDays": 10,
+  "maxPerDay": 2,
+  "minBodyChars": 700,
+  "bannedWords": [
+    "最好的", "第一名", "全网第一", "绝对", "百分百", "万无一失",
+    "保证涨粉", "稳赚", "必火", "一夜爆红", "平台官方推荐"
+  ],
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+}

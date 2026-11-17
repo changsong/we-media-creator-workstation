@@ -284,9 +284,13 @@ node tools/verify-trends.js                # 对标账号 + 文案提取（含�
 面向终端用户的中英双语产品站。构建产物是纯静态目录，反馈表单由 `website/server.mjs` 接收并写入本地 SQLite。
 
 ```bash
-npm run site:build             # 生成 website/site（63 页，含 /en/ 全量镜像）
+npm run site:build             # 生成 website/site（68 页起，含 /en/ 全量镜像与中文独有「加油站」）
 PORT=8788 npm run site:serve   # 本地预览 + /api/feedback
 npm run site:deploy            # 构建并发布到生产服务器（SSH 上传 + 重启 + 健康检查）
+npm run site:baidu             # 提交新增/变更页面到百度普通收录（读 sitemap，按 lastmod 去重）
+npm run site:jiayouzhan        # 抓 RSS 选题 → AI 原创改写 → 写入内容并重建（--dry-run / --fetch-only / --mock / --no-build）
+npm run site:jiayouzhan:takedown -- <slug>   # 下架一篇文章并重建
+npm run site:content:pull      # 从服务器拉回 content/jiayouzhan.json（部署时自动执行）
 npm run site:releases          # 从 OSS 拉取 latest*.yml，更新 src/data/releases.json
 ```
 
@@ -295,3 +299,5 @@ npm run site:releases          # 从 OSS 拉取 latest*.yml，更新 src/data/re
 - 构建环境变量：`SITE_URL`（canonical / OG 绝对地址）、`SITE_BASE`（子路径部署）、`FEEDBACK_ENDPOINT`、`CHECKOUT_URL`、`CONTACT_EMAIL`
 - 部署：把 `website/site/` 上传到静态托管（Nginx / OSS + CDN），并把 `/api/feedback` 反向代理到 `node website/server.mjs`；反馈数据落在 `website/data/feedback.db`
 - 反馈管理：`GET /api/feedback?format=csv`，请求头 `Authorization: Bearer $FEEDBACK_ADMIN_TOKEN`。默认限流 5 次/小时（`FEEDBACK_RATE_LIMIT`），跨域白名单 `ALLOWED_ORIGINS`
+- 加油站：中文独有栏目 `/jiayouzhan/`，每天从 `website/scripts/jiayouzhan/config.json` 里的 RSS 源与 B 站公开搜索的教程类视频中挑选拍摄/剪辑/运营选题（标题命中技能词，排除财报/电商等商业新闻），由 AI 参考标题摘要原创改写，校验长度、禁用词与来源重合率后写入 `content/jiayouzhan.json` 并原子重建站点。权威内容在服务器，`site:deploy` 会先拉回该文件（拉取失败即中止部署），打包时不包含 `content/`；服务器 cron 每天 07:17 执行 `daily.mjs`（`flock /tmp/jiayouzhan.lock`），百度 09:17 任务自动收录新页面。AI Key 放在服务器 `/opt/we-media-site/.ai.json`（600，不进仓库），缺失时任务只记日志不产出半成品；服务器构建复用既有 CSS（`SKIP_TAILWIND=1`），失败时保留旧 `site/`
+- 百度收录：生产环境的提交在服务器执行，令牌 `/opt/we-media-site/.baidu.json`、已提交状态 `/opt/we-media-site/.baidu-submitted.json`、日志 `logs/baidu-submit.log`。cron 每天 09:17 增量推送 10 条（`scripts/submit-baidu.mjs --limit 10`，flock 防重入）；`site:deploy` 结束后会立即在服务器推送一次，配额不足只警告。本地 `npm run site:baidu` 用于 `--dry-run` 预览和查看待提交顺序，生产状态以服务器为准；首次全量可用 `--all`，`--limit N` 控制单次条数。token 须属于 sitemap 域名对应的已验证站点（百度搜索资源平台「普通收录 → API 提交」）

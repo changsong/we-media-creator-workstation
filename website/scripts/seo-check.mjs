@@ -7,14 +7,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const siteDir = path.join(root, 'site');
+const siteDir = process.env.SITE_DIR ? path.resolve(process.env.SITE_DIR) : path.join(root, 'site');
 const SITE_URL = (process.env.SITE_URL || 'https://we-media.example.com').replace(/\/+$/, '');
 const SITE_BASE = (process.env.SITE_BASE || '').replace(/\/+$/, '');
 const PRODUCTION_ORIGIN = 'https://www.wemediacreator.com';
 const strictOrigin = Boolean(process.env.SITE_URL);
 
 if (!fs.existsSync(siteDir)) {
-  console.error('seo-check: website/site 不存在，请先运行 npm run site:build');
+  console.error(`seo-check: ${siteDir} 不存在，请先运行 npm run site:build`);
   process.exit(1);
 }
 
@@ -166,11 +166,14 @@ for (const rel of pages) {
 
   const hreflangs = ['zh-CN', 'en', 'x-default'].filter((code) =>
     new RegExp(`<link\\s+rel="alternate"\\s+hreflang="${code}"`, 'i').test(html));
+  const zhOnly = rel.startsWith('jiayouzhan/');
   if (noindex) {
     if (hreflangs.length) warn(page, `noindex 页仍输出 hreflang：${hreflangs.join(', ')}`);
   } else {
     indexableUrls.add(urlForFile(rel));
-    if (hreflangs.length !== 3) fail(page, `hreflang 缺失（发现 ${hreflangs.join(', ') || '无'}）`);
+    const expected = zhOnly ? ['zh-CN', 'x-default'] : ['zh-CN', 'en', 'x-default'];
+    const ok = hreflangs.length === expected.length && expected.every((code) => hreflangs.includes(code));
+    if (!ok) fail(page, `hreflang 不正确（${zhOnly ? '中文独有页' : '双语页'}应输出 ${expected.join(', ')}，实际发现 ${hreflangs.join(', ') || '无'}）`);
     const h1 = countOf(html, /<h1\b/gi);
     if (h1 !== 1) fail(page, `可索引页 <h1> 数量 ${h1}（应为 1）`);
   }

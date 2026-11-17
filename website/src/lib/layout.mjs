@@ -207,6 +207,9 @@ function globalJsonLd(lang) {
   return { '@context': 'https://schema.org', '@graph': [org, site] };
 }
 
+// 百度搜索资源平台站点验证码（可用环境变量覆盖）
+const BAIDU_VERIFICATION_DEFAULT = 'codeva-3jyOBTb5nt';
+
 const FONT_PRELOADS = [
   'QdVPSTAyLFyeg_IDWvOJmVES_Hw3BXo.woff2',
   'QdVMSTAyLFyeg_IDWvOJmVES_HTEJm81Rb0.woff2',
@@ -230,8 +233,12 @@ export function head({
   const enHref = absolute(route, 'en');
   const ogImage = assetAbsolute('og.png');
   const showAlternates = alternates && !noindex;
+  const zhOnly = alternates === 'zh-only';
   const alternateLinks = showAlternates
-    ? `<link rel="alternate" hreflang="zh-CN" href="${zhHref}"/>
+    ? zhOnly
+      ? `<link rel="alternate" hreflang="zh-CN" href="${zhHref}"/>
+<link rel="alternate" hreflang="x-default" href="${zhHref}"/>`
+      : `<link rel="alternate" hreflang="zh-CN" href="${zhHref}"/>
 <link rel="alternate" hreflang="en" href="${enHref}"/>
 <link rel="alternate" hreflang="x-default" href="${zhHref}"/>`
     : '';
@@ -243,9 +250,7 @@ ${article.modified ? `<meta property="article:modified_time" content="${esc(arti
     process.env.GOOGLE_SITE_VERIFICATION
       ? `<meta name="google-site-verification" content="${esc(process.env.GOOGLE_SITE_VERIFICATION)}"/>`
       : '',
-    process.env.BAIDU_SITE_VERIFICATION
-      ? `<meta name="baidu-site-verification" content="${esc(process.env.BAIDU_SITE_VERIFICATION)}"/>`
-      : '',
+    `<meta name="baidu-site-verification" content="${esc(process.env.BAIDU_SITE_VERIFICATION || BAIDU_VERIFICATION_DEFAULT)}"/>`,
   ].filter(Boolean).join('\n');
   const fontPreloads = FONT_PRELOADS
     .map((font) => `<link rel="preload" href="${asset(font)}" as="font" type="font/woff2" crossorigin/>`)
@@ -294,7 +299,7 @@ ${alternateLinks}${verifyMeta}
 <meta property="og:image:type" content="image/png"/>
 <meta property="og:image:alt" content="${imageAlt}"/>
 <meta property="og:locale" content="${lang === 'en' ? 'en_US' : 'zh_CN'}"/>
-<meta property="og:locale:alternate" content="${lang === 'en' ? 'zh_CN' : 'en_US'}"/>
+${zhOnly ? '' : `<meta property="og:locale:alternate" content="${lang === 'en' ? 'zh_CN' : 'en_US'}"/>\n`}
 ${articleMeta}<meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="${esc(title)}"/>
 <meta name="twitter:description" content="${esc(description)}"/>
@@ -325,7 +330,7 @@ export function layout({
   bodyClass = '',
   scripts = '',
 }) {
-  const showAlternates = alternates && !noindex;
+  const showAlternates = alternates === true && !noindex;
   return `${head({ lang, route, title, description, jsonLd, ogType, noindex, alternates, article })}
 <body class="bg-background font-body-md text-on-surface antialiased overflow-x-hidden pb-20 xl:pb-0 ${bodyClass}">
 <a class="skip-link" href="#main">${lang === 'en' ? 'Skip to content' : '跳到主要内容'}</a>

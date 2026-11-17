@@ -7,6 +7,7 @@ export const UI = {
     nav: [
       { key: 'features', label: '功能特性', route: '/features/' },
       { key: 'platforms', label: '支持平台', route: '/platforms/' },
+      { key: 'jiayouzhan', label: '加油站', route: '/jiayouzhan/' },
       { key: 'workflow', label: '工作流展示', route: '/#workflow' },
       { key: 'pricing', label: '价格方案', route: '/pricing/' },
       { key: 'privacy', label: '安全与隐私', route: '/#local-first' },
@@ -65,6 +66,7 @@ export const UI = {
           title: '资源与支持',
           links: [
             { label: '使用场景', route: '/use-cases/solo/' },
+            { label: '加油站', route: '/jiayouzhan/' },
             { label: '博客', route: '/blog/' },
             { label: '常见问题', route: '/faq/' },
             { label: '反馈与购买咨询', route: '/feedback/' },

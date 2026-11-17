@@ -8,8 +8,10 @@ import { render404, renderRoutes, renderSitemap, renderRobots, renderLlms } from
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
-const siteDir = path.join(__dirname, 'site');
+const shippedSiteDir = path.join(__dirname, 'site');
+const siteDir = process.env.SITE_OUT ? path.resolve(process.env.SITE_OUT) : shippedSiteDir;
 const assetsDir = path.join(siteDir, 'assets');
+const skipTailwind = process.env.SKIP_TAILWIND === '1';
 const checkout = process.env.CHECKOUT_URL || '';
 
 const ASSET_FILES = [
@@ -25,10 +27,20 @@ const ASSET_GLOBS = [/\.woff2$/];
 function copyAssets() {
   const src = path.join(repoRoot, 'public', 'assets');
   fs.mkdirSync(assetsDir, { recursive: true });
-  for (const name of fs.readdirSync(src)) {
-    const keep = ASSET_FILES.includes(name) || ASSET_GLOBS.some((re) => re.test(name));
-    if (!keep) continue;
-    fs.copyFileSync(path.join(src, name), path.join(assetsDir, name));
+  const keep = (name) => ASSET_FILES.includes(name) || ASSET_GLOBS.some((re) => re.test(name));
+  if (fs.existsSync(src)) {
+    for (const name of fs.readdirSync(src)) {
+      if (!keep(name)) continue;
+      fs.copyFileSync(path.join(src, name), path.join(assetsDir, name));
+    }
+  } else {
+    // 服务器上没有 public/assets，从上一版站点产物兜底复制
+    const legacy = path.join(shippedSiteDir, 'assets');
+    if (!fs.existsSync(legacy)) throw new Error(`缺少素材目录：${src} 与 ${legacy} 都不存在`);
+    for (const name of fs.readdirSync(legacy)) {
+      if (!keep(name)) continue;
+      fs.copyFileSync(path.join(legacy, name), path.join(assetsDir, name));
+    }
   }
   fs.copyFileSync(path.join(__dirname, 'src', 'site.js'), path.join(assetsDir, 'site.js'));
   fs.copyFileSync(path.join(__dirname, 'src', 'checkout.js'), path.join(assetsDir, 'checkout.js'));
@@ -50,6 +62,14 @@ function writePage(route, html, lang = 'zh') {
 }
 
 function runTailwind() {
+  if (skipTailwind) {
+    const previous = path.join(shippedSiteDir, 'assets', 'site.css');
+    if (path.resolve(siteDir) === path.resolve(shippedSiteDir) || !fs.existsSync(previous)) {
+      throw new Error('SKIP_TAILWIND=1 时需要使用 SITE_OUT 指向新目录，且上一版 site/assets/site.css 必须存在');
+    }
+    fs.copyFileSync(previous, path.join(assetsDir, 'site.css'));
+    return;
+  }
   const cli = path.join(repoRoot, 'node_modules', 'tailwindcss', 'lib', 'cli.js');
   const result = spawnSync(
     process.execPath,
@@ -96,7 +116,7 @@ function main() {
     }
   })(siteDir);
 
-  console.log(`site -> ${path.relative(repoRoot, siteDir)} (${htmlFiles.length} pages, ${routes.length} indexed routes) in ${Date.now() - started}ms`);
+  console.log(`site -> ${path.relative(repoRoot, siteDir)} (${htmlFiles.length} pages, ${routes.length} indexed routes, tailwind ${skipTailwind ? 'reused' : 'built'}) in ${Date.now() - started}ms`);
   console.log(`url ${SITE_URL}${SITE_BASE || ''} · version ${VERSION}`);
 }
 
