@@ -5,7 +5,7 @@ import { USE_CASES } from '../data/use-cases.mjs';
 import { PLATFORM_DETAILS } from '../data/platforms.mjs';
 import { LEGAL } from '../data/legal.mjs';
 import { CHANGELOG } from '../data/changelog.mjs';
-import { absolute, asset, breadcrumbs, esc, layout, routeTo } from './layout.mjs';
+import { absolute, asset, assetAbsolute, breadcrumbs, clampText, esc, layout, routeTo, siteRoot } from './layout.mjs';
 import { ui } from './i18n.mjs';
 import {
   checkoutUrl,
@@ -42,14 +42,30 @@ function formatSize(bytes) {
   return `${(Number(bytes) / 1024 / 1024).toFixed(1)} MB`;
 }
 
-function page({ lang, route, title, description, body, jsonLd = [], priority = 0.7, lastmod, noindex = false, ogType = 'website', scripts = '' }) {
+function page({ lang, route, title, description, body, jsonLd = [], priority = 0.7, lastmod, noindex = false, ogType = 'website', scripts = '', alternates = !noindex, article = null }) {
   return {
     lang,
     route,
     priority,
     lastmod,
     noindex,
-    html: layout({ lang, route, title, description, body, jsonLd, noindex, ogType, scripts }),
+    html: layout({ lang, route, title, description, body, jsonLd, noindex, ogType, scripts, alternates, article }),
+  };
+}
+
+function orgRef() {
+  return { '@type': 'Organization', '@id': `${siteRoot()}/#organization`, name: 'WeMedia Studio' };
+}
+
+function offerLd(lang) {
+  const prices = PLANS.map((plan) => (lang === 'en' ? plan.priceUsd : plan.price));
+  return {
+    '@type': 'AggregateOffer',
+    priceCurrency: lang === 'en' ? 'USD' : 'CNY',
+    lowPrice: Math.min(...prices),
+    highPrice: Math.max(...prices),
+    offerCount: PLANS.length,
+    url: absolute('/pricing/', lang),
   };
 }
 
@@ -364,7 +380,7 @@ function platformPage(lang, slug) {
     lang,
     route: `/platforms/${slug}/`,
     title: isEn ? `${name} publishing & analytics — WeMedia Creator` : `${name}发布与数据复盘｜媒管家`,
-    description: (isEn ? detail.intro : detail.intro).slice(0, 150),
+    description: clampText(detail.intro, isEn ? 160 : 90, lang),
     body,
     jsonLd: [bc.jsonLd, faqLd],
     priority: 0.8,
@@ -446,6 +462,8 @@ function pricingPage(lang, checkout = '') {
       ? 'Local-first desktop workspace for publishing to eight Chinese platforms with automatic analytics.'
       : '本地优先的自媒体桌面工作台，支持八个平台发布与八个平台数据自动回流。',
     brand: { '@type': 'Brand', name: 'WeMedia Studio' },
+    image: assetAbsolute('og.png'),
+    url: absolute('/pricing/', lang),
     offers: PLANS.map((plan) => ({
       '@type': 'Offer',
       name: isEn ? plan.nameEn : plan.nameZh,
@@ -644,9 +662,14 @@ function downloadPage(lang) {
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Windows 10+, macOS 11+, Ubuntu 22.04+',
     softwareVersion: VERSION,
-    downloadUrl: absolute('/download/', lang),
-    fileSize: formatSize(win.size),
+    downloadUrl: win.url,
+    fileSize: String(win.size),
     datePublished: String(RELEASES.releaseDate).slice(0, 10),
+    image: assetAbsolute('og.png'),
+    screenshot: assetAbsolute('og.png'),
+    inLanguage: isEn ? 'en' : 'zh-CN',
+    publisher: orgRef(),
+    offers: offerLd(lang),
   };
 
   return page({
@@ -738,7 +761,7 @@ function useCasePage(lang, slug) {
     lang,
     route: `/use-cases/${slug}/`,
     title: isEn ? `${h1} — WeMedia Creator` : `${h1}｜媒管家`,
-    description: f('intro').slice(0, 150),
+    description: clampText(f('intro'), isEn ? 160 : 90, lang),
     body,
     jsonLd: [bc.jsonLd],
     priority: 0.7,
@@ -787,7 +810,7 @@ function blogIndex(lang) {
     `<div class="max-w-6xl mx-auto pb-space-2xl">
       <a class="group grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-3xl bg-canvas-dark overflow-hidden shadow-xl shadow-canvas-dark/10" href="${routeTo(`/blog/${featured.slug}/`, lang)}">
         <div class="relative min-h-[240px] overflow-hidden">
-          <img alt="" class="absolute inset-0 h-full w-full object-cover opacity-70 transition-transform duration-500 group-hover:scale-105" src="${asset('img-3.jpg')}" loading="lazy"/>
+          <img alt="" class="absolute inset-0 h-full w-full object-cover opacity-70 transition-transform duration-500 group-hover:scale-105" src="${asset('img-3.jpg')}" width="512" height="279" loading="lazy" decoding="async"/>
           <div class="absolute inset-0 bg-gradient-to-t from-canvas-dark via-canvas-dark/30 to-transparent"></div>
           <span class="absolute left-5 top-5 rounded-full bg-gold-accent px-3 py-1 font-label-capsule text-[11px] uppercase tracking-wider text-canvas-dark">${isEn ? 'Latest' : '最新'}</span>
         </div>
@@ -811,13 +834,18 @@ function blogIndex(lang) {
   const blogLd = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
+    '@id': `${absolute('/blog/', lang)}#blog`,
     name: t.blog.title,
     url: absolute('/blog/', lang),
     inLanguage: isEn ? 'en' : 'zh-CN',
+    image: assetAbsolute('og.png'),
+    publisher: orgRef(),
     blogPost: BLOG_POSTS.slice(0, 8).map((post) => ({
       '@type': 'BlogPosting',
       headline: isEn ? post.titleEn : post.titleZh,
       datePublished: post.date,
+      dateModified: post.date,
+      image: assetAbsolute('og.png'),
       url: absolute(`/blog/${post.slug}/`, lang),
     })),
   };
@@ -826,7 +854,9 @@ function blogIndex(lang) {
     lang,
     route: '/blog/',
     title: isEn ? 'Blog — publishing workflows and creator analytics' : '博客｜发布流程、内容日历与数据复盘',
-    description: t.blog.intro,
+    description: isEn
+      ? t.blog.intro
+      : '写给认真做内容的人：多平台发布流程、数据复盘方法、内容日历搭建与发布工具选择经验，来自一线创作者的工作笔记与可复用模板。',
     body,
     jsonLd: [bc.jsonLd, blogLd],
     priority: 0.7,
@@ -841,6 +871,13 @@ function blogPostPage(lang, slug) {
   const t = ui(lang);
   const title = isEn ? post.titleEn : post.titleZh;
   const desc = isEn ? post.descEn : post.descZh;
+  const intro = isEn ? post.introEn : post.introZh;
+  const shortThreshold = isEn ? 120 : 60;
+  const seoDesc = clampText(
+    desc.length < shortThreshold ? `${desc}${isEn ? ' ' : ''}${intro}` : desc,
+    isEn ? 160 : 90,
+    lang,
+  );
   const bc = crumb(lang, [
     { label: isEn ? 'Home' : '首页', route: '/' },
     { label: t.blog.title, route: '/blog/' },
@@ -906,19 +943,27 @@ function blogPostPage(lang, slug) {
     datePublished: post.date,
     dateModified: post.date,
     inLanguage: isEn ? 'en' : 'zh-CN',
+    url: absolute(`/blog/${slug}/`, lang),
     mainEntityOfPage: absolute(`/blog/${slug}/`, lang),
+    image: assetAbsolute('og.png'),
+    keywords: isEn ? post.tagEn : post.tagZh,
+    isPartOf: { '@id': `${absolute('/blog/', lang)}#blog` },
     author: { '@type': 'Organization', name: 'WeMedia Studio' },
-    publisher: { '@type': 'Organization', name: 'WeMedia Studio' },
+    publisher: {
+      ...orgRef(),
+      logo: { '@type': 'ImageObject', url: assetAbsolute('img-1.png'), width: 512, height: 512 },
+    },
   };
 
   return page({
     lang,
     route: `/blog/${slug}/`,
-    title: isEn ? `${title} — WeMedia Blog` : `${title}｜WeMedia 博客`,
-    description: desc,
+    title: isEn ? `${title} | WeMedia` : `${title}｜WeMedia 博客`,
+    description: seoDesc,
     body,
     jsonLd: [bc.jsonLd, articleLd],
     ogType: 'article',
+    article: { published: post.date, modified: post.date, section: isEn ? post.tagEn : post.tagZh },
     priority: 0.6,
     lastmod: post.date,
   });
@@ -989,7 +1034,7 @@ function faqPage(lang) {
     title: isEn ? 'FAQ — accounts, data, pricing, limitations' : '常见问题｜账号安全、数据存放、价格与限制',
     description: isEn
       ? 'Frequently asked questions about WeMedia Creator: account safety, local data, platform support, pricing, refunds, and limitations.'
-      : '关于媒管家的常见问题：账号安全、本地数据、平台支持、价格退款与产品边界。',
+      : '关于媒管家的常见问题：账号安全与封号风险、本地数据存放与备份、八个平台支持范围、价格与退款政策、macOS 限制与产品边界。',
     body,
     jsonLd: [bc.jsonLd, faqLd],
     priority: 0.7,
@@ -1125,8 +1170,10 @@ function feedbackPage(lang) {
   return page({
     lang,
     route: '/feedback/',
-    title: isEn ? 'Feedback & licensing questions' : '反馈与购买咨询',
-    description: t.feedback.intro,
+    title: isEn ? 'Feedback & licensing questions' : '问题反馈与购买咨询｜媒管家',
+    description: isEn
+      ? t.feedback.intro
+      : '提交功能建议、问题反馈或购买咨询，也可以申请电子发票。购买与授权咨询会在 1 个工作日内回复，功能建议每周集中阅读并评估。',
     body,
     priority: 0.6,
   });
@@ -1162,7 +1209,7 @@ function aboutPage(lang) {
     }),
     `<div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-space-xl items-center pb-space-2xl">
       <div class="relative overflow-hidden rounded-3xl shadow-xl shadow-canvas-dark/10">
-        <img alt="${isEn ? 'A bright desk with a laptop showing analytics' : '明亮的工作台，笔记本上显示数据面板'}" class="h-full w-full object-cover" src="${asset('img-3.jpg')}" loading="lazy"/>
+        <img alt="${isEn ? 'A bright desk with a laptop showing analytics' : '明亮的工作台，笔记本上显示数据面板'}" class="h-full w-full object-cover" src="${asset('img-3.jpg')}" width="512" height="279" loading="lazy" decoding="async"/>
         <div class="absolute bottom-4 left-4 right-4 rounded-xl bg-surface-white/90 backdrop-blur px-4 py-3">
           <div class="font-label-capsule text-[11px] uppercase tracking-wider text-primary">${isEn ? 'The problem we started with' : '最初的起点'}</div>
           <div class="font-body-sm text-body-sm text-on-surface">${isEn ? 'Eight tabs, eight forms, and a spreadsheet of numbers copied by hand.' : '八个标签页、八份表单，还有一张手抄的数据表。'}</div>
@@ -1203,7 +1250,7 @@ function aboutPage(lang) {
     title: isEn ? 'About WeMedia Studio' : '关于我们｜WeMedia Studio',
     description: isEn
       ? 'A small studio building local-first publishing and analytics software for Chinese content creators.'
-      : 'WeMedia Studio 是一个为中文创作者做本地优先发布与复盘工具的小团队。',
+      : 'WeMedia Studio 是专注本地优先的小团队，为中文创作者打造「媒管家」：八平台自动发布、作品数据回流复盘，账号与素材全部留在本机。',
     body,
     jsonLd: [bc.jsonLd],
     priority: 0.5,
@@ -1252,8 +1299,10 @@ function changelogPage(lang) {
   return page({
     lang,
     route: '/changelog/',
-    title: isEn ? 'Changelog — WeMedia Creator' : '更新日志｜媒管家',
-    description: isEn ? 'Release notes for WeMedia Creator: new platform support, fixes, and compatibility updates.' : '媒管家的版本更新记录：平台支持、修复与适配变化。',
+    title: isEn ? 'Changelog — WeMedia Creator' : '更新日志｜媒管家每个版本改了什么',
+    description: isEn
+      ? 'Release notes for WeMedia Creator: new platform support, fixes, and compatibility updates.'
+      : '媒管家的完整版本更新记录：新增平台支持、发布与数据采集修复、安装包适配与兼容性变化，以及每个版本的具体改动与已知问题说明。',
     body,
     jsonLd: [bc.jsonLd],
     priority: 0.5,
@@ -1293,10 +1342,11 @@ function legalPage(lang, kind) {
     lang,
     route,
     title: isEn ? `${title} — WeMedia Creator` : `${title}｜媒管家`,
-    description: intro.slice(0, 150),
+    description: clampText(intro, isEn ? 160 : 90, lang),
     body,
     jsonLd: [bc.jsonLd],
     priority: 0.3,
+    lastmod: doc.updated,
   });
 }
 
@@ -1531,19 +1581,32 @@ function urlFor(route, lang) {
 }
 
 export function renderSitemap(routes) {
-  const entries = routes
-    .filter((r) => !r.noindex)
-    .map(
-      (r) => `  <url>
-    <loc>${urlFor(r.route, r.lang)}</loc>
-    <lastmod>${(r.lastmod || RELEASES.releaseDate || new Date().toISOString()).slice(0, 10)}</lastmod>
+  const indexed = routes.filter((r) => !r.noindex);
+  const byRoute = new Map();
+  for (const r of indexed) {
+    if (!byRoute.has(r.route)) byRoute.set(r.route, {});
+    byRoute.get(r.route)[r.lang] = r;
+  }
+  const entries = indexed
+    .map((r) => {
+      const pair = byRoute.get(r.route) || {};
+      const alternates = pair.zh && pair.en
+        ? `
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="${urlFor(r.route, 'zh')}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${urlFor(r.route, 'en')}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${urlFor(r.route, 'zh')}"/>`
+        : '';
+      const lastmod = (r.lastmod || RELEASES.releaseDate || new Date().toISOString()).slice(0, 10);
+      return `  <url>
+    <loc>${urlFor(r.route, r.lang)}</loc>${alternates}
+    <lastmod>${lastmod}</lastmod>
     <changefreq>${r.route === '/' ? 'weekly' : 'monthly'}</changefreq>
     <priority>${(r.priority ?? 0.7).toFixed(1)}</priority>
-  </url>`,
-    )
+  </url>`;
+    })
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${entries}
 </urlset>
 `;
@@ -1578,7 +1641,7 @@ export function renderLlms() {
 ## Key facts
 
 - Platforms: Douyin, WeChat Channels, Xiaohongshu, WeChat Official Accounts, Bilibili, Kuaishou, Weibo, Zhihu.
-- Automatic analytics: Douyin, Xiaohongshu, WeChat Channels, WeChat Official Accounts.
+- Automatic analytics: Douyin, WeChat Channels, Xiaohongshu, WeChat Official Accounts, Bilibili, Kuaishou, Weibo, Zhihu (Zhihu covers video works only).
 - Platforms require Chrome or Edge on the same machine; no API keys.
 - Data lives in a local SQLite database; the app is single-user and does not upload content.
 - Current version: ${VERSION}.

@@ -31,11 +31,40 @@ export function absolute(route, lang = 'zh') {
   return `${SITE_URL}${routeTo(route, lang)}`;
 }
 
+// 静态资源用绝对地址（不带语言前缀、不带尾斜杠），供 og:image 与 JSON-LD 使用
+export function assetAbsolute(path) {
+  return `${SITE_URL}${asset(path)}`;
+}
+
+// 按整句拼接到上限；单句超长才退化为词/字边界截断并加省略号
+export function clampText(text = '', max = 160, lang = 'zh') {
+  const clean = String(text).replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean;
+  const sentences = clean.match(/[^。！？.!?]+[。！？.!?]?/g) || [clean];
+  let out = '';
+  for (const sentence of sentences) {
+    if (`${out}${sentence}`.trim().length > max) break;
+    out += sentence;
+  }
+  out = out.trim();
+  if (out.length >= max * 0.5) return out;
+  const slice = clean.slice(0, max);
+  if (lang === 'en') {
+    const cut = slice.lastIndexOf(' ');
+    return `${slice.slice(0, cut > max * 0.6 ? cut : max).trim()}…`;
+  }
+  return `${slice.trim()}…`;
+}
+
+export function siteRoot() {
+  return `${SITE_URL}${SITE_BASE}`;
+}
+
 export function langLabel(lang) {
   return lang === 'en' ? 'EN' : '中';
 }
 
-export function header({ lang, route }) {
+export function header({ lang, route, alternates = true }) {
   const t = ui(lang);
   const isActive = (navRoute) => {
     const base = navRoute.split('#')[0];
@@ -60,7 +89,7 @@ export function header({ lang, route }) {
   return `<header id="site-header" class="fixed top-0 left-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(9,12,13,0.04)]">
   <div class="h-20 max-w-[1440px] mx-auto px-margin flex items-center justify-between gap-space-md">
     <a class="flex items-center gap-space-md shrink-0" href="${routeTo('/', lang)}" aria-label="${esc(t.brand)}">
-      <img alt="WeMedia Logo" class="h-8 w-auto object-contain" src="${asset('img-1.png')}" width="32" height="32"/>
+      <img alt="WeMedia Logo" class="h-8 w-auto object-contain" src="${asset('img-1.png')}" width="32" height="32" decoding="async" fetchpriority="high"/>
       <span class="flex flex-col">
         <span class="flex items-center gap-space-sm">
           <span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">${esc(t.brand)}</span>
@@ -71,10 +100,10 @@ export function header({ lang, route }) {
     </a>
     <nav class="hidden xl:flex items-center gap-space-md 2xl:gap-space-lg" aria-label="${lang === 'en' ? 'Primary' : '主导航'}">${navLinks}</nav>
     <div class="flex items-center gap-space-sm shrink-0">
-      <div class="hidden sm:flex items-center bg-surface-container-low px-2 py-1 rounded-full text-on-surface-variant font-label-capsule text-body-sm" aria-label="${esc(t.language)}">
+      ${alternates ? `<div class="hidden sm:flex items-center bg-surface-container-low px-2 py-1 rounded-full text-on-surface-variant font-label-capsule text-body-sm" aria-label="${esc(t.language)}">
         <a class="px-2 py-0.5 rounded-full ${lang === 'zh' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'zh')}" hreflang="zh-CN" lang="zh-CN">中</a>
         <a class="px-2 py-0.5 rounded-full ${lang === 'en' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'en')}" hreflang="en" lang="en">EN</a>
-      </div>
+      </div>` : ''}
       <div class="hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm">
         <span class="w-2 h-2 rounded-full bg-status-success"></span><span>macOS / Win</span>
       </div>
@@ -114,7 +143,7 @@ export function footer({ lang }) {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-gutter mb-space-2xl">
       <div class="lg:col-span-2 flex flex-col items-start">
         <a class="flex items-center gap-space-sm mb-space-md" href="${routeTo('/', lang)}">
-          <img alt="WeMedia Logo" class="h-8 w-auto object-contain" src="${asset('img-1.png')}" width="32" height="32" loading="lazy"/>
+          <img alt="WeMedia Logo" class="h-8 w-auto object-contain" src="${asset('img-1.png')}" width="32" height="32" loading="lazy" decoding="async"/>
           <span class="font-headline-sm text-headline-sm text-text-light-primary">${lang === 'en' ? 'WeMedia Creator' : '媒管家'}</span>
         </a>
         <p class="font-body-md text-body-md text-text-light-secondary mb-space-lg max-w-sm">${esc(t.footer.desc)}</p>
@@ -148,28 +177,80 @@ export function mobileCta({ lang }) {
 }
 
 function globalJsonLd(lang) {
+  const root = siteRoot();
+  const orgId = `${root}/#organization`;
   const org = {
     '@type': 'Organization',
+    '@id': orgId,
     name: 'WeMedia Studio',
-    url: absolute('/', lang),
-    logo: absolute('/assets/img-1.png', lang),
+    url: `${root}/`,
+    description: lang === 'en'
+      ? 'WeMedia Studio builds WeMedia Creator, a desktop workstation for planning, publishing, and reviewing content across Chinese social platforms.'
+      : 'WeMedia Studio 出品桌面工具「媒管家」，帮助一人团队完成多平台内容排期、发布与数据复盘。',
+    logo: {
+      '@type': 'ImageObject',
+      url: assetAbsolute('img-1.png'),
+      width: 512,
+      height: 512,
+    },
+    sameAs: ['https://github.com/changsong/we-media-creator-workstation'],
   };
   const site = {
     '@type': 'WebSite',
+    '@id': `${root}/#website`,
     name: lang === 'en' ? 'WeMedia Creator' : '媒管家',
     alternateName: 'WeMedia Creator',
-    url: absolute('/', lang),
+    url: `${root}/`,
     inLanguage: lang === 'en' ? 'en' : 'zh-CN',
+    publisher: { '@id': orgId },
   };
   return { '@context': 'https://schema.org', '@graph': [org, site] };
 }
 
-export function head({ lang, route, title, description, jsonLd = [], ogType = 'website', noindex = false }) {
-  const t = ui(lang);
+const FONT_PRELOADS = [
+  'QdVPSTAyLFyeg_IDWvOJmVES_Hw3BXo.woff2',
+  'QdVMSTAyLFyeg_IDWvOJmVES_HTEJm81Rb0.woff2',
+  'LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yw.woff2',
+  'kJEPBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzBwG-RpA6RzaxHMPdY40KH8nGzv3fzfVJO1Q.woff2',
+];
+
+export function head({
+  lang,
+  route,
+  title,
+  description,
+  jsonLd = [],
+  ogType = 'website',
+  noindex = false,
+  alternates = true,
+  article = null,
+}) {
   const canonical = absolute(route, lang);
   const zhHref = absolute(route, 'zh');
   const enHref = absolute(route, 'en');
-  const ogImage = absolute('/assets/og.png', lang);
+  const ogImage = assetAbsolute('og.png');
+  const showAlternates = alternates && !noindex;
+  const alternateLinks = showAlternates
+    ? `<link rel="alternate" hreflang="zh-CN" href="${zhHref}"/>
+<link rel="alternate" hreflang="en" href="${enHref}"/>
+<link rel="alternate" hreflang="x-default" href="${zhHref}"/>`
+    : '';
+  const articleMeta = article
+    ? `<meta property="article:published_time" content="${esc(article.published)}"/>
+${article.modified ? `<meta property="article:modified_time" content="${esc(article.modified)}"/>\n` : ''}${article.section ? `<meta property="article:section" content="${esc(article.section)}"/>\n` : ''}`
+    : '';
+  const verifyMeta = [
+    process.env.GOOGLE_SITE_VERIFICATION
+      ? `<meta name="google-site-verification" content="${esc(process.env.GOOGLE_SITE_VERIFICATION)}"/>`
+      : '',
+    process.env.BAIDU_SITE_VERIFICATION
+      ? `<meta name="baidu-site-verification" content="${esc(process.env.BAIDU_SITE_VERIFICATION)}"/>`
+      : '',
+  ].filter(Boolean).join('\n');
+  const fontPreloads = FONT_PRELOADS
+    .map((font) => `<link rel="preload" href="${asset(font)}" as="font" type="font/woff2" crossorigin/>`)
+    .join('\n');
+  const imageAlt = esc(`${title} — WeMedia Creator`);
   const ld = [globalJsonLd(lang), ...jsonLd].map(
     (obj) => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`,
   ).join('\n');
@@ -201,21 +282,26 @@ export function head({ lang, route, title, description, jsonLd = [], ogType = 'w
 <meta name="description" content="${esc(description)}"/>
 ${noindex ? '<meta name="robots" content="noindex, follow"/>' : '<meta name="robots" content="index, follow, max-image-preview:large"/>'}
 <link rel="canonical" href="${canonical}"/>
-<link rel="alternate" hreflang="zh-CN" href="${zhHref}"/>
-<link rel="alternate" hreflang="en" href="${enHref}"/>
-<link rel="alternate" hreflang="x-default" href="${zhHref}"/>
+${alternateLinks}${verifyMeta}
 <meta property="og:type" content="${ogType}"/>
 <meta property="og:site_name" content="WeMedia Creator"/>
 <meta property="og:title" content="${esc(title)}"/>
 <meta property="og:description" content="${esc(description)}"/>
 <meta property="og:url" content="${canonical}"/>
 <meta property="og:image" content="${ogImage}"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:type" content="image/png"/>
+<meta property="og:image:alt" content="${imageAlt}"/>
 <meta property="og:locale" content="${lang === 'en' ? 'en_US' : 'zh_CN'}"/>
-<meta name="twitter:card" content="summary_large_image"/>
+<meta property="og:locale:alternate" content="${lang === 'en' ? 'zh_CN' : 'en_US'}"/>
+${articleMeta}<meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="${esc(title)}"/>
 <meta name="twitter:description" content="${esc(description)}"/>
 <meta name="twitter:image" content="${ogImage}"/>
+<meta name="twitter:image:alt" content="${imageAlt}"/>
 <link rel="icon" type="image/png" href="${asset('img-1.png')}"/>
+${fontPreloads}
 <link rel="stylesheet" href="${asset('fonts-text.css')}"/>
 <link rel="stylesheet" href="${asset('fonts-icons2.css')}"/>
 <link rel="stylesheet" href="${asset('site.css')}"/>
@@ -233,14 +319,17 @@ export function layout({
   jsonLd = [],
   ogType = 'website',
   noindex = false,
+  alternates = !noindex,
+  article = null,
   mainClass = '',
   bodyClass = '',
   scripts = '',
 }) {
-  return `${head({ lang, route, title, description, jsonLd, ogType, noindex })}
+  const showAlternates = alternates && !noindex;
+  return `${head({ lang, route, title, description, jsonLd, ogType, noindex, alternates, article })}
 <body class="bg-background font-body-md text-on-surface antialiased overflow-x-hidden pb-20 xl:pb-0 ${bodyClass}">
 <a class="skip-link" href="#main">${lang === 'en' ? 'Skip to content' : '跳到主要内容'}</a>
-${header({ lang, route })}
+${header({ lang, route, alternates: showAlternates })}
 <main id="main" class="w-full pt-20 bg-background max-w-[1440px] mx-auto px-margin ${mainClass}">${body}</main>
 ${footer({ lang })}
 ${mobileCta({ lang })}

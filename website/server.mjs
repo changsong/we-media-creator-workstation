@@ -201,7 +201,15 @@ function serveFile(req, res, file) {
   const type = MIME[ext] || 'application/octet-stream';
   const stat = fs.statSync(file);
   const isAsset = file.includes(`${path.sep}assets${path.sep}`);
-  const cache = ext === '.html' ? 'no-cache' : isAsset ? 'public, max-age=604800' : 'public, max-age=3600';
+  const cache = ext === '.html'
+    ? 'no-cache'
+    : ext === '.woff2'
+      ? 'public, max-age=31536000, immutable'
+      : ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.ico'].includes(ext)
+        ? 'public, max-age=2592000'
+        : isAsset
+          ? 'public, max-age=604800'
+          : 'public, max-age=3600';
   const headers = {
     'Content-Type': type,
     'Cache-Control': cache,
@@ -269,6 +277,16 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(405);
       res.end();
       return;
+    }
+
+    // 目录地址统一 301 到带尾斜杠的 canonical 形式
+    if (url.pathname !== '/' && !url.pathname.endsWith('/') && !path.extname(url.pathname)) {
+      const dir = path.join(siteDir, path.normalize(url.pathname).replace(/^([/\\])+/, ''));
+      if (dir.startsWith(siteDir) && fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
+        res.writeHead(301, { Location: `${url.pathname}/${url.search}` });
+        res.end();
+        return;
+      }
     }
 
     const file = resolveStatic(url.pathname);

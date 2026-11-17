@@ -372,7 +372,7 @@ export function desktopSection({ lang, hasVideo = false }) {
   const media = hasVideo
     ? `<div class="video-shell" data-video-demo><video preload="metadata" playsinline muted loop poster="${asset('img-2.jpg')}"><source src="${asset('video/demo.mp4')}" type="video/mp4"/></video><div class="video-poster" data-video-poster><button class="video-play" type="button" aria-label="${isEn ? 'Play product demo' : '播放产品演示'}">${icon('play_arrow', 'text-[32px]')}</button><div class="font-label-capsule text-label-capsule text-text-light-primary">${isEn ? 'Product demo' : '产品演示视频'}</div></div></div>`
     : `<div class="relative overflow-hidden rounded-2xl bg-canvas-dark shadow-2xl shadow-canvas-dark/20">
-      <img alt="${isEn ? 'A creator workspace with a monitor showing an editing timeline' : '创作者工作台实景：显示器上正在剪辑内容'}" class="h-full w-full object-cover" src="${asset('img-2.jpg')}" width="512" height="279" loading="lazy"/>
+      <img alt="${isEn ? 'A creator workspace with a monitor showing an editing timeline' : '创作者工作台实景：显示器上正在剪辑内容'}" class="h-full w-full object-cover" src="${asset('img-2.jpg')}" width="512" height="279" loading="lazy" decoding="async"/>
       <div class="absolute inset-0 bg-gradient-to-t from-canvas-dark/90 via-canvas-dark/20 to-transparent"></div>
       <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
         <div class="text-text-light-primary">

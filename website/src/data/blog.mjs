@@ -7,9 +7,9 @@ export const BLOG_POSTS = [
     readZh: 8,
     readEn: 6,
     titleZh: '一条视频发八个平台，怎样不崩溃',
-    titleEn: 'Publishing one video to eight platforms without losing your mind',
+    titleEn: 'Publishing one video to eight platforms, calmly',
     descZh: '把一条主素材拆成八次发布，真正耗时的不是上传，而是重复填写、改封面和确认结果。这是一套可复用的流程。',
-    descEn: 'The cost of publishing one asset to eight platforms is not the upload. It is retyping, resizing, and checking whether it actually went live. Here is a repeatable process.',
+    descEn: 'The hard part of publishing one asset to eight platforms is not the upload, but retyping, resizing, and verifying it went live. Here is a repeatable process.',
     introZh:
       '一条视频发八个平台，听起来只是「多上传几次」。真正做过的人都知道，崩溃点在于每一步都要重新填、重新选、重新确认。把这套动作拆开，会发现大部分都可以提前准备。',
     introEn:

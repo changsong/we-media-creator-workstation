@@ -264,7 +264,7 @@ export const faqTopics = {
       items: [
         { q: 'What is it?', a: 'WeMedia Creator is a local-first desktop app that puts topic planning, scheduling, publishing, analytics, and asset archiving in one workspace. It supports Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts.' },
         { q: 'How is it different from a browser extension or a scheduler?', a: 'Extensions usually handle one platform, while generic schedulers depend on official APIs. We publish through the browser on your own machine, so no developer account is needed, and analytics plus review live in the same app.' },
-        { q: 'Which platforms are supported?', a: 'Publishing covers eight platforms: Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts. Automatic analytics currently covers four: Douyin, Xiaohongshu, WeChat Channels, and WeChat Official Accounts.' },
+        { q: 'Which platforms are supported?', a: 'Publishing covers eight platforms: Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts. Automatic analytics also covers all eight; for Zhihu it collects video works only, so answers and articles are entered manually.' },
       ],
     },
     {
@@ -282,7 +282,7 @@ export const faqTopics = {
         { q: 'Where is my data stored?', a: 'In a local SQLite database in your user data directory. Nothing is uploaded, and your schedules and reviews remain available offline.' },
         { q: 'Can I export it?', a: 'Yes. All four business tables export to CSV, encoded so Excel opens Chinese text correctly.' },
         { q: 'What happens when I change computers?', a: 'Stop the app and copy the data directory to the matching location on the new machine. Upgrades and reinstalls do not delete your data.' },
-        { q: 'Which platforms sync analytics automatically?', a: 'Douyin, Xiaohongshu, WeChat Channels, and WeChat Official Accounts sync automatically. For other platforms, record key numbers manually in the review table.' },
+        { q: 'Which platforms sync analytics automatically?', a: 'All eight platforms sync automatically: Douyin, WeChat Channels, Xiaohongshu, WeChat Official Accounts, Bilibili, Kuaishou, Weibo, and Zhihu. Zhihu coverage is limited to video works, so answers and articles are entered manually.' },
       ],
     },
     {
