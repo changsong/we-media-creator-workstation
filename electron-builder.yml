@@ -19,6 +19,9 @@ files:
   - "!tools/**"
   - "!doc/**"
   - "!stitch-export/**"
+  # 内部营销工具与官网源码不进安装包（Windows / macOS / Linux 共用本配置）
+  - "!marketing/**"
+  - "!website/**"
   - "!*.md"
 
 # ELECTRON_RUN_AS_NODE 子进程无法读取 asar，服务代码必须放在 asar 外
