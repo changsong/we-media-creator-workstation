@@ -87,7 +87,7 @@ export function header({ lang, route, alternates = true }) {
     .join('');
 
   return `<header id="site-header" class="fixed top-0 left-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(9,12,13,0.04)]">
-  <div class="h-20 max-w-[1440px] mx-auto px-margin flex items-center justify-between gap-space-md">
+  <div class="h-20 max-w-[1440px] mx-auto px-margin-mobile md:px-margin flex items-center justify-between gap-space-md">
     <a class="flex items-center gap-space-md shrink-0" href="${routeTo('/', lang)}" aria-label="${esc(t.brand)}">
       <img alt="WeMedia Logo" class="h-8 w-auto object-contain" src="${asset('img-1.png')}" width="32" height="32" decoding="async" fetchpriority="high"/>
       <span class="flex flex-col">
@@ -101,8 +101,8 @@ export function header({ lang, route, alternates = true }) {
     <nav class="hidden xl:flex items-center gap-space-md 2xl:gap-space-lg" aria-label="${lang === 'en' ? 'Primary' : '主导航'}">${navLinks}</nav>
     <div class="flex items-center gap-space-sm shrink-0">
       ${alternates ? `<div class="hidden sm:flex items-center bg-surface-container-low px-2 py-1 rounded-full text-on-surface-variant font-label-capsule text-body-sm" aria-label="${esc(t.language)}">
-        <a class="px-2 py-0.5 rounded-full ${lang === 'zh' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'zh')}" hreflang="zh-CN" lang="zh-CN">中</a>
-        <a class="px-2 py-0.5 rounded-full ${lang === 'en' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'en')}" hreflang="en" lang="en">EN</a>
+        <a class="px-2.5 py-1 rounded-full ${lang === 'zh' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'zh')}" hreflang="zh-CN" lang="zh-CN">中</a>
+        <a class="px-2.5 py-1 rounded-full ${lang === 'en' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'en')}" hreflang="en" lang="en">EN</a>
       </div>` : ''}
       <div class="hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm">
         <span class="w-2 h-2 rounded-full bg-status-success"></span><span>macOS / Win</span>
@@ -110,16 +110,23 @@ export function header({ lang, route, alternates = true }) {
       <a class="hidden xl:inline-flex items-center px-4 py-2 rounded-full bg-surface-container-low text-on-surface font-label-capsule text-label-capsule hover:bg-surface-container transition-colors" href="${KEYGATE_TRIAL_URL}" target="_blank" rel="noopener">${esc(t.trial)}</a>
       <a class="hidden sm:inline-flex items-center px-5 py-2.5 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-[0_4px_14px_rgba(255,217,117,0.4)] transition-all" href="${routeTo('/download/', lang)}">${esc(t.downloadFree)}</a>
       <a class="hidden md:flex w-8 h-8 rounded-full bg-primary items-center justify-center shrink-0" href="${routeTo('/feedback/', lang)}" aria-label="${esc(t.feedback.title)}"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></a>
-      <button id="menu-toggle" class="xl:hidden inline-flex w-9 h-9 rounded-full bg-surface-container-low items-center justify-center text-on-surface" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="${esc(t.menu)}" data-label-open="${esc(t.menu)}" data-label-close="${esc(t.closeMenu)}">
-        <span class="material-symbols-outlined text-[20px]">menu</span>
+      <button id="menu-toggle" class="xl:hidden inline-flex w-10 h-10 rounded-full bg-surface-container-low items-center justify-center text-on-surface" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="${esc(t.menu)}" data-label-open="${esc(t.menu)}" data-label-close="${esc(t.closeMenu)}">
+        <span class="material-symbols-outlined text-[22px]">menu</span>
       </button>
     </div>
   </div>
-  <div id="mobile-menu" class="hidden xl:hidden border-t border-border-light bg-surface-white/95 backdrop-blur-xl">
-    <div class="max-w-[1440px] mx-auto px-margin py-3 grid grid-cols-1 sm:grid-cols-2 gap-1">
+  <div id="mobile-menu" class="hidden xl:hidden max-h-[calc(100vh-5rem)] overflow-y-auto overscroll-contain border-t border-border-light bg-surface-white/95 backdrop-blur-xl">
+    <div class="max-w-[1440px] mx-auto px-margin-mobile md:px-margin py-3 grid grid-cols-1 sm:grid-cols-2 gap-1">
       ${mobileLinks}
       <a class="px-4 py-3 rounded-xl bg-gold-accent text-canvas-dark font-label-capsule text-label-capsule" href="${routeTo('/download/', lang)}">${esc(t.downloadFree)}</a>
       <a class="px-4 py-3 rounded-xl bg-surface-container-low text-on-surface font-label-capsule text-label-capsule" href="${KEYGATE_TRIAL_URL}" target="_blank" rel="noopener">${esc(t.trial)}</a>
+      ${alternates ? `<div class="sm:col-span-2 flex items-center justify-between rounded-xl bg-surface-container-low px-4 py-2.5">
+        <span class="font-body-sm text-body-sm text-on-surface-variant">${esc(t.language)}</span>
+        <span class="flex items-center bg-surface-white p-1 rounded-full font-label-capsule text-label-capsule">
+          <a class="px-3 py-1.5 rounded-full ${lang === 'zh' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant'}" href="${routeTo(route, 'zh')}" hreflang="zh-CN" lang="zh-CN">中文</a>
+          <a class="px-3 py-1.5 rounded-full ${lang === 'en' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant'}" href="${routeTo(route, 'en')}" hreflang="en" lang="en">English</a>
+        </span>
+      </div>` : ''}
     </div>
   </div>
 </header>`;
@@ -132,14 +139,14 @@ export function footer({ lang }) {
       (col) => `<div>
         <div class="font-label-capsule text-label-capsule text-text-light-primary uppercase tracking-wider mb-space-md">${esc(col.title)}</div>
         <ul class="space-y-space-sm font-body-md text-body-md">
-          ${col.links.map((l) => `<li><a class="hover:text-text-light-primary transition-colors" href="${routeTo(l.route, lang)}">${esc(l.label)}</a></li>`).join('')}
+          ${col.links.map((l) => `<li><a class="inline-block py-1 hover:text-text-light-primary transition-colors" href="${routeTo(l.route, lang)}">${esc(l.label)}</a></li>`).join('')}
         </ul>
       </div>`,
     )
     .join('');
 
   return `<footer class="w-full bg-canvas-dark text-text-light-secondary mt-space-3xl">
-  <div class="max-w-[1440px] mx-auto px-margin py-space-3xl">
+  <div class="max-w-[1440px] mx-auto px-margin-mobile md:px-margin py-space-3xl">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-gutter mb-space-2xl">
       <div class="lg:col-span-2 flex flex-col items-start">
         <a class="flex items-center gap-space-sm mb-space-md" href="${routeTo('/', lang)}">
@@ -157,9 +164,9 @@ export function footer({ lang }) {
     <div class="border-t border-border-dark pt-space-lg flex flex-col md:flex-row md:items-center md:justify-between gap-3 font-body-sm text-body-sm">
       <p>© 2026 ${esc(t.footer.copyright)}</p>
       <div class="flex flex-wrap items-center gap-4">
-        <a class="hover:text-text-light-primary transition-colors" href="${routeTo('/legal/terms/', lang)}">${esc(t.footer.terms)}</a>
-        <a class="hover:text-text-light-primary transition-colors" href="${routeTo('/legal/privacy/', lang)}">${esc(t.footer.privacy)}</a>
-        <a class="hover:text-text-light-primary transition-colors" href="https://github.com/changsong/we-media-creator-workstation" target="_blank" rel="noopener">GitHub</a>
+        <a class="inline-block py-1 hover:text-text-light-primary transition-colors" href="${routeTo('/legal/terms/', lang)}">${esc(t.footer.terms)}</a>
+        <a class="inline-block py-1 hover:text-text-light-primary transition-colors" href="${routeTo('/legal/privacy/', lang)}">${esc(t.footer.privacy)}</a>
+        <a class="inline-block py-1 hover:text-text-light-primary transition-colors" href="https://github.com/changsong/we-media-creator-workstation" target="_blank" rel="noopener">GitHub</a>
         <span>${esc(t.footer.icp)}</span>
         <span>${esc(t.footer.police)}</span>
       </div>
@@ -335,7 +342,7 @@ export function layout({
 <body class="bg-background font-body-md text-on-surface antialiased overflow-x-hidden pb-20 xl:pb-0 ${bodyClass}">
 <a class="skip-link" href="#main">${lang === 'en' ? 'Skip to content' : '跳到主要内容'}</a>
 ${header({ lang, route, alternates: showAlternates })}
-<main id="main" class="w-full pt-20 bg-background max-w-[1440px] mx-auto px-margin ${mainClass}">${body}</main>
+<main id="main" class="w-full pt-20 bg-background max-w-[1440px] mx-auto px-margin-mobile md:px-margin ${mainClass}">${body}</main>
 ${footer({ lang })}
 ${mobileCta({ lang })}
 <script src="${asset('site.js')}" defer></script>
@@ -349,8 +356,8 @@ export function breadcrumbs({ lang, items }) {
   const links = items
     .map((item, idx) => {
       const last = idx === items.length - 1;
-      if (last) return `<span class="text-on-surface" aria-current="page">${esc(item.label)}</span>`;
-      return `<a class="hover:text-on-surface transition-colors" href="${routeTo(item.route, lang)}">${esc(item.label)}</a><span class="material-symbols-outlined text-[14px]">chevron_right</span>`;
+      if (last) return `<span class="min-w-0 truncate text-on-surface" aria-current="page" title="${esc(item.label)}">${esc(item.label)}</span>`;
+      return `<a class="shrink-0 py-1 hover:text-on-surface transition-colors" href="${routeTo(item.route, lang)}">${esc(item.label)}</a><span class="shrink-0 material-symbols-outlined text-[14px]">chevron_right</span>`;
     })
     .join('');
   const ld = {
@@ -364,7 +371,7 @@ export function breadcrumbs({ lang, items }) {
     })),
   };
   return {
-    html: `<nav class="flex items-center gap-1.5 text-body-sm font-body-sm text-on-surface-variant pt-space-lg" aria-label="${lang === 'en' ? 'Breadcrumb' : '面包屑'}">${links}</nav>`,
+    html: `<nav class="flex min-w-0 items-center gap-1.5 text-body-sm font-body-sm text-on-surface-variant pt-space-lg" aria-label="${lang === 'en' ? 'Breadcrumb' : '面包屑'}">${links}</nav>`,
     jsonLd: ld,
   };
 }

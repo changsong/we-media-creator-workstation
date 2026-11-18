@@ -44,8 +44,9 @@ const HERO = {
     titleAccent: '一张工作台。',
     sub: '选题、排期、发布、复盘、沉淀，全在一个本地应用里完成。到点自动发布，数据自动回填，账号与素材始终留在你自己的电脑上。',
     download: '下载桌面版 (Windows / macOS / Linux)',
+    downloadShort: '下载桌面版',
     pricing: '查看授权价格 (¥49.9起)',
-    micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="text-on-surface font-medium">无需申请 API</span> ｜ 数据完全保存在本机 SQLite',
+    micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="whitespace-nowrap text-on-surface font-medium">无需申请 API</span> ｜ 数据完全保存在本机 SQLite',
   },
   en: {
     badge: 'New in 2026',
@@ -54,8 +55,9 @@ const HERO = {
     titleAccent: 'One workbench.',
     sub: 'Plan, schedule, publish, review, and archive everything from one local app. It publishes on time, pulls the numbers back, and keeps your accounts and files on your own computer.',
     download: 'Download for desktop (Windows / macOS / Linux)',
+    downloadShort: 'Download for desktop',
     pricing: 'See pricing (from $10)',
-    micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="text-on-surface font-medium">No API keys</span> ｜ Everything stays in local SQLite',
+    micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="whitespace-nowrap text-on-surface font-medium">No API keys</span> ｜ Everything stays in local SQLite',
   },
 };
 
@@ -78,7 +80,7 @@ export function hero({ lang }) {
     <div class="flex flex-wrap items-center justify-center gap-space-md mb-space-sm">
       <a class="inline-flex items-center gap-3 px-8 py-3.5 rounded-full bg-gold-accent hover:bg-gold-accent-hover text-canvas-dark font-label-capsule text-label-capsule shadow-lg shadow-gold-accent/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0" href="${routeTo('/download/', lang)}">
         ${icon('download', 'text-[20px] fill')}
-        <span>${esc(c.download)}</span>
+        <span><span class="sm:hidden">${esc(c.downloadShort)}</span><span class="hidden sm:inline">${esc(c.download)}</span></span>
       </a>
       <a class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-surface-white hover:bg-surface-container-low text-on-surface font-label-capsule text-label-capsule shadow-sm transition-all hover:shadow" href="${routeTo('/pricing/', lang)}">
         ${icon('verified', 'text-[18px]')}

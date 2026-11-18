@@ -141,7 +141,8 @@
   }
 
   .field-input {
-    @apply w-full rounded-xl border border-border-light bg-white px-4 py-3 font-body-md text-body-md text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/70 focus:border-primary focus:ring-2 focus:ring-gold-accent/50;
+    /* 16px on small screens: iOS Safari zooms the page when a focused field is smaller */
+    @apply w-full rounded-xl border border-border-light bg-white px-4 py-3 font-body-md text-[16px] md:text-body-md text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/70 focus:border-primary focus:ring-2 focus:ring-gold-accent/50;
   }
 
   select.field-input {
