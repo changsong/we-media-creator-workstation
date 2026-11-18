@@ -1,8 +1,31 @@
 export const CHANGELOG = [
   {
+    version: '2.3.0',
+    date: '2026-11-18',
+    current: true,
+    titleZh: '多运营账号，一份授权通用',
+    titleEn: 'Multiple operating accounts on one license',
+    itemsZh: [
+      '同一台机器可以管理多个运营账号，顶栏一键切换，重启后自动回到上次使用的账号。',
+      '每个账号最多连接 8 个渠道：抖音、视频号、快手、微博、公众号、小红书、B站、知乎。',
+      '账号之间完全隔离：数据库、素材、选题、录音与渠道登录态互不影响，不会串号。',
+      '一份授权覆盖本机所有账号；定时发布、公众号监控与对标账号更新按账号独立调度。',
+      '删除账号时整个工作区移入 legacy 备份目录，可手动恢复。',
+      '修复连接设置在接口异常或超时时可能一直停留在加载状态的问题，新增超时提示与一键重试。',
+    ],
+    itemsEn: [
+      'One computer can now host multiple operating accounts, switchable from the top bar and remembered across restarts.',
+      'Each account connects up to eight channels: Douyin, WeChat Channels, Kuaishou, Weibo, Official Accounts, Xiaohongshu, Bilibili, and Zhihu.',
+      'Accounts are fully isolated: databases, assets, topics, recordings, and channel sessions never mix.',
+      'One license covers every account on the machine; scheduled publishing, Official Account monitoring, and competitor tracking are scheduled per account.',
+      'Deleting an account moves its whole workspace into a legacy backup folder that you can restore manually.',
+      'Fixed connection settings getting stuck on the loading state when the API errors or times out; added a timeout message and one-click retry.',
+    ],
+  },
+  {
     version: '2.2.0',
     date: '2026-11-09',
-    current: true,
+    current: false,
     titleZh: '全局搜索与素材库内联编辑',
     titleEn: 'Global search and inline asset editing',
     itemsZh: [

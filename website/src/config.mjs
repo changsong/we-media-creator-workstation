@@ -71,6 +71,7 @@ export const PLANS = [
 export const PLAN_FEATURES_ZH = [
   '8 大平台定时自动发布',
   '8 大平台数据自动回流复盘',
+  '多运营账号独立隔离，一份授权本机通用',
   '全部功能，无低配版',
   '授权同时激活 3 台设备',
   '订阅期内版本更新与平台适配',
@@ -80,6 +81,7 @@ export const PLAN_FEATURES_ZH = [
 export const PLAN_FEATURES_EN = [
   'Scheduled publishing to all 8 platforms',
   'Automatic analytics for all 8 platforms',
+  'Isolated operating accounts on one machine, one license for all',
   'All features included, no cut-down tiers',
   'Activate up to 3 devices',
   'Updates and platform fixes while subscribed',
@@ -220,6 +222,7 @@ export const faqTopics = {
         { q: '它到底是什么？', a: '媒管家是一款本地优先的桌面应用。它把选题、排期、发布、数据复盘和素材归档放在同一张工作台里，支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台。' },
         { q: '和浏览器插件、定时工具有什么不同？', a: '插件通常只能操作单个平台，通用定时工具又依赖平台开放 API。我们通过本机浏览器完成发布，不需要开发者资质；同时把数据回流和复盘做进了同一个应用。' },
         { q: '支持哪些平台？', a: '自动发布覆盖抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台，8 个平台的作品数据都能自动回流复盘表（知乎目前只覆盖视频作品，回答与文章不计入）。' },
+        { q: '可以同时管理多个运营账号吗？', a: '可以。同一台机器能创建多个运营账号，每个账号最多连接上述 8 个渠道。账号之间数据库、素材、选题、录音与登录态完全隔离，不会串号；一份授权覆盖本机所有账号，定时发布、公众号监控与对标账号更新按账号独立运行。删除账号时整个工作区会移入 legacy 备份目录，可手动恢复。' },
       ],
     },
     {
@@ -265,6 +268,7 @@ export const faqTopics = {
         { q: 'What is it?', a: 'WeMedia Creator is a local-first desktop app that puts topic planning, scheduling, publishing, analytics, and asset archiving in one workspace. It supports Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts.' },
         { q: 'How is it different from a browser extension or a scheduler?', a: 'Extensions usually handle one platform, while generic schedulers depend on official APIs. We publish through the browser on your own machine, so no developer account is needed, and analytics plus review live in the same app.' },
         { q: 'Which platforms are supported?', a: 'Publishing covers eight platforms: Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts. Automatic analytics also covers all eight; for Zhihu it collects video works only, so answers and articles are entered manually.' },
+        { q: 'Can I manage several operating accounts at once?', a: 'Yes. One machine can host multiple operating accounts, each connecting up to all eight channels above. Databases, assets, topics, recordings, and sign-in sessions are fully isolated per account, so nothing mixes. A single license covers every account on the machine, and scheduled publishing, Official Account monitoring, and competitor tracking run independently per account. Deleting an account moves its whole workspace into a legacy backup folder you can restore manually.' },
       ],
     },
     {

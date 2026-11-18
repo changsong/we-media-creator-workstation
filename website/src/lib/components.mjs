@@ -39,10 +39,10 @@ export function icon(name, extra = '') {
 const HERO = {
   zh: {
     badge: '2026 全新架构',
-    badgeNote: '本地优先桌面端 · 适配主流新媒体改版',
+    badgeNote: '本地优先桌面端 · 多账号隔离 · 适配主流新媒体改版',
     titlePrefix: '八个平台，',
     titleAccent: '一张工作台。',
-    sub: '选题、排期、发布、复盘、沉淀，全在一个本地应用里完成。到点自动发布，数据自动回填，账号与素材始终留在你自己的电脑上。',
+    sub: '选题、排期、发布、复盘、沉淀，全在一个本地应用里完成。本机多运营账号独立隔离、一份授权通用；到点自动发布，数据自动回填，账号与素材始终留在你自己的电脑上。',
     download: '下载桌面版 (Windows / macOS / Linux)',
     downloadShort: '下载桌面版',
     pricing: '查看授权价格 (¥49.9起)',
@@ -50,10 +50,10 @@ const HERO = {
   },
   en: {
     badge: 'New in 2026',
-    badgeNote: 'Local-first desktop · Kept current with platform changes',
+    badgeNote: 'Local-first desktop · Isolated accounts · Kept current with platform changes',
     titlePrefix: 'Eight platforms. ',
     titleAccent: 'One workbench.',
-    sub: 'Plan, schedule, publish, review, and archive everything from one local app. It publishes on time, pulls the numbers back, and keeps your accounts and files on your own computer.',
+    sub: 'Plan, schedule, publish, review, and archive everything from one local app. Several operating accounts run isolated on one machine under a single license, and it publishes on time, pulls the numbers back, and keeps your files on your own computer.',
     download: 'Download for desktop (Windows / macOS / Linux)',
     downloadShort: 'Download for desktop',
     pricing: 'See pricing (from $10)',
@@ -302,6 +302,44 @@ export function benefits({ lang }) {
 </section>`;
 }
 
+/* -------------------------------------------------- Multi-account */
+
+const ACCOUNT_CARDS = {
+  zh: [
+    ['switch_account', '多账号，一键切换', '同一台机器创建多个运营账号，顶栏随时切换，重启后自动回到上次使用的账号。'],
+    ['shield_lock', '数据完全隔离', '每个账号的数据库、素材、选题、录音和渠道登录态各自独立，不会串号。'],
+    ['vpn_key', '一份授权通用', '授权覆盖本机所有账号，定时发布、公众号监控与对标更新分账号独立调度。'],
+  ],
+  en: [
+    ['switch_account', 'Multiple accounts, one switch', 'Create several operating accounts on one machine, switch from the top bar, and reopen the last one you used after a restart.'],
+    ['shield_lock', 'Fully isolated data', 'Each account keeps its own database, assets, topics, recordings, and channel sessions, so nothing bleeds across accounts.'],
+    ['vpn_key', 'One license covers all', 'A single license covers every account on the machine, with publishing, monitoring, and competitor updates scheduled per account.'],
+  ],
+};
+
+export function multiAccount({ lang }) {
+  const isEn = lang === 'en';
+  const cards = (ACCOUNT_CARDS[lang] || ACCOUNT_CARDS.zh).map(([ic, title, body]) => `<div class="rounded-2xl bg-surface-white p-5 shadow-sm">
+    <div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-3">${icon(ic)}</div>
+    <div class="font-headline-sm text-headline-sm text-on-surface mb-1">${esc(title)}</div>
+    <p class="font-body-sm text-body-sm text-on-surface-variant">${esc(body)}</p>
+  </div>`).join('');
+  return `<section class="w-full py-space-3xl" id="accounts">
+  <div class="max-w-6xl mx-auto">
+    ${sectionHeading({
+      lang,
+      eyebrow: isEn ? 'Multiple accounts, multiple channels' : '多账号与多渠道',
+      title: isEn ? 'Run several operating accounts from one computer' : '一台电脑，管好多个运营账号',
+      desc: isEn
+        ? 'Each account connects up to eight channels and keeps its own data. Switch in the top bar without signing out or mixing numbers.'
+        : '每个账号最多连接 8 个渠道，数据各自独立。顶栏一键切换，不用登出，也不会把数据混在一起。',
+    })}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">${cards}</div>
+    <p class="mt-5 text-center"><a class="inline-flex items-center gap-1 font-label-capsule text-body-sm text-primary hover:gap-2 transition-all" href="${routeTo('/features/#accounts', lang)}">${isEn ? 'See how accounts work' : '了解多账号如何工作'} ${icon('arrow_forward', 'text-[16px]')}</a></p>
+  </div>
+</section>`;
+}
+
 /* ------------------------------------------------------ Trust / limits */
 
 const LIMITS = {
@@ -309,13 +347,13 @@ const LIMITS = {
     ['devices', '依赖本机浏览器', '发布与部分数据采集依赖本机安装的 Chrome 或 Edge 浏览器环境驱动。'],
     ['verified_user', '扫码授权登录态', '首次需在独立窗口登录平台账号，会话 Cookie 仅保存在本机，过期需轻点重登。'],
     ['update', '平台改版响应', '平台更新前端时可能出现短暂异常，开发团队会持续发布热更新补丁进行适配。'],
-    ['person', '单机单人专注设计', '当前版本专为独立创作者设计，暂不支持云端跨团队协同或多人远程共享。'],
+    ['person', '多账号，单机专注', '同一台机器支持多个运营账号且数据隔离，但仍不提供云端多人协作或远程共享。'],
   ],
   en: [
     ['devices', 'Needs a local browser', 'Publishing and some data collection rely on Chrome or Edge installed on your machine.'],
     ['verified_user', 'Sign in with a scan', 'Log in to each platform once in an isolated window. Cookies stay local; sign in again when they expire.'],
     ['update', 'Platform changes happen', 'Pages change and may cause brief failures. We ship compatibility updates and let you retry safely.'],
-    ['person', 'Built for one person', 'This version is designed for individual creators, with no cloud team collaboration or remote sharing yet.'],
+    ['person', 'Multi-account, single machine', 'Several isolated operating accounts run on one machine, but there is no cloud team collaboration or remote sharing yet.'],
   ],
 };
 

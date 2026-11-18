@@ -26,7 +26,7 @@ export const UI = {
     closeMenu: '关闭菜单',
     language: '语言',
     footer: {
-      desc: '面向专业创作者的内容运营工作台。本地存储、八网分发、数据自动回流，告别浏览器多开与手抄后台。',
+      desc: '面向专业创作者的内容运营工作台。本地存储、多账号隔离、八网分发、数据自动回流，告别浏览器多开与手抄后台。',
       status: '本地优先运行',
       stack: 'Electron 45 + SQLite',
       cols: [
@@ -163,7 +163,7 @@ export const UI = {
     closeMenu: 'Close menu',
     language: 'Language',
     footer: {
-      desc: 'A content operations workbench for serious creators. Local storage, eight-platform publishing, and automatic analytics, without tab overload or copying numbers by hand.',
+      desc: 'A content operations workbench for serious creators. Local storage, isolated operating accounts, eight-platform publishing, and automatic analytics, without tab overload or copying numbers by hand.',
       status: 'Running locally',
       stack: 'Electron 45 + SQLite',
       cols: [

@@ -130,6 +130,10 @@ const FEATURE_STATS = {
     zh: [['成稿', '与配图说明'], ['关键词', '串联选题与复盘'], ['语音', '复盘直接归档']],
     en: [['Copy', 'and image notes'], ['Keywords', 'link ideas and reviews'], ['Voice', 'memos archived directly']],
   },
+  accounts: {
+    zh: [['多', '个运营账号'], ['8', '个渠道 / 账号'], ['1', '份授权通用']],
+    en: [['Multi', 'operating accounts'], ['8', 'channels per account'], ['1', 'license for all']],
+  },
   connect: {
     zh: [['扫码', '独立浏览器窗口'], ['本机', 'Cookie 不上传'], ['0', 'API 申请']],
     en: [['QR', 'isolated browser window'], ['Local', 'cookies never uploaded'], ['0', 'API applications']],
@@ -203,10 +207,10 @@ function featuresPage(lang) {
   return page({
     lang,
     route: '/features/',
-    title: isEn ? 'Features — planning, scheduling, publishing, analytics' : '功能特性｜选题、排期、八平台发布与数据复盘',
+    title: isEn ? 'Features — planning, scheduling, publishing, analytics' : '功能特性｜多账号、选题、排期、八平台发布与数据复盘',
     description: isEn
-      ? 'Explore the viral idea radar, idea pool, content calendar, publish queue, automatic analytics for eight platforms, asset library, and one-click sign-in.'
-      : '了解媒管家的爆款灵感雷达、选题池、内容日历、八平台发布队列、八平台自动数据复盘、素材库与一键登录能力。',
+      ? 'Explore multi-account management, the viral idea radar, idea pool, content calendar, publish queue, 8-platform analytics, asset library, and one-click sign-in.'
+      : '了解媒管家的多运营账号与多渠道管理、爆款灵感雷达、选题池、内容日历、八平台发布队列、八平台自动数据复盘、素材库与一键登录能力。',
     body,
     priority: 0.9,
   });
@@ -218,12 +222,12 @@ const PLATFORM_HERO = {
   zh: {
     eyebrow: '支持平台',
     title: '八个平台，一套发布流程',
-    desc: '八个平台都能自动发布，作品数据也都自动回流（知乎目前覆盖视频作品）。每个平台的规则、封面比例与限制，都在各自的指南里写清楚。',
+    desc: '八个平台都能自动发布，作品数据也都自动回流（知乎目前覆盖视频作品）。每个运营账号最多连接这 8 个渠道，登录态互相独立；每个平台的规则、封面比例与限制，都在各自的指南里写清楚。',
   },
   en: {
     eyebrow: 'Platforms',
     title: 'Eight platforms, one publishing flow',
-    desc: 'All eight platforms publish and sync analytics automatically (Zhihu currently covers video works). Each guide spells out formats, cover ratios, and limits.',
+    desc: 'All eight platforms publish and sync analytics automatically (Zhihu currently covers video works). Each operating account connects up to these eight channels with its own sessions, and each guide spells out formats, cover ratios, and limits.',
   },
 };
 
@@ -408,8 +412,8 @@ function pricingPage(lang, checkout = '') {
       eyebrow: isEn ? 'Pricing' : '价格方案',
       title: isEn ? 'One license. Three ways to pay.' : '一份授权，三种买法',
       description: isEn
-        ? 'Every plan includes all features and all eight platforms. Only the billing rhythm and duration differ, with no cut-down tiers.'
-        : '所有方案都包含全部功能与八个平台，区别只在付费周期与有效期。没有功能阉割版本，也没有隐藏加价。',
+        ? 'Every plan includes all features and all eight platforms, and one license covers every operating account on your machine. Only the billing rhythm and duration differ, with no cut-down tiers.'
+        : '所有方案都包含全部功能与八个平台，一份授权可管理本机多个运营账号，区别只在付费周期与有效期。没有功能阉割版本，也没有隐藏加价。',
       breadcrumbHtml: bc.html,
       actions: primaryButton({ href: routeTo('/download/', lang), label: isEn ? 'Download free first' : '先免费下载体验', download: true })
         + secondaryButton({ href: KEYGATE_TRIAL_URL, label: isEn ? 'Claim a free trial' : '免费领取试用授权' }),
@@ -642,11 +646,13 @@ function downloadPage(lang) {
           items: isEn
             ? [
                 ['Is it free to try?', 'The download is free. You can organize ideas and schedules without a license; publishing requires an active license.'],
+                ['Can one computer manage several accounts?', 'Yes. Create multiple operating accounts on one machine, each connecting up to eight channels with fully isolated data. One license covers every account on the machine.'],
                 ['macOS says the app “is damaged and can’t be opened”. What should I do?', 'That is the system blocking an unsigned build, not a corrupt file (the DMG mounting means the image is intact). Move the app into Applications, run xattr -cr "/Applications/WeMedia Creator Workstation.app" in Terminal, then open it again. The build is not signed yet because we do not have an Apple developer account; macOS also does not auto-update.'],
                 ['Will installing remove my old data?', 'No. Reinstalling keeps the data directory. Back it up before switching computers or clearing the app.'],
               ]
             : [
                 ['可以免费试用吗？', '下载免费。没有授权也可以整理选题与排期；执行自动发布需要有效授权。'],
+                ['一台电脑可以管理多个账号吗？', '可以。同一台机器可创建多个运营账号，每个账号最多连接 8 个渠道，数据完全隔离；一份授权覆盖本机所有账号。'],
                 ['macOS 提示 App 已损坏打不开怎么办？', '这是未签名构建触发的系统拦截，并非文件损坏（DMG 能挂载即说明镜像完整）。把应用拖入「应用程序」后，在终端执行 xattr -cr "/Applications/WeMedia Creator Workstation.app"，再双击打开即可。构建暂未签名是因为还没有 Apple 开发者账号；macOS 版也不启用自动更新。'],
                 ['重装会删除旧数据吗？', '不会。重装会保留数据目录；换电脑或清理应用前请先备份。'],
               ],
@@ -1644,6 +1650,7 @@ export function renderLlms() {
 
 - Platforms: Douyin, WeChat Channels, Xiaohongshu, WeChat Official Accounts, Bilibili, Kuaishou, Weibo, Zhihu.
 - Automatic analytics: Douyin, WeChat Channels, Xiaohongshu, WeChat Official Accounts, Bilibili, Kuaishou, Weibo, Zhihu (Zhihu covers video works only).
+- Multiple operating accounts per machine, each with up to eight channels and fully isolated data; one license covers every account on the machine.
 - Platforms require Chrome or Edge on the same machine; no API keys.
 - Data lives in a local SQLite database; the app is single-user and does not upload content.
 - Current version: ${VERSION}.
@@ -1672,7 +1679,7 @@ export function renderLlms() {
   const full = `${short}
 ## Detailed capabilities
 
-The app covers five stages: viral idea radar and idea pool, content calendar, publish center, analytics review, and asset archive. The radar searches Xiaohongshu, Douyin, and Bilibili at once and ranks results by cross-platform heat; searches and results are kept locally for 30 days. It publishes through the user's own browser session, verifies each result, retries failed tasks, and stores everything locally. Automatic analytics covers all eight platforms; for Zhihu it currently covers video works only, so answers and articles require manual entry.
+The app supports multiple operating accounts on one machine, each connecting up to eight channels with isolated databases, assets, topics, recordings, and sign-in sessions; a single license covers all accounts, and scheduled tasks run per account. It covers five stages: viral idea radar and idea pool, content calendar, publish center, analytics review, and asset archive. The radar searches Xiaohongshu, Douyin, and Bilibili at once and ranks results by cross-platform heat; searches and results are kept locally for 30 days. It publishes through the user's own browser session, verifies each result, retries failed tasks, and stores everything locally. Automatic analytics covers all eight platforms; for Zhihu it currently covers video works only, so answers and articles require manual entry.
 
 ## Pricing
 

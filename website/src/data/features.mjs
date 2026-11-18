@@ -72,6 +72,18 @@ export const FEATURE_BLOCKS = [
     bulletsEn: ['Keep final copy and image notes together', 'Keywords connect ideas, assets, and reviews', 'Voice memos archive directly without extra transcription work'],
   },
   {
+    id: 'accounts',
+    icon: 'manage_accounts',
+    titleZh: '多账号与多渠道：一份授权，管好整台机器',
+    titleEn: 'Multiple accounts and channels on one license',
+    bodyZh:
+      '同一台机器可以创建多个运营账号，每个账号最多连接 8 个渠道。顶栏随时切换，重启后自动回到上次使用的账号。账号之间完全隔离——数据库、素材、选题、录音和渠道登录态各自独立，不会串号。一份授权覆盖本机所有账号，定时发布、公众号监控与对标账号更新按账号独立调度；删除账号时整个工作区移入备份目录，可手动恢复。',
+    bodyEn:
+      'Create several operating accounts on one machine, each connecting up to eight channels. Switch from the top bar at any time, and the app reopens the last account you used. Accounts are fully isolated — databases, assets, topics, recordings, and channel sessions stay separate, so nothing bleeds across accounts. One license covers every account on the machine, and scheduled publishing, Official Account monitoring, and competitor tracking run per account. Deleting an account moves its whole workspace into a backup folder you can restore manually.',
+    bulletsZh: ['同一台机器管理多个运营账号，顶栏一键切换', '每个账号最多连接 8 个渠道，登录态互相独立', '数据库、素材、选题与录音按账号隔离，不会串号', '一份授权覆盖本机所有账号，后台任务分账号独立调度'],
+    bulletsEn: ['Several operating accounts on one machine with one-click switching', 'Up to eight channels per account, each with its own session', 'Databases, assets, topics, and recordings isolated per account', 'One license for every account, with background tasks scheduled per account'],
+  },
+  {
     id: 'connect',
     icon: 'vpn_key',
     titleZh: '一键登录：不用申请 API',
@@ -80,7 +92,7 @@ export const FEATURE_BLOCKS = [
       '独立浏览器窗口扫码登录，Cookie 只留在本机；过期了重新登录即可，无需开发者认证。账号密码不会上传，也没有共享账号或中转服务器。',
     bodyEn:
       'Sign in with a QR code in an isolated browser window. Cookies stay on your machine; sign in again when they expire. No developer account, no uploaded passwords, no shared accounts or relay server.',
-    bulletsZh: ['每个平台使用独立登录态', 'Cookie 保存在本机数据目录', '登录过期会提示重新扫码，不会静默失败'],
-    bulletsEn: ['Each platform has its own isolated session', 'Cookies live in the local data directory', 'Expired sessions prompt a new scan instead of failing silently'],
+    bulletsZh: ['每个账号、每个平台各有独立登录态', 'Cookie 保存在本机数据目录', '登录过期会提示重新扫码，不会静默失败'],
+    bulletsEn: ['Every account and platform gets its own isolated session', 'Cookies live in the local data directory', 'Expired sessions prompt a new scan instead of failing silently'],
   },
 ];
