@@ -4,7 +4,7 @@
 
 - **前端**：原生 HTML/CSS/JS，无构建、无依赖，五个视图（首页 / 选题池 / 内容日历 / 数据复盘 / 素材库）
 - **后端**：Node 内置 `http` + 内置 `node:sqlite`，零第三方依赖
-- **存储**：`data/workbench.db`，WAL 模式、约束与索引、每日整库快照
+- **存储**：本机 SQLite（WAL 模式、约束与索引、每日整库快照），支持多运营账号，每个账号一套独立数据库与素材目录
 
 ## 启动
 
@@ -19,6 +19,16 @@ npm start -- --port 8080  # 换端口
 也可以双击 `start.bat`。首次启动（且 `data/` 为空）会自动写入 4 条选题、4 条排期、7 条复盘快照、1 篇素材的示例数据。
 
 > 只监听 `127.0.0.1`。需要局域网访问时用 `npm start -- --host 0.0.0.0`，自行确认网络安全。
+
+## 多账号
+
+同一台机器可以管理多个运营账号，每个账号最多连接 8 个渠道（抖音 / 视频号 / 快手 / 微博 / 公众号 / 小红书 / B站 / 知乎）。账号之间**完全隔离**：数据库、素材、选题、录音、渠道登录态各自独立。
+
+- **切换**：顶栏渠道筛选左侧的账号按钮可随时切换；重启后自动进入上次使用的账号。
+- **存储**：默认账号沿用 `data/workbench.db`（升级零迁移），新建账号放在 `data/accounts/<id>/`；账号列表与上次使用记录在 `data/accounts.json`。
+- **授权**：一份授权覆盖本机所有账号，无需每个账号单独激活。
+- **后台任务**：定时发布、公众号监控、对标账号更新会为每个账号独立调度。
+- **删除**：删除账号时整个目录移到 `data/legacy/accounts/`，可手动恢复。
 
 ## 桌面版（Windows / macOS / Linux）
 
@@ -89,9 +99,11 @@ lib/trends/browser.js        工作台共用无头浏览器会话
 lib/trends/transcript.js     视频字幕 / 图文正文提取
 lib/trends/util.js           热度评分等共用工具
 public/                      index.html / style.css / app.js
-data/workbench.db            数据库（运行时生成）
+data/workbench.db            默认运营账号的数据库（运行时生成）
+data/accounts/<id>/          其余运营账号的独立工作区（数据库、素材、录音、登录 profile）
+data/accounts.json           运营账号注册表与上次使用的账号
 data/backups/                每日整库快照，保留 7 天
-data/legacy/                 迁移前的 JSON 存档
+data/legacy/                 迁移前的 JSON 存档；删除账号时移入 legacy/accounts/
 tools/migrate-json-to-sqlite.js  迁移命令
 tools/smoke-test.js          页面冒烟测试（需要 jsdom）
 tools/sync-test.js           SSE 同步验证
@@ -187,9 +199,9 @@ meta                        schema_version
 
 ## 备份与恢复
 
-- 每天第一次写入前执行 `VACUUM INTO data/backups/workbench-YYYY-MM-DD.db`，保留最近 7 天
-- 手动备份：`npm run migrate` 不会备份，直接拷 `data/workbench.db`（先停止服务）或执行 `VACUUM INTO` 更稳妥
-- 恢复：停止服务 → 用备份文件覆盖 `data/workbench.db` → 删掉 `data/workbench.db-wal` 和 `-shm` → 启动
+- 每天第一次写入前为每个账号做一次 `VACUUM INTO data/backups/` 快照，保留最近 7 天（默认账号 `workbench-*.db`，新账号 `workbench-<id>-*.db`）
+- 手动备份：`npm run migrate` 不会备份，直接拷 `data/workbench.db`（默认账号）或 `data/accounts/<id>/workbench.db`（先停止服务）或执行 `VACUUM INTO` 更稳妥
+- 恢复：停止服务 → 用备份文件覆盖对应账号的 `workbench.db` → 删掉同目录的 `-wal` 和 `-shm` → 启动
 
 ## 接口
 
@@ -204,9 +216,16 @@ meta                        schema_version
 | PATCH | `/api/tables/:table/records/:id` | 局部更新 |
 | DELETE | `/api/tables/:table/records/:id` | 删除 |
 | GET | `/api/tables/:table/export.csv` | 导出 CSV（带 BOM） |
-| GET | `/api/events` | SSE，写入时推送 `change` 事件 |
+| GET | `/api/events` | SSE，写入时推送 `change` 事件（按账号过滤） |
+| GET | `/api/accounts` | 运营账号列表与上次使用账号 |
+| POST | `/api/accounts` | 新建账号 `{ "name": "..." }` |
+| PATCH | `/api/accounts/:id` | 重命名账号 |
+| DELETE | `/api/accounts/:id` | 删除账号（移入 `legacy/accounts/`，默认账号不可删） |
+| POST | `/api/accounts/:id/activate` | 设为上次使用的账号 |
 
 字段值支持裸值（`"平台": "小红书"`）或类型包装（`"平台": {"select": "小红书"}`）。服务端按 schema 统一校验：选项不在候选、评分越界、链接非 http(s)、必填为空、复盘同日重复、编号冲突，都会返回 400/409 和中文原因。
+
+除账号管理接口外，其它 `/api/*` 通过 `X-Account-Id` 请求头或 `?account=<id>` 查询参数选择账号（两者都没有时用上次使用的账号）。`?account=` 主要用于 `<img>` / `<audio>` / `<video>`、CSV 导出和 EventSource 这类无法自定义请求头的场景。
 
 ## 对标账号监控（爆款灵感雷达）
 
@@ -273,7 +292,7 @@ node tools/verify-trends.js                # 对标账号 + 文案提取（含�
 - **加平台**：改 `lib/schemas.js` 的 `PLATFORMS`，页面下拉自动跟着变（列是 TEXT，不用改库）
 - **加字段**：`lib/schemas.js` 加一项 + `lib/mapping.js` 加列映射 + `lib/db.js` 里 `ALTER TABLE`（或重建库）；列表展示还要改 `public/app.js` 对应视图
 - **改阶段**：`STAGES` 决定顺序与颜色；写回选题状态的规则在 `public/app.js` 的 `syncTopicStatus()`
-- **直接查库**：`node --experimental-sqlite -e "..."`，或用任意 SQLite 客户端打开 `data/workbench.db`（建议只读，写入请走页面/接口以保证校验）
+- **直接查库**：`node --experimental-sqlite -e "..."`，或用任意 SQLite 客户端打开 `data/workbench.db`（默认账号）或 `data/accounts/<id>/workbench.db`（建议只读，写入请走页面/接口以保证校验）
 
 ## 与资料库页面的关系
 

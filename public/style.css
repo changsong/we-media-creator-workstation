@@ -176,6 +176,37 @@ a{text-decoration:none}
 .profile-avatar-btn .overlay{position:absolute;left:0;right:0;bottom:0;background:rgba(25,28,30,.62);color:#fff;font:600 10px/16px "Be Vietnam Pro",sans-serif;padding:2px 0;opacity:0;transition:opacity .15s}
 .profile-avatar-btn:hover .overlay{opacity:1}
 
+/* workspace account switcher */
+.ws-acct-menu{position:absolute;right:0;top:calc(100% + .5rem);width:16rem;background:#fff;border:1px solid #e7e8eb;border-radius:1rem;box-shadow:0 18px 48px rgba(25,28,30,.18);padding:.4rem;z-index:70;max-height:22rem;overflow-y:auto}
+.ws-acct-item{display:flex;align-items:center;gap:.6rem;width:100%;padding:.5rem .6rem;border:none;background:none;border-radius:.75rem;cursor:pointer;text-align:left;font-family:inherit}
+.ws-acct-item:hover{background:#f2f3f6}
+.ws-acct-item.on{background:#fff7e0}
+.ws-acct-item img{width:26px;height:26px;border-radius:9999px;object-fit:cover;background:#f2f3f6;flex-shrink:0}
+.ws-acct-item .meta{min-width:0;flex:1}
+.ws-acct-item .nm{display:block;font:600 13px/18px "Be Vietnam Pro",sans-serif;color:#191c1e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-acct-item .sub{display:block;font:11px/15px "Be Vietnam Pro",sans-serif;color:#9a9ca0}
+.ws-acct-item .cur{font:600 10px/14px "Be Vietnam Pro",sans-serif;color:#785d00;background:#fbe7a1;border-radius:9999px;padding:1px 7px;flex-shrink:0}
+.ws-acct-sep{height:1px;background:#e7e8eb;margin:.3rem .2rem}
+.ws-acct-manage{display:flex;align-items:center;gap:.5rem;width:100%;padding:.55rem .6rem;border:none;background:none;border-radius:.75rem;cursor:pointer;font:600 12.5px/18px "Be Vietnam Pro",sans-serif;color:#44474a}
+.ws-acct-manage:hover{background:#f2f3f6}
+#wsAccountModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(25,28,30,.38);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:90;padding:1rem}
+#wsAccountModal.on{opacity:1;pointer-events:auto}
+#wsAccountModal .modal-card{width:520px;max-width:100%;max-height:88vh;overflow-y:auto}
+#wsAccountModal.on .modal-card{transform:translateY(0) scale(1)}
+.ws-account-list{display:flex;flex-direction:column;gap:.5rem}
+.ws-account-row{display:flex;align-items:center;gap:.65rem;border:1px solid #edeef1;border-radius:.9rem;padding:.65rem .75rem;background:#fff}
+.ws-account-row.on{border-color:#e7c361;background:#fffdf3}
+.ws-account-row img{width:34px;height:34px;border-radius:9999px;object-fit:cover;background:#f2f3f6;flex-shrink:0}
+.ws-account-row .meta{min-width:0;flex:1}
+.ws-account-row .nm{font:700 13.5px/19px "Be Vietnam Pro",sans-serif;color:#191c1e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-account-row .sub{font:11px/16px "Be Vietnam Pro",sans-serif;color:#9a9ca0}
+.ws-account-row .ops{display:flex;gap:.3rem;flex-shrink:0}
+.ws-account-row .ops button{border:none;background:#f2f3f6;color:#44474a;border-radius:9999px;padding:.3rem .6rem;font:600 11px/16px "Be Vietnam Pro",sans-serif;cursor:pointer;font-family:inherit}
+.ws-account-row .ops button:hover{background:#e7e8eb}
+.ws-account-row .ops button.danger{color:#ba1a1a}
+.ws-account-new{display:flex;gap:.5rem;align-items:center;border-top:1px solid #edeef1;padding-top:.75rem;margin-top:.25rem}
+.ws-account-new .inp{flex:1}
+
 /* voice memo */
 #voiceModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(25,28,30,.38);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:90;padding:1rem}
 #voiceModal.on{opacity:1;pointer-events:auto}

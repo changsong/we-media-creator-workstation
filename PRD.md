@@ -330,8 +330,9 @@
 ### 7.3 存储与备份（lib/db.js）
 - `node:sqlite`（`DatabaseSync`），WAL 模式，`synchronous=NORMAL`，`busy_timeout=5000`。
 - 启动时执行 DDL（表/索引/sequences/meta），校验 `schema_version`（高于程序版本则拒绝启动）。
-- **每日备份**：当天首次写入前 `VACUUM INTO data/backups/workbench-YYYY-MM-DD.db`，保留最近 7 天（`touchBackup` 标志一天只备一次）。
-- 目录：`data/workbench.db`、备份 `data/backups/`、旧 JSON 存档 `data/legacy/`。
+- **每日备份**：当天首次写入前按账号 `VACUUM INTO data/backups/workbench[-<id>]-YYYY-MM-DD.db`，保留最近 7 天（`touchBackup` 标志每个账号一天只备一次）。
+- 目录：默认账号 `data/workbench.db`，其余账号 `data/accounts/<id>/workbench.db`；注册表 `data/accounts.json`；备份 `data/backups/`；旧 JSON 存档 `data/legacy/`。
+- **多账号**：`accountContext`（AsyncLocalStorage）标记当前账号，`db.open()` 按账号缓存连接；默认账号沿用根目录实现零迁移，新账号各自独立工作区。
 - `integrity()`：`PRAGMA integrity_check`，`/api/health` 暴露。
 
 ### 7.4 迁移与种子（lib/migrate.js + lib/seed.js）
@@ -388,9 +389,11 @@ lib/seed.js                      示例数据内容
 public/index.html               页面骨架（顶栏 / 标签 / 抽屉 / 弹窗 / toast）
 public/style.css                 设计系统（颗粒绿主色、阶段 9 色、卡片/表格/日历/抽屉）
 public/app.js                    全部前端逻辑与视图
-data/workbench.db                运行时数据库（WAL）
+data/workbench.db                默认账号数据库（WAL）
+data/accounts/<id>/              其余账号的独立工作区
+data/accounts.json               运营账号注册表
 data/backups/                    每日整库快照（7 天）
-data/legacy/                    迁移前 JSON 存档
+data/legacy/                    迁移前 JSON 存档 / 已删除账号备份
 tools/migrate-json-to-sqlite.js 迁移命令
 tools/smoke-test.js             页面冒烟测试（需 jsdom）
 tools/sync-test.js              SSE 同步验证

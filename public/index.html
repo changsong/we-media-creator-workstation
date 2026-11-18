@@ -58,7 +58,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
     </nav>
   </div>
   <div class="flex flex-col items-center gap-space-xs w-full px-space-xs">
-    <button id="accountBtn" class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" title="账号与授权" type="button">
+    <button id="accountBtn" class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" title="授权中心" type="button">
       <span class="material-symbols-outlined text-lg">workspace_premium</span>
     </button>
     <button class="flex items-center justify-center w-11 h-11 rounded-xl text-on-primary-container hover:bg-surface-container-highest/20 hover:text-on-primary transition-all" id="helpBtn" title="帮助" type="button">
@@ -88,6 +88,14 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
       <div id="sync" class="hidden lg:flex items-center gap-space-xs bg-surface-container-lowest px-space-md py-1.5 rounded-full shadow-sm">
         <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         <span id="syncText" class="text-label-sm font-label-sm text-on-surface-variant">已连接</span>
+      </div>
+      <div class="relative" id="wsAcctWrap">
+        <button id="wsAcctBtn" class="flex items-center gap-1.5 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface text-label-md font-label-md pl-space-md pr-2 py-1.5 rounded-full shadow-sm transition-colors max-w-[11rem]" type="button" title="切换运营账号">
+          <img id="wsAcctAvatar" alt="" class="w-5 h-5 rounded-full object-cover bg-surface-container flex-shrink-0" src="/assets/img-4.png">
+          <span id="wsAcctName" class="truncate">加载中…</span>
+          <span class="material-symbols-outlined text-base text-on-surface-variant flex-shrink-0">expand_more</span>
+        </button>
+        <div id="wsAcctMenu" class="ws-acct-menu" role="menu" hidden></div>
       </div>
       <div class="relative">
         <select id="pfFilter" class="appearance-none bg-surface-container-lowest text-label-md font-label-md text-on-surface pl-space-md pr-8 py-1.5 rounded-full shadow-sm focus:outline-none cursor-pointer" title="按平台筛选">
@@ -249,6 +257,26 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
       <a href="https://www.wemediacreator.com/pricing/" target="_blank" rel="noopener">购买授权</a>
       <button id="accountCopyMachine" type="button">复制机器码</button>
       <button id="accountLogout" type="button" style="display:none">退出登录</button>
+    </div>
+  </div>
+</div>
+
+<div id="wsAccountModal" role="dialog" aria-modal="true" aria-labelledby="wsAccountTitle">
+  <div class="modal-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Workspaces</span>
+        <h3 id="wsAccountTitle" class="text-headline-md font-headline-md text-on-surface mt-1">运营账号</h3>
+        <p class="text-label-sm text-on-surface-variant mt-1">每个账号拥有独立的数据、素材与渠道授权；一份授权覆盖本机所有账号。</p>
+      </div>
+      <button id="wsAccountClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <div id="wsAccountList" class="ws-account-list"></div>
+    <div class="ws-account-new">
+      <input id="wsAccountNewName" class="inp" type="text" maxlength="24" placeholder="新账号名称，例如：品牌号 A" autocomplete="off">
+      <button id="wsAccountNewBtn" class="px-5 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all" type="button">新建账号</button>
     </div>
   </div>
 </div>

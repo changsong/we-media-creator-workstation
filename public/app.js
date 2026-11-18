@@ -1,5 +1,23 @@
 (function(){
   var API = '/api';
+
+  /* ---------- 多账号工作区 ---------- */
+  // 当前选中的运营账号：请求头带 X-Account-Id，图片/音频等无法带头的地址用 ?account=
+  var ACCOUNT = { id: '', activeId: '', list: [], loaded: false, menuOpen: false };
+  try { ACCOUNT.id = localStorage.getItem('wmc.account') || ''; } catch(err){ ACCOUNT.id = ''; }
+
+  function persistAccount(){
+    try {
+      if(ACCOUNT.id) localStorage.setItem('wmc.account', ACCOUNT.id);
+      else localStorage.removeItem('wmc.account');
+    } catch(err){ /* 隐私模式忽略 */ }
+  }
+  function accountHeader(extra){
+    var headers = extra || {};
+    if(ACCOUNT.id) headers['X-Account-Id'] = ACCOUNT.id;
+    return headers;
+  }
+
   var suppressUntil = 0;
   var reloadTimer = null;
   var staleWhileEditing = false;
@@ -9,7 +27,7 @@
 
   function request(path, options){
     var opt = options || {};
-    var headers = { 'Content-Type': 'application/json' };
+    var headers = accountHeader({ 'Content-Type': 'application/json' });
     if(opt.headers){
       Object.keys(opt.headers).forEach(function(k){ headers[k] = opt.headers[k]; });
     }
@@ -577,6 +595,152 @@
       return PROFILE;
     });
   }
+  /* ---------- 多账号切换与管理工作区 ---------- */
+  function accountById(id){
+    for(var i = 0; i < ACCOUNT.list.length; i++){
+      if(ACCOUNT.list[i].id === id) return ACCOUNT.list[i];
+    }
+    return null;
+  }
+  function accountAvatar(a){
+    return (a && a.avatarUrl) ? a.avatarUrl : '/assets/img-4.png';
+  }
+  function accountChannelText(a){
+    var c = (a && a.channels) || {};
+    return (c.connected || 0) + '/' + (c.total || 8) + ' 个渠道已连接';
+  }
+  function renderAccountChrome(){
+    var cur = accountById(ACCOUNT.id) || accountById(ACCOUNT.activeId) || ACCOUNT.list[0];
+    var nameEl = $('wsAcctName');
+    if(nameEl) nameEl.textContent = cur ? (cur.name || '账号') : (ACCOUNT.loaded ? '未命名账号' : '加载中…');
+    var avEl = $('wsAcctAvatar');
+    if(avEl) avEl.src = accountAvatar(cur);
+  }
+  function renderAccountMenu(){
+    var menu = $('wsAcctMenu');
+    if(!menu) return;
+    if(!ACCOUNT.loaded){
+      menu.innerHTML = '<p class="ws-acct-manage" style="cursor:default">正在读取账号…</p>';
+      return;
+    }
+    var rows = ACCOUNT.list.map(function(a){
+      var on = a.id === ACCOUNT.id;
+      return '<button class="ws-acct-item' + (on ? ' on' : '') + '" type="button" role="menuitem" data-acct="' + esc(a.id) + '">' +
+        '<img src="' + esc(accountAvatar(a)) + '" alt="">' +
+        '<span class="meta"><span class="nm">' + esc(a.name || '账号') + '</span>' +
+        '<span class="sub">' + esc(accountChannelText(a)) + '</span></span>' +
+        (on ? '<span class="cur">当前</span>' : '') +
+        '</button>';
+    }).join('');
+    menu.innerHTML = rows +
+      '<div class="ws-acct-sep"></div>' +
+      '<button class="ws-acct-manage" type="button" data-acct-manage="1"><span class="material-symbols-outlined text-base">settings</span>管理账号</button>';
+  }
+  function openAccountMenu(){
+    var menu = $('wsAcctMenu');
+    if(!menu) return;
+    renderAccountMenu();
+    menu.hidden = false;
+    ACCOUNT.menuOpen = true;
+  }
+  function closeAccountMenu(){
+    var menu = $('wsAcctMenu');
+    if(menu) menu.hidden = true;
+    ACCOUNT.menuOpen = false;
+  }
+  function loadAccounts(){
+    return request('/accounts').then(function(res){
+      ACCOUNT.list = (res && res.accounts) || [];
+      ACCOUNT.activeId = (res && res.activeAccountId) || '';
+      var valid = ACCOUNT.list.some(function(a){ return a.id === ACCOUNT.id; });
+      if(!valid) ACCOUNT.id = ACCOUNT.activeId || (ACCOUNT.list[0] && ACCOUNT.list[0].id) || 'default';
+      persistAccount();
+      ACCOUNT.loaded = true;
+      renderAccountChrome();
+      renderAccountMenu();
+      return ACCOUNT;
+    }).catch(function(){
+      ACCOUNT.loaded = false;
+      renderAccountChrome();
+      return ACCOUNT;
+    });
+  }
+  function switchWorkspaceAccount(id){
+    if(!id || id === ACCOUNT.id){ closeAccountMenu(); return; }
+    ACCOUNT.id = id;
+    persistAccount();
+    closeAccountMenu();
+    setSync('正在切换账号…', '');
+    request('/accounts/' + encodeURIComponent(id) + '/activate', { method: 'POST', body: '{}' })
+      .catch(function(){ /* 激活记录失败不影响本地切换 */ })
+      .then(function(){ location.reload(); });
+  }
+  function renderWsAccountList(){
+    var box = $('wsAccountList');
+    if(!box) return;
+    box.innerHTML = ACCOUNT.list.map(function(a){
+      var on = a.id === ACCOUNT.id;
+      return '<div class="ws-account-row' + (on ? ' on' : '') + '">' +
+        '<img src="' + esc(accountAvatar(a)) + '" alt="">' +
+        '<div class="meta"><div class="nm">' + esc(a.name || '账号') + '</div>' +
+        '<div class="sub">' + esc(accountChannelText(a)) + (a.system ? ' · 默认账号' : '') + '</div></div>' +
+        '<div class="ops">' +
+        (on ? '' : '<button type="button" data-acct-switch="' + esc(a.id) + '">切换</button>') +
+        '<button type="button" data-acct-rename="' + esc(a.id) + '">重命名</button>' +
+        (a.system ? '' : '<button type="button" class="danger" data-acct-delete="' + esc(a.id) + '">删除</button>') +
+        '</div></div>';
+    }).join('');
+  }
+  function openWsAccountModal(){
+    closeAccountMenu();
+    renderWsAccountList();
+    $('wsAccountModal').classList.add('on');
+  }
+  function closeWsAccountModal(){
+    $('wsAccountModal').classList.remove('on');
+  }
+  function createWorkspaceAccount(){
+    var input = $('wsAccountNewName');
+    var name = String(input ? input.value : '').trim();
+    if(!name){ toast('请输入账号名称', 'err'); if(input) input.focus(); return; }
+    var btn = $('wsAccountNewBtn');
+    if(btn) btn.disabled = true;
+    request('/accounts', { method: 'POST', body: JSON.stringify({ name: name }) }).then(function(created){
+      if(input) input.value = '';
+      toast('已创建账号「' + ((created && created.name) || name) + '」');
+      return loadAccounts();
+    }).then(renderWsAccountList).catch(function(err){
+      toast('创建失败：' + errMsg(err), 'err');
+    }).then(function(){ if(btn) btn.disabled = false; });
+  }
+  function renameWorkspaceAccount(id){
+    var a = accountById(id);
+    if(!a) return;
+    var next = window.prompt('修改账号名称', a.name || '');
+    if(next == null) return;
+    next = String(next).trim();
+    if(!next){ toast('账号名称不能为空', 'err'); return; }
+    request('/accounts/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify({ name: next }) })
+      .then(function(){
+        toast('已重命名');
+        return loadAccounts();
+      })
+      .then(renderWsAccountList)
+      .catch(function(err){ toast('重命名失败：' + errMsg(err), 'err'); });
+  }
+  function deleteWorkspaceAccount(id){
+    var a = accountById(id);
+    if(!a || a.system) return;
+    if(!window.confirm('删除账号「' + (a.name || '') + '」后，其数据会移入 data/legacy 备份目录，确定继续？')) return;
+    request('/accounts/' + encodeURIComponent(id), { method: 'DELETE' }).then(function(){
+      toast('账号已删除');
+      if(ACCOUNT.id === id) ACCOUNT.id = '';
+      return loadAccounts();
+    }).then(renderWsAccountList).catch(function(err){
+      toast('删除失败：' + errMsg(err), 'err');
+    });
+  }
+
   function loadMonitorStatus(){
     return request('/monitor/wechat/status').then(function(s){
       MON = s || null;
@@ -1788,6 +1952,7 @@
       tx.uploadXhr = xhr;
       xhr.open('POST', API + '/trends/transcript/upload?name=' + encodeURIComponent(file.name));
       xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      if(ACCOUNT.id) xhr.setRequestHeader('X-Account-Id', ACCOUNT.id);
       xhr.upload.onprogress = function(ev){
         if(!ev.lengthComputable) return;
         tx.uploadPct = Math.round((ev.loaded / ev.total) * 100);
@@ -3183,14 +3348,36 @@
 
   /* ---------- 连接设置 ---------- */
   var connData = null; // 连接设置一览（来自 /api/connections），null 表示尚未加载
+  var connLoading = false; // 单飞：一次只发一个请求，避免渲染循环重复拉取
+  var connError = null; // 加载失败原因；与 connData 二选一展示
   var connTab = 'platforms'; // 'platforms' 渠道 Cookie 设置（默认）/ 'proxy' 网络代理
 
   function loadConnections(){
+    if(connLoading) return;
+    connLoading = true;
+    connError = null;
+    // 本地服务无响应时 fetch 可能长时间挂着，超时后给用户一个明确的重试入口
+    var timer = setTimeout(function(){
+      if(!connLoading) return;
+      connLoading = false;
+      connError = '连接配置加载超时，请确认本地服务仍在运行';
+      if(state.view === 'connections') render();
+    }, 15000);
     request('/connections').then(function(d){
-      connData = d;
+      clearTimeout(timer);
+      connLoading = false;
+      if(!d || !d.platforms || !d.defs || !d.connections){
+        connError = '连接配置数据不完整，请刷新重试';
+      } else {
+        connData = d;
+      }
       if(state.view === 'connections') render();
     }).catch(function(err){
-      toast('连接配置加载失败：' + err.message, 'err');
+      clearTimeout(timer);
+      connLoading = false;
+      connError = err && err.message ? err.message : '连接配置加载失败';
+      if(state.view === 'connections') render();
+      toast('连接配置加载失败：' + connError, 'err');
     });
   }
 
@@ -3213,6 +3400,12 @@
 
   function viewConnections(){
     if(!connData){
+      if(connError){
+        return '<div class="rounded-2xl bg-surface-container-lowest border border-outline-variant p-space-xl text-center">'
+          + '<p class="text-label-md font-label-md text-on-surface mb-space-sm">' + esc(connError) + '</p>'
+          + '<button class="inline-flex items-center gap-1 px-space-md py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md" data-act="connReload" type="button"><span class="material-symbols-outlined text-base">refresh</span>重新加载</button>'
+          + '</div>';
+      }
       loadConnections();
       return '<div class="flex items-center gap-space-sm text-on-surface-variant"><span class="material-symbols-outlined animate-spin">progress_activity</span> 正在加载各渠道连接配置…</div>';
     }
@@ -4233,6 +4426,7 @@
       if(xhrs) xhrs.push(xhr);
       xhr.open('POST', API + '/media?name=' + encodeURIComponent(file.name) + '&kind=' + kind + '&duration=' + encodeURIComponent(duration || 0) + (role ? '&role=' + encodeURIComponent(role) : '') + (ratio ? '&ratio=' + encodeURIComponent(ratio) : ''));
       xhr.setRequestHeader('Content-Type', file.type || (kind === 'image' ? 'image/png' : 'video/mp4'));
+      if(ACCOUNT.id) xhr.setRequestHeader('X-Account-Id', ACCOUNT.id);
       xhr.upload.onprogress = function(ev){
         if(!ev.lengthComputable || !onProgress) return;
         onProgress(Math.round(ev.loaded / ev.total * 100));
@@ -5106,10 +5300,58 @@
   $('refreshBtn').addEventListener('click', function(){ loadAllData(); });
   $('exportBtn').addEventListener('click', function(){
     var map = { home:'calendar', topics:'topic', calendar:'calendar', review:'review', assets:'asset' };
-    window.location.href = '/api/tables/' + (map[state.view] || 'calendar') + '/export.csv';
+    window.location.href = '/api/tables/' + (map[state.view] || 'calendar') + '/export.csv' +
+      (ACCOUNT.id ? '?account=' + encodeURIComponent(ACCOUNT.id) : '');
   });
   var profileBtn = $('profileBtn');
   if(profileBtn) profileBtn.addEventListener('click', openProfileEditor);
+
+  /* ---------- 账号切换菜单 ---------- */
+  var wsAcctBtn = $('wsAcctBtn');
+  if(wsAcctBtn) {
+    wsAcctBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      if(ACCOUNT.menuOpen) closeAccountMenu();
+      else openAccountMenu();
+    });
+  }
+  var wsAcctMenu = $('wsAcctMenu');
+  if(wsAcctMenu) {
+    wsAcctMenu.addEventListener('click', function(e){
+      var pick = e.target.closest ? e.target.closest('[data-acct]') : null;
+      if(pick){ switchWorkspaceAccount(pick.getAttribute('data-acct')); return; }
+      var manage = e.target.closest ? e.target.closest('[data-acct-manage]') : null;
+      if(manage) openWsAccountModal();
+    });
+  }
+  document.addEventListener('click', function(e){
+    if(!ACCOUNT.menuOpen) return;
+    var wrap = $('wsAcctWrap');
+    if(wrap && e.target.closest && e.target.closest('#wsAcctWrap')) return;
+    closeAccountMenu();
+  });
+  var wsAccountClose = $('wsAccountClose');
+  if(wsAccountClose) wsAccountClose.addEventListener('click', closeWsAccountModal);
+  var wsAccountModal = $('wsAccountModal');
+  if(wsAccountModal) wsAccountModal.addEventListener('click', function(e){ if(e.target === this) closeWsAccountModal(); });
+  var wsAccountList = $('wsAccountList');
+  if(wsAccountList) {
+    wsAccountList.addEventListener('click', function(e){
+      var t = e.target;
+      var sw = t.closest ? t.closest('[data-acct-switch]') : null;
+      if(sw){ switchWorkspaceAccount(sw.getAttribute('data-acct-switch')); return; }
+      var rn = t.closest ? t.closest('[data-acct-rename]') : null;
+      if(rn){ renameWorkspaceAccount(rn.getAttribute('data-acct-rename')); return; }
+      var dl = t.closest ? t.closest('[data-acct-delete]') : null;
+      if(dl){ deleteWorkspaceAccount(dl.getAttribute('data-acct-delete')); }
+    });
+  }
+  var wsAccountNewBtn = $('wsAccountNewBtn');
+  if(wsAccountNewBtn) wsAccountNewBtn.addEventListener('click', createWorkspaceAccount);
+  var wsAccountNewName = $('wsAccountNewName');
+  if(wsAccountNewName) wsAccountNewName.addEventListener('keydown', function(e){
+    if(e.keyCode === 13){ e.preventDefault(); createWorkspaceAccount(); }
+  });
 
   var helpBtn = $('helpBtn');
   if(helpBtn) helpBtn.addEventListener('click', function(){
@@ -5691,7 +5933,9 @@
     }
     if(act === 'connReload'){
       connData = null;
+      connError = null;
       loadConnections();
+      if(state.view === 'connections') render();
       return;
     }
     if(act === 'connSave'){
@@ -7063,7 +7307,7 @@
     if(VOICE.assetId) qs += '&assetId=' + encodeURIComponent(VOICE.assetId);
     fetch(API + '/recordings' + qs, {
       method: 'POST',
-      headers: { 'Content-Type': mime },
+      headers: accountHeader({ 'Content-Type': mime }),
       body: blob
     }).then(function(res){
       return res.text().then(function(text){
@@ -7135,7 +7379,7 @@
       voicePlayingId = null;
       syncVoiceIcons();
     }
-    fetch(API + '/recordings/' + encodeURIComponent(id), { method: 'DELETE' }).then(function(res){
+    fetch(API + '/recordings/' + encodeURIComponent(id), { method: 'DELETE', headers: accountHeader() }).then(function(res){
       return res.text().then(function(text){
         var body = null;
         if(text){ try{ body = JSON.parse(text); }catch(err){} }
@@ -7281,7 +7525,7 @@
   function uploadProfileAvatar(file){
     return fetch(API + '/profile/avatar', {
       method: 'POST',
-      headers: { 'Content-Type': file.type },
+      headers: accountHeader({ 'Content-Type': file.type }),
       body: file
     }).then(function(res){
       return res.text().then(function(text){
@@ -7358,6 +7602,8 @@
       $('modal').classList.remove('on');
       $('profileModal').classList.remove('on');
       closeAccountModal();
+      closeAccountMenu();
+      closeWsAccountModal();
       closeVoiceMemo();
       closePublishModal();
       pendingDelete = null;
@@ -7386,11 +7632,13 @@
   function subscribe(){
     if(typeof EventSource === 'undefined') return;
     try{
-      var es = new EventSource(API + '/events');
+      var es = new EventSource(API + '/events' + (ACCOUNT.id ? '?account=' + encodeURIComponent(ACCOUNT.id) : ''));
       es.addEventListener('ready', function(){ setSync('实时同步已连接', 'ok'); });
       es.addEventListener('change', function(e){
         var payload = null;
         try{ payload = e && e.data ? JSON.parse(e.data) : null; }catch(err){ payload = null; }
+        // 切换账号后旧连接可能仍收到其它账号的事件，直接忽略
+        if(payload && payload.accountId && payload.accountId !== ACCOUNT.id) return;
         if(payload && payload.type === 'benchmarks'){
           if(payload.job){
             state.trend.status = payload.job;
@@ -7692,14 +7940,17 @@
     var initial = (location.hash || '').replace(/^#/, '');
     if(['home','topics','calendar','publish','review','assets','connections'].indexOf(initial) >= 0) state.view = initial;
     setSync('正在连接…', '');
-    subscribe();
-    Promise.all([
-      loadProfile().catch(function(){ /* 旧服务没有 profile 接口时保持默认资料 */ }),
-      loadVoiceRecordings(),
-      loadBenchmarks(),
-      loadLicenseStatus(),
-      loadPublishData().catch(function(){ /* 发布服务不可用时不影响其它页面 */ })
-    ]).then(loadAllData).then(tourMaybeAutoStart);
+    // 先确定当前账号，再建立 SSE 与拉取数据，避免读到上一个账号的内容
+    loadAccounts().then(function(){
+      subscribe();
+      return Promise.all([
+        loadProfile().catch(function(){ /* 旧服务没有 profile 接口时保持默认资料 */ }),
+        loadVoiceRecordings(),
+        loadBenchmarks(),
+        loadLicenseStatus(),
+        loadPublishData().catch(function(){ /* 发布服务不可用时不影响其它页面 */ })
+      ]);
+    }).then(loadAllData).then(tourMaybeAutoStart);
   }
   boot();
 })();

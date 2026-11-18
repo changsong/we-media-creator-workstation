@@ -6,6 +6,8 @@ const path = require('path');
 const crypto = require('crypto');
 const { URL } = require('url');
 const store = require('./lib/store');
+const accountContext = require('./lib/account-context');
+const accounts = require('./lib/accounts');
 const { tables, tableOrder, publicSchema } = require('./lib/schemas');
 const wechatMonitor = require('./lib/wechat-monitor');
 const channelConnections = require('./lib/channel-connections');
@@ -40,7 +42,10 @@ let lastSelfWrite = 0;
 
 function broadcast(payload) {
   const data = `event: change\ndata: ${JSON.stringify(payload)}\n\n`;
+  const accountId = payload && payload.accountId ? payload.accountId : null;
   clients.forEach((res) => {
+    // 事件只推给同一账号的标签页，避免切换账号后看到别的账号的变更
+    if (accountId && res.accountId && res.accountId !== accountId) return;
     try {
       res.write(data);
     } catch (err) {
@@ -290,13 +295,75 @@ async function handleApi(req, res, url) {
     return sendJSON(res, 200, {
       ok: true,
       version: APP_VERSION,
+      accountId: accountContext.currentOrDefault(),
       storage: 'sqlite',
-      db: store.dbPath,
+      db: store.dbPath(),
       integrity: store.integrity(),
       tables: store.stats(),
       orphans: store.orphans(),
       time: new Date().toISOString()
     });
+  }
+
+  // 多账号管理：列表 / 新建 / 重命名 / 删除 / 设为当前
+  if (parts[1] === 'accounts') {
+    const targetId = parts[2] || '';
+    const action = parts[3] || '';
+    try {
+      if (!targetId && method === 'GET') return sendJSON(res, 200, accounts.list());
+      if (!targetId && method === 'POST') {
+        const body = await readBody(req);
+        const created = accounts.create(body);
+        // 新账号从空工作区起步，配置为未启用；仍为它挂上定时链，后续启用时无需重启
+        try {
+          wechatMonitor.startAccount(created.id);
+        } catch (err) {
+          /* 忽略 */
+        }
+        try {
+          benchmarks.startAccount(created.id);
+        } catch (err) {
+          /* 忽略 */
+        }
+        return sendJSON(res, 201, created);
+      }
+      if (targetId && !action && (method === 'PUT' || method === 'PATCH')) {
+        const body = await readBody(req);
+        return sendJSON(res, 200, accounts.rename(targetId, body));
+      }
+      if (targetId && !action && method === 'DELETE') {
+        const removed = accounts.remove(targetId);
+        // 注册表已更新，重建定时链以摘除该账号
+        try {
+          wechatMonitor.startScheduler();
+        } catch (err) {
+          /* 忽略 */
+        }
+        try {
+          benchmarks.startScheduler();
+        } catch (err) {
+          /* 忽略 */
+        }
+        return sendJSON(res, 200, removed);
+      }
+      if (targetId && action === 'activate' && method === 'POST') {
+        const account = accounts.setActive(targetId);
+        // 旧账号的暖浏览器不能留给新账号复用，空闲时立即关闭
+        try {
+          Promise.resolve(trendsBrowser.resetWarm()).catch(() => {});
+        } catch (err) {
+          /* 忽略 */
+        }
+        return sendJSON(res, 200, {
+          ok: true,
+          activeAccountId: account.id,
+          accounts: accounts.list()
+        });
+      }
+    } catch (err) {
+      return sendError(res, err);
+    }
+    return sendJSON(res, 404, { error: '接口不存在' });
   }
 
   // 账号与授权（Keygate）
@@ -402,7 +469,10 @@ async function handleApi(req, res, url) {
       'X-Accel-Buffering': 'no'
     });
     res.write('retry: 3000\n\n');
-    res.write(`event: ready\ndata: ${JSON.stringify({ ok: true })}\n\n`);
+    res.write(
+      `event: ready\ndata: ${JSON.stringify({ ok: true, accountId: accountContext.currentOrDefault() })}\n\n`
+    );
+    res.accountId = accountContext.currentOrDefault();
     clients.add(res);
     const timer = setInterval(() => {
       try {
@@ -1166,12 +1236,30 @@ async function handleApi(req, res, url) {
 
 function touch(tableKey, action, id) {
   lastSelfWrite = Date.now();
-  broadcast({ table: tableKey, action, id, at: new Date().toISOString() });
+  broadcast({
+    table: tableKey,
+    action,
+    id,
+    accountId: accountContext.currentOrDefault(),
+    at: new Date().toISOString()
+  });
 }
 
 publishTasks.setChangeHook((table, action, id) => touch(table, action, id));
 
 /* ---------------- 服务 ---------------- */
+
+/**
+ * 解析请求所属账号：前端用 X-Account-Id 头，无法自定义头的请求
+ * （img/audio/video、CSV 下载、EventSource）用 ?account= 查询参数。
+ * 未知或缺失时回落到注册表里上次使用的账号。
+ */
+function resolveAccountId(req, url) {
+  const header = req.headers['x-account-id'];
+  const raw = (Array.isArray(header) ? header[0] : header) || url.searchParams.get('account') || '';
+  return accounts.resolveId(raw) || accounts.getActiveId();
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname === '/favicon.ico') {
@@ -1179,7 +1267,16 @@ const server = http.createServer((req, res) => {
     return res.end();
   }
   if (url.pathname.startsWith('/api/')) {
-    handleApi(req, res, url).catch((err) => sendError(res, err));
+    const accountId = resolveAccountId(req, url);
+    accountContext
+      .run(accountId, () => handleApi(req, res, url))
+      .catch((err) => {
+        if (!res.headersSent) sendError(res, err);
+        else {
+          console.error('[error]', err);
+          try { res.end(); } catch (e) { /* noop */ }
+        }
+      });
     return;
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -1189,31 +1286,57 @@ const server = http.createServer((req, res) => {
   return serveStatic(req, res, url.pathname);
 });
 
+// 账号注册表必须先建立，后续所有数据库/文件路径才能按账号落位
+let accountIds = [accountContext.DEFAULT_ACCOUNT_ID];
 try {
-  const info = store.init();
-  console.log(`[db] SQLite ${store.dbPath}`);
-  console.log(`[db] ${JSON.stringify(info.counts)}`);
+  accounts.ensureRegistry();
+  accountIds = accounts.listIds();
+} catch (err) {
+  console.warn('[accounts] 账号注册表初始化失败，按默认账号启动：', err.message);
+}
+
+try {
+  accountIds.forEach((id) => {
+    accountContext.run(id, () => {
+      // 默认账号沿用旧逻辑（含首次示例数据 / 旧数据迁移），新账号从空工作区开始
+      const info = id === accounts.DEFAULT_ID ? store.init() : store.init({ seed: false });
+      console.log(`[db] 账号 ${id}：SQLite ${store.dbPath()}`);
+      if (id === accounts.getActiveId()) console.log(`[db] ${JSON.stringify(info.counts)}`);
+    });
+  });
 } catch (err) {
   console.error('[db] 初始化失败：', err.message);
   process.exit(1);
 }
 
-try {
-  const cleaned = media.gcStaged();
-  if (cleaned) console.log(`[media] 已清理 ${cleaned} 个过期的暂存素材`);
-  const gcTimer = setInterval(() => {
+function gcStagedAllAccounts() {
+  let ids = accountIds;
+  try {
+    ids = accounts.listIds();
+  } catch (err) {
+    /* 注册表暂不可读时沿用启动时的账号列表 */
+  }
+  ids.forEach((id) => {
     try {
-      media.gcStaged();
+      accountContext.run(id, () => {
+        const cleaned = media.gcStaged();
+        if (cleaned) console.log(`[media] 账号 ${id}：已清理 ${cleaned} 个过期的暂存素材`);
+      });
     } catch (err) {
-      console.warn('[media] 暂存素材清理失败：', err.message);
+      console.warn(`[media] 账号 ${id} 暂存素材清理失败：`, err.message);
     }
-  }, 60 * 60 * 1000);
+  });
+}
+
+try {
+  gcStagedAllAccounts();
+  const gcTimer = setInterval(gcStagedAllAccounts, 60 * 60 * 1000);
   if (gcTimer.unref) gcTimer.unref();
 } catch (err) {
   console.warn('[media] 暂存素材清理失败：', err.message);
 }
 
-cleanupUploads();
+accountIds.forEach((id) => accountContext.run(id, () => cleanupUploads()));
 
 try {
   const started = wechatMonitor.startScheduler();
@@ -1259,8 +1382,11 @@ server.on('error', (err) => {
 });
 
 server.listen(PORT, HOST, () => {
+  const dataDir = path.dirname(accounts.REGISTRY_FILE);
   console.log(`媒管家已启动：http://${HOST}:${PORT}`);
-  console.log('按 Ctrl+C 停止；数据库 data/workbench.db，每日自动备份到 data/backups/');
+  console.log(
+    `按 Ctrl+C 停止；共 ${accountIds.length} 个运营账号，数据目录 ${dataDir}（每日自动备份到 backups/）`
+  );
 });
 
 let shuttingDown = false;
