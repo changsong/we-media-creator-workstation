@@ -167,7 +167,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 200, {
         items,
         sentToday: s.sentToday,
-        dailyCap: bank.settings.dailyCap || 20,
+        dailyCap: bank.settings.dailyCap || 40,
         intervalSeconds: { min: 60, max: 120 },
         excludedPlatforms: EXCLUDED_PLATFORMS.map((platform) => ({ key: platform, label: platformLabel(platform) })),
       });

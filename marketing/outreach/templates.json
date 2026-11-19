@@ -4,7 +4,7 @@
     "siteUrl": "https://www.wemediacreator.com",
     "trialUrl": "https://keygate.unionuser.com/signup/4917722b",
     "trialDays": 31,
-    "dailyCap": 20,
+    "dailyCap": 40,
     "cooldownDays": 30,
     "intervalMinutes": [3, 8],
     "sendExcludePlatforms": ["kuaishou"]
