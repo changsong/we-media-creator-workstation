@@ -550,7 +550,7 @@ function downloadPage(lang) {
       title: 'Windows',
       subtitle: isEn ? 'Windows 10 and later · x64' : 'Windows 10 及以上 · x64',
       children: downloadRow({ lang, label: isEn ? 'NSIS installer (.exe)' : 'NSIS 安装包 (.exe)', file: win, primary: true }) +
-        `<p class="font-body-sm text-[11px] text-on-surface-variant">${isEn ? 'Installs per user without administrator rights. SmartScreen may warn because the build is unsigned.' : '按当前用户安装，无需管理员权限。构建未签名，SmartScreen 可能提示，选择“更多信息 → 仍要运行”即可。'}</p>`,
+        `<p class="font-body-sm text-[11px] text-on-surface-variant">${isEn ? 'Installs per user without administrator rights. The build is unsigned. On SmartScreen choose “More info → Run anyway”. If Windows 11 Smart App Control blocks it, see the fix below.' : '按当前用户安装，无需管理员权限。构建未签名：SmartScreen 提示时选「更多信息 → 仍要运行」；Win11 若被「智能应用控制」拦截，处理方法见下方说明。'}</p>`,
     }),
     downloadCard({
       lang,
@@ -610,6 +610,26 @@ function downloadPage(lang) {
     `<p hidden data-os-banner data-label-win="${esc(isEn ? 'Windows detected — the highlighted installer below matches your system.' : '检测到 Windows，下方已加亮对应的安装包。')}" data-label-mac="${esc(isEn ? 'macOS detected — pick Apple Silicon or Intel below.' : '检测到 macOS，请在下方选择 Apple Silicon 或 Intel 版本。')}" data-label-linux="${esc(isEn ? 'Linux detected — AppImage is the quickest option.' : '检测到 Linux，AppImage 是最快的安装方式。')}" class="max-w-6xl mx-auto mb-4 font-body-sm text-body-sm text-status-success"></p>`,
     `<div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-gutter">${cards}</div>`,
     `<div class="max-w-6xl mx-auto mt-4 rounded-2xl bg-surface-container-low/70 px-5 py-4 font-body-sm text-body-sm text-on-surface-variant flex items-start gap-2">${icon('info', 'text-[18px] text-primary mt-0.5')}<span>${isEn ? 'The desktop app needs a local Chrome or Edge installation for publishing. Mobile phones are not supported; the app is a desktop workbench.' : '发布依赖本机安装的 Chrome 或 Edge 浏览器。暂不支持手机端，工作台是桌面应用。'}</span></div>`,
+    contentSection({
+      body: `<div class="max-w-6xl mx-auto rounded-3xl bg-surface-white p-6 sm:p-8 shadow-sm">
+        <div class="flex items-start gap-3">
+          <span class="text-primary shrink-0">${icon('gpp_maybe', 'text-[24px]')}</span>
+          <div class="min-w-0">
+            <h2 class="font-headline-md text-headline-md text-on-surface">${isEn ? 'Windows 11 shows “Smart App Control blocked this app”. Here is the fix.' : 'Windows 11 提示「智能应用控制已阻止」，这样处理'}</h2>
+            <div class="mt-3 space-y-3 font-body-sm text-body-sm text-on-surface-variant">
+              <p>${isEn ? 'This is Smart App Control in Windows 11, not antivirus. The installer is unsigned, so Smart App Control refuses to run it. The dialog has no “Run anyway” button; turn the feature off in system settings first.' : '这是 Win11 的「智能应用控制」在拦截未签名的安装包。它不是杀毒误报，也不是文件损坏。这个提示没有「仍要运行」按钮，需要在系统设置里关闭该功能。'}</p>
+              <ol class="space-y-1.5">
+                <li>${isEn ? '1. Open Settings → Privacy &amp; security → Windows Security.' : '1. 打开「设置 → 隐私和安全性 → Windows 安全中心」。'}</li>
+                <li>${isEn ? '2. Go to App &amp; browser control → Smart App Control.' : '2. 进入「应用和浏览器控制 → 智能应用控制」。'}</li>
+                <li>${isEn ? '3. Set Smart App Control to Off, then run the installer again.' : '3. 把开关设为「关闭」，再重新运行安装包。'}</li>
+              </ol>
+              <p>${isEn ? 'Once turned off, Smart App Control cannot be turned back on without reinstalling Windows. Decide for yourself before switching it off. If you would rather not, try the app on another computer, or contact us through the feedback form.' : '智能应用控制一旦关闭，就无法再次开启，除非重装系统。是否关闭请自行评估。介意的话，可以先在别的电脑上试用，或通过反馈表单联系我们。'}</p>
+              <p>${isEn ? 'If the setting is missing, this computer never had Smart App Control enabled and nothing needs fixing.' : '如果设置里找不到这一项，说明这台电脑本来就没开智能应用控制，无需处理。'}</p>
+            </div>
+          </div>
+        </div>
+      </div>`,
+    }),
     contentSection({
       body: `<div class="max-w-6xl mx-auto">
         ${sectionHeading({ lang, eyebrow: isEn ? 'First run' : '第一次使用', title: isEn ? 'Four steps to your first scheduled post' : '四步完成第一次排期' })}
