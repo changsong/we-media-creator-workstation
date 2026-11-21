@@ -218,8 +218,7 @@ function articlePage(article, articles) {
           <ul class="list-disc pl-5 space-y-2 font-body-md text-body-md text-on-surface">${takeaways}</ul>
         </div>
         <div class="rounded-2xl bg-surface-white p-5 font-body-sm text-body-sm text-on-surface-variant shadow-sm">
-          <p>本文由 AI 辅助整理与改写，参考公开的行业文章与平台教程，用于分享创作方法，不构成平台官方建议。</p>
-          <p class="mt-2">${source}</p>
+          <p>${source}</p>
         </div>
       </div>
     </div>`,
