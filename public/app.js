@@ -80,10 +80,23 @@
   var MON = null;
   var STAGES = ['选题确认','脚本撰写','待补素材','制作中','待审核','待发布','已发布','二次分发','已复盘'];
   var STATUS = ['待写','写作中','已发布','废弃'];
-  var PLATFORMS = ['抖音','视频号','快手','微博','公众号','小红书','B站','知乎'];
+  var PLATFORMS = ['抖音','视频号','快手','微博','公众号','小红书','B站','知乎','YouTube','TikTok'];
+  var OVERSEAS = ['YouTube','TikTok'];
+  function isOverseas(p){ return OVERSEAS.indexOf(p) >= 0; }
+  // 平台下拉按国内/海外分组渲染，避免两类渠道混在一起
+  function platformOptionsHtml(list){
+    var domestic = [], overseas = [];
+    list.forEach(function(p){ (isOverseas(p) ? overseas : domestic).push(p); });
+    function opts(arr){ return arr.map(function(p){ return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join(''); }
+    var out = '';
+    if(domestic.length) out += '<optgroup label="国内平台">' + opts(domestic) + '</optgroup>';
+    if(overseas.length) out += '<optgroup label="海外平台">' + opts(overseas) + '</optgroup>';
+    return out;
+  }
   var PLATFORM_COLOR = {
     '公众号':'#2f8f5b','小红书':'#c25454','视频号':'#3b7ea1','抖音':'#5c5470',
-    'B站':'#4a7fa5','知乎':'#5f5a9e','微博':'#b8863b','快手':'#d9531e'
+    'B站':'#4a7fa5','知乎':'#5f5a9e','微博':'#b8863b','快手':'#d9531e',
+    'YouTube':'#c4302b','TikTok':'#111111'
   };
   var STAGE_COLORS = ['#82877e','#b8863b','#c25454','#6f66a8','#3b7ea1','#a07e00','#2f8f5b','#2c7465','#5f5a9e'];
   var STATUS_COLOR = { '待写':'#82877e', '写作中':'#b8863b', '已发布':'#2f8f5b', '废弃':'#c25454' };
@@ -3384,17 +3397,19 @@
   var CONN_ICON = {
     '公众号':'chat', '小红书':'auto_stories', '视频号':'play_circle', '抖音':'music_note',
     'B站':'smart_display', '知乎':'forum', '微博':'public', '快手':'videocam',
-    '灰豚数据':'insights'
+    '灰豚数据':'insights', 'YouTube':'smart_display', 'TikTok':'music_note'
   };
   var CONN_TINT = {
     '公众号':'bg-[#DCF3E5] text-[#23583A]', '小红书':'bg-[#FCE3DD] text-[#8E3B26]',
     '视频号':'bg-[#D5EAF7] text-[#2C495E]', '抖音':'bg-[#E2DFFF] text-[#444465]',
     'B站':'bg-[#D5EAF7] text-[#2C495E]', '知乎':'bg-[#E2DFFF] text-[#444465]',
     '微博':'bg-[#FFDF91] text-[#594400]', '快手':'bg-[#FFE3D3] text-[#8A3B0F]',
-    '灰豚数据':'bg-[#FFE9CC] text-[#7A4A00]'
+    '灰豚数据':'bg-[#FFE9CC] text-[#7A4A00]', 'YouTube':'bg-[#FFE3D3] text-[#8A3B0F]',
+    'TikTok':'bg-[#F2F3F6] text-[#44474A]'
   };
   var CONN_MODE = {
     cookie:   { label:'Cookie 登录', cls:'chip-honey' },
+    oauth:    { label:'OAuth 授权', cls:'chip-line' },
     custom:   { label:'自定义', cls:'chip-line' }
   };
 
@@ -3416,14 +3431,17 @@
       if(def.group === 'data') return true;
       return state.platform === 'all' || state.platform === p;
     });
+    var domestic = platforms.filter(function(p){ return d.defs[p].group !== 'overseas'; });
+    var overseas = platforms.filter(function(p){ return d.defs[p].group === 'overseas'; });
     var enabledCount = d.platforms.filter(function(p){
       return d.connections[p] && d.connections[p].enabled;
     }).length;
     var cookieCount = d.platforms.filter(function(p){ return d.defs[p].apiMode === 'cookie'; }).length;
+    var oauthCount = d.platforms.filter(function(p){ return d.defs[p].apiMode === 'oauth'; }).length;
     var html = '';
     html += '<div class="flex items-end justify-between mb-space-lg gap-space-md flex-wrap">'
       + '<div><h2 class="text-headline-md font-headline-md text-on-surface">连接设置</h2>'
-      + '<p class="text-label-sm text-on-surface-variant mt-1">为各渠道一键登录获取 Cookie，数据采集与自动发布复用同一登录态。</p></div>'
+      + '<p class="text-label-sm text-on-surface-variant mt-1">国内渠道用 Cookie 一键登录；海外渠道用 OAuth 授权。数据采集与自动发布复用同一登录态。</p></div>'
       + '<button class="flex items-center gap-1 px-space-md py-2 rounded-full bg-surface-container-lowest text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="connReload" type="button"><span class="material-symbols-outlined text-base">refresh</span>刷新</button>'
       + '</div>';
 
@@ -3436,12 +3454,13 @@
       + '<div class="flex items-center gap-2 flex-wrap">'
       + '<span class="chip chip-mint">已启用 ' + enabledCount + ' / ' + d.platforms.length + '</span>'
       + '<span class="chip chip-honey">Cookie 登录 ' + cookieCount + '</span>'
+      + (oauthCount ? '<span class="chip chip-line">OAuth 授权 ' + oauthCount + '</span>' : '')
       + '</div></div>';
 
     // Tab：渠道 Cookie 设置（默认）/ 网络代理
     var activeTab = connTab === 'proxy' ? 'proxy' : 'platforms';
     html += '<div class="seg mb-space-lg">';
-    html += '<button class="' + (activeTab === 'platforms' ? 'on' : '') + '" data-act="connTab" data-tab="platforms" type="button">渠道 Cookie 设置</button>';
+    html += '<button class="' + (activeTab === 'platforms' ? 'on' : '') + '" data-act="connTab" data-tab="platforms" type="button">渠道连接</button>';
     if(d.proxy){
       var proxyTabLabel = '网络代理';
       if(d.proxy.enabled) proxyTabLabel += d.proxy.configured ? ' · 已启用' : ' · 待完善';
@@ -3453,9 +3472,22 @@
     if(!platforms.length){
       html += '<div class="rounded-2xl bg-surface-container-lowest border border-dashed border-outline-variant p-space-xl text-center text-on-surface-variant">当前筛选下没有渠道，切换右上角「全部平台」查看。</div>';
     } else {
-      html += '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
-      platforms.forEach(function(p){ html += connCard(p, d); });
-      html += '</div>';
+      if(domestic.length){
+        html += '<div class="flex items-center gap-space-sm mb-space-md mt-1">'
+          + '<h3 class="text-label-md font-label-md text-on-surface">国内渠道</h3>'
+          + '<span class="text-label-sm text-on-surface-variant">Cookie 一键登录，登录态复用于采集与发布</span></div>'
+          + '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
+        domestic.forEach(function(p){ html += connCard(p, d); });
+        html += '</div>';
+      }
+      if(overseas.length){
+        html += '<div class="flex items-center gap-space-sm mb-space-md ' + (domestic.length ? 'mt-space-xl' : 'mt-1') + '">'
+          + '<h3 class="text-label-md font-label-md text-on-surface">海外渠道</h3>'
+          + '<span class="text-label-sm text-on-surface-variant">OAuth 官方授权，令牌只保存在本机</span></div>'
+          + '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
+        overseas.forEach(function(p){ html += connCard(p, d); });
+        html += '</div>';
+      }
     }
     html += '</div>';
 
@@ -3523,6 +3555,30 @@
         + '<span class="text-label-sm text-on-surface-variant">打开独立浏览器窗口，登录成功后自动回填并保存</span>'
         + '</div>';
     }
+    // OAuth 授权（海外渠道）
+    if(def.oauth && def.oauth.available){
+      var ost = (d.oauthStatus && d.oauthStatus[p]) || { connected:false };
+      var ostatusText = ost.connected
+        ? '已授权' + (ost.accountLabel ? '（账号：' + ost.accountLabel + '）' : '') + (ost.expiresAt ? ' · 有效至 ' + fmtDateTime(ost.expiresAt) : '')
+        : '未授权';
+      var callbackUrl = (typeof location !== 'undefined' ? location.origin : 'http://127.0.0.1:5180') + '/api/oauth/' + encodeURIComponent(p) + '/callback';
+      html += '<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-2">'
+        + '<div class="flex items-center gap-2 flex-wrap">'
+        + '<span class="chip ' + (ost.connected ? 'chip-mint' : 'chip-line') + '">' + esc(ostatusText) + '</span>'
+        + '<span class="text-label-sm text-on-surface-variant">OAuth 回调地址（填到开发者后台的 Redirect URI，含端口）</span>'
+        + '</div>'
+        + '<code class="text-[12px] break-all text-on-surface-variant select-all">' + esc(callbackUrl) + '</code>'
+        + '<div class="flex items-center gap-2 flex-wrap">'
+        + '<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-surface-container-lowest text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="connOauth" data-platform="' + esc(p) + '" type="button"><span class="material-symbols-outlined text-base">login</span>' + (ost.connected ? '重新授权' : '授权连接') + '</button>'
+        + (ost.connected ? '<button class="px-3 py-1.5 rounded-full text-label-sm font-label-sm bg-surface-container-lowest text-[#8E3B26] hover:bg-[#FCE3DD] transition-colors" data-act="connOauthDisconnect" data-platform="' + esc(p) + '" type="button">断开授权</button>' : '')
+        + '</div>'
+        + '<div class="flex items-center gap-2 flex-wrap">'
+        + '<input class="inp flex-1 min-w-[200px]" data-oauth-manual="' + esc(p) + '" placeholder="回调页打不开？粘贴地址栏的完整回调 URL" autocomplete="off" spellcheck="false" style="margin-bottom:0">'
+        + '<button class="px-3 py-1.5 rounded-full text-label-sm font-label-sm bg-surface-container-lowest text-on-surface hover:bg-surface-container-high transition-colors shrink-0" data-act="connOauthManual" data-platform="' + esc(p) + '" type="button">完成授权</button>'
+        + '</div>'
+        + '<p class="text-label-sm text-on-surface-variant hidden" data-oauth-msg="' + esc(p) + '"></p>'
+        + '</div>';
+    }
     // 字段
     html += '<div class="flex flex-col gap-space-sm">';
     def.fields.forEach(function(f){
@@ -3548,7 +3604,9 @@
     html += '<div class="min-w-0"><p class="text-label-sm text-on-surface-variant truncate">' + savedAt + '</p>'
       + '<p class="text-label-sm ' + (complete ? 'text-[#1B6F43]' : 'text-[#9A3B3B]') + '">' + (complete ? '必填项已填写' : '待填写 ' + (required.length - filled) + ' 项必填') + '</p></div>';
     html += '<div class="flex items-center gap-2 shrink-0">';
-    html += '<button class="px-4 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="connTest" data-platform="' + esc(p) + '" type="button">测试连接</button>';
+    if(!(def.oauth && def.oauth.available)){
+      html += '<button class="px-4 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="connTest" data-platform="' + esc(p) + '" type="button">测试连接</button>';
+    }
     html += '<button class="inline-flex items-center gap-1 px-5 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" data-act="connSave" data-platform="' + esc(p) + '" type="button"><span class="material-symbols-outlined text-base">save</span>保存</button>';
     html += '</div></div>';
     html += '</div>';
@@ -3843,6 +3901,95 @@
         // 瞬时失败继续轮询
       });
     }, 1000);
+  }
+
+  var oauthPollTimer = null;
+
+  function connOauth(platform){
+    var btn = document.querySelector('#view button[data-act="connOauth"][data-platform="' + platform + '"]');
+    var msg = document.querySelector('#view [data-oauth-msg="' + platform + '"]');
+    if(btn){ btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span>等待授权…'; }
+    if(msg){ msg.className = 'text-label-sm text-on-surface-variant'; msg.textContent = '正在打开授权窗口…'; }
+    request('/connections/' + encodeURIComponent(platform) + '/oauth', { method: 'POST', body: '{}' })
+      .then(function(resp){
+        if(msg && resp.oauth && resp.oauth.message){ msg.textContent = resp.oauth.message; }
+        pollConnOauth(platform, btn, msg);
+      })
+      .catch(function(err){
+        if(btn){ btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined text-base">login</span>授权连接'; }
+        if(msg){ msg.className = 'text-label-sm text-[#9A3B3B]'; msg.textContent = '✕ ' + err.message; }
+        toast('发起授权失败：' + err.message, 'err');
+      });
+  }
+
+  function pollConnOauth(platform, btn, msg){
+    if(oauthPollTimer){ clearInterval(oauthPollTimer); oauthPollTimer = null; }
+    var started = Date.now();
+    function stop(){ if(oauthPollTimer){ clearInterval(oauthPollTimer); oauthPollTimer = null; } }
+    function restore(){
+      if(btn && document.body.contains(btn)){
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-base">login</span>重新授权';
+      }
+    }
+    oauthPollTimer = setInterval(function(){
+      request('/connections/' + encodeURIComponent(platform) + '/oauth/status').then(function(st){
+        if(!st) return;
+        if(st.status === 'success'){
+          stop();
+          toast(platform + ' 授权成功', 'ok');
+          connData = null;
+          loadConnections();
+          return;
+        }
+        if(st.status === 'error' || st.status === 'cancelled' || st.status === 'idle'){
+          stop(); restore();
+          var failText = st.message || (st.status === 'cancelled' ? '已取消授权' : '授权窗口已关闭');
+          if(msg){ msg.className = 'text-label-sm text-[#9A3B3B]'; msg.textContent = '✕ ' + failText; }
+          return;
+        }
+        if(msg){
+          msg.className = 'text-label-sm text-on-surface-variant';
+          msg.textContent = st.message || '请在弹出的浏览器窗口完成授权…';
+        }
+        if(Date.now() - started > 10 * 60 * 1000){
+          stop(); restore();
+          if(msg){ msg.className = 'text-label-sm text-[#9A3B3B]'; msg.textContent = '✕ 等待授权超时，请重新点击'; }
+        }
+      }).catch(function(){
+        // 瞬时失败继续轮询
+      });
+    }, 1000);
+  }
+
+  function connOauthManual(platform){
+    var input = document.querySelector('#view [data-oauth-manual="' + platform + '"]');
+    var msg = document.querySelector('#view [data-oauth-msg="' + platform + '"]');
+    var value = input ? input.value.trim() : '';
+    if(!value){ toast('请先粘贴回调地址或授权码', 'err'); return; }
+    if(msg){ msg.className = 'text-label-sm text-on-surface-variant'; msg.textContent = '正在换取令牌…'; }
+    request('/connections/' + encodeURIComponent(platform) + '/oauth/manual', {
+      method: 'POST',
+      body: JSON.stringify({ input: value })
+    }).then(function(){
+      toast(platform + ' 授权成功', 'ok');
+      connData = null;
+      loadConnections();
+    }).catch(function(err){
+      if(msg){ msg.className = 'text-label-sm text-[#9A3B3B]'; msg.textContent = '✕ ' + err.message; }
+      toast('授权失败：' + err.message, 'err');
+    });
+  }
+
+  function connOauthDisconnect(platform){
+    if(!window.confirm('断开 ' + platform + ' 授权后，需要重新授权才能自动发布。确定继续？')) return;
+    request('/connections/' + encodeURIComponent(platform) + '/oauth', { method: 'DELETE' })
+      .then(function(){
+        toast(platform + ' 授权已断开', 'ok');
+        connData = null;
+        loadConnections();
+      })
+      .catch(function(err){ toast('断开失败：' + err.message, 'err'); });
   }
 
   function connClear(platform, key){
@@ -4148,13 +4295,11 @@
     });
     html += '</select></div>';
     html += '<div class="fld"><label class="lab">发布平台 <b>*</b></label><select id="pubPlatform" class="sel">';
-    platformOpts.forEach(function(p){
-      html += '<option value="' + esc(p) + '">' + esc(p) + '</option>';
-    });
+    html += platformOptionsHtml(platformOpts);
     html += '</select></div>';
     html += '</div>';
     html += '<div class="fld"><label class="lab">计划执行时间 <b>*</b></label><input id="pubWhen" class="inp" type="datetime-local" value="' + esc(when) + '"></div>';
-    html += '<div class="fld"><label class="lab">作品标题 <b>*</b> <span class="text-outline normal-case">· 抖音最多 30 字，超出自动截断</span></label><input id="pubTitle" class="inp" type="text" maxlength="80" value="' + esc(title) + '" placeholder="填写作品标题"></div>';
+    html += '<div class="fld"><label class="lab">作品标题 <b>*</b> <span class="text-outline normal-case">· 抖音最多 30 字；YouTube 最多 100 字；TikTok 文案在 App 内补充</span></label><input id="pubTitle" class="inp" type="text" maxlength="80" value="' + esc(title) + '" placeholder="填写作品标题"></div>';
     html += '<div class="fld"><label class="lab">作品简介</label><textarea id="pubDescription" class="ta" rows="3" placeholder="留空也可以；话题标签会自动追加到简介末尾"></textarea></div>';
     html += '<div class="fld"><label class="lab">话题标签 <span class="text-outline normal-case">· 用逗号或空格分隔，最多 10 个</span></label><input id="pubTags" class="inp" type="text" placeholder="干货, 运营, 复盘"></div>';
     html += '<div class="fld" style="margin-bottom:0"><label class="lab">发布素材 <b>*</b></label><div id="pubMediaSlot"><div class="text-label-sm text-on-surface-variant">正在读取内容日历素材…</div></div></div>';
@@ -4217,9 +4362,7 @@
     if(!rec) return;
     var platformEl = $('pubPlatform');
     if(platformEl){
-      platformEl.innerHTML = pubPlatformOptions(rec).map(function(p){
-        return '<option value="' + esc(p) + '">' + esc(p) + '</option>';
-      }).join('');
+      platformEl.innerHTML = platformOptionsHtml(pubPlatformOptions(rec));
     }
     if(PUB_UPLOAD.uploading){
       (PUB_UPLOAD.xhrs || []).forEach(function(xhr){ try{ xhr.abort(); }catch(err){} });
@@ -5953,6 +6096,21 @@
       connLogin(actEl.getAttribute('data-platform'));
       return;
     }
+    if(act === 'connOauth'){
+      e.preventDefault();
+      connOauth(actEl.getAttribute('data-platform'));
+      return;
+    }
+    if(act === 'connOauthManual'){
+      e.preventDefault();
+      connOauthManual(actEl.getAttribute('data-platform'));
+      return;
+    }
+    if(act === 'connOauthDisconnect'){
+      e.preventDefault();
+      connOauthDisconnect(actEl.getAttribute('data-platform'));
+      return;
+    }
     if(act === 'connToggle'){
       e.preventDefault();
       connToggle(actEl.getAttribute('data-platform'));
@@ -7613,11 +7771,8 @@
   /* ---------- boot ---------- */
   (function fillPlatforms(){
     var sel = $('pfFilter');
-    PLATFORMS.forEach(function(p){
-      var o = document.createElement('option');
-      o.value = p; o.textContent = p;
-      sel.appendChild(o);
-    });
+    if(!sel) return;
+    sel.insertAdjacentHTML('beforeend', platformOptionsHtml(PLATFORMS));
   })();
 
   function scheduleReload(){

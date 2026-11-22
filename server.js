@@ -11,6 +11,7 @@ const accounts = require('./lib/accounts');
 const { tables, tableOrder, publicSchema } = require('./lib/schemas');
 const wechatMonitor = require('./lib/wechat-monitor');
 const channelConnections = require('./lib/channel-connections');
+const oauth = require('./lib/oauth');
 const xhsCollector = require('./lib/xhs-collector');
 const douyinCollector = require('./lib/douyin-collector');
 const channelsCollector = require('./lib/channels-collector');
@@ -33,6 +34,8 @@ const license = require('./lib/license');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PORT = Number(process.env.PORT) || readFlag('--port') || 5180;
 const HOST = process.env.HOST || readFlag('--host') || '127.0.0.1';
+// OAuth 回调用本机 loopback 地址，端口必须与实际监听端口一致
+oauth.configure({ port: PORT });
 // 桌面版 app-server 不带 package.json，版本由主进程通过 APP_VERSION 注入
 const APP_VERSION = process.env.APP_VERSION || readPackageVersion();
 
@@ -1157,6 +1160,16 @@ async function handleApi(req, res, url) {
         // 代理配置文件损坏不影响连接页展示
         data.proxy = null;
       }
+      // 海外 OAuth 渠道的授权状态（不含令牌明文）
+      data.oauthStatus = {};
+      Object.keys(data.defs || {}).forEach((p) => {
+        if (!data.defs[p].oauth) return;
+        try {
+          data.oauthStatus[p] = oauth.tokenStatus(p);
+        } catch (err) {
+          data.oauthStatus[p] = { connected: false };
+        }
+      });
       return sendJSON(res, 200, data);
     }
     if (!platform) {
@@ -1182,6 +1195,42 @@ async function handleApi(req, res, url) {
       if (method === 'DELETE') {
         try {
           return sendJSON(res, 200, { ok: true, login: channelConnections.cancelLogin(platform) });
+        } catch (err) {
+          return sendJSON(res, err.status || 400, { error: err.message });
+        }
+      }
+      res.writeHead(405, { Allow: 'GET, POST, DELETE' });
+      return res.end();
+    }
+    // 海外渠道 OAuth：POST start 发起 / GET status 轮询 / POST manual 粘贴回调 /
+    // DELETE 断开授权
+    if (parts[3] === 'oauth') {
+      if (method === 'POST' && (!parts[4] || parts[4] === 'start')) {
+        try {
+          return sendJSON(res, 202, { ok: true, oauth: await oauth.start(platform) });
+        } catch (err) {
+          return sendJSON(res, err.status || 400, { error: err.message });
+        }
+      }
+      if (method === 'GET' && parts[4] === 'status') {
+        try {
+          return sendJSON(res, 200, oauth.status(platform));
+        } catch (err) {
+          return sendJSON(res, err.status || 400, { error: err.message });
+        }
+      }
+      if (method === 'POST' && parts[4] === 'manual') {
+        const body = await readBody(req);
+        try {
+          const result = await oauth.manual(platform, body && body.input);
+          return sendJSON(res, 200, result);
+        } catch (err) {
+          return sendJSON(res, err.status || 400, { error: err.message });
+        }
+      }
+      if (method === 'DELETE') {
+        try {
+          return sendJSON(res, 200, oauth.disconnect(platform));
         } catch (err) {
           return sendJSON(res, err.status || 400, { error: err.message });
         }
@@ -1265,6 +1314,18 @@ const server = http.createServer((req, res) => {
   if (url.pathname === '/favicon.ico') {
     res.writeHead(204);
     return res.end();
+  }
+  // OAuth 回调由浏览器直接打开，不带账号头：账号由 state 决定，
+  // 必须在解析当前账号之前拦截。
+  if (url.pathname.startsWith('/api/oauth/')) {
+    oauth.handleCallback(req, res, url).catch((err) => {
+      console.error('[oauth] 回调处理失败：', err.message);
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('授权回调处理失败：' + err.message);
+      }
+    });
+    return;
   }
   if (url.pathname.startsWith('/api/')) {
     const accountId = resolveAccountId(req, url);
