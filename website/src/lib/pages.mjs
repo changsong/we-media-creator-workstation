@@ -1339,6 +1339,10 @@ function changelogPage(lang) {
 
 /* ----------------------------------------------------------------- Legal */
 
+function legalLinkify(text) {
+  return esc(text).replace(/(https?:\/\/[^\s<）)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
 function legalPage(lang, kind) {
   const doc = LEGAL[kind];
   if (!doc) return null;
@@ -1359,7 +1363,7 @@ function legalPage(lang, kind) {
       <p class="mt-4 font-body-lg text-body-lg text-on-surface-variant">${esc(intro)}</p>
       <p class="mt-3 font-body-sm text-body-sm text-on-surface-variant">${isEn ? 'Last updated' : '最后更新'}：${formatDate(doc.updated, lang)}</p>
       <div class="mt-space-xl prose-site pb-space-2xl">
-        ${sections.map((section) => `<h2>${esc(section.h)}</h2>${section.ps.map((p) => `<p>${esc(p)}</p>`).join('')}`).join('\n')}
+        ${sections.map((section) => `<h2>${esc(section.h)}</h2>${section.ps.map((p) => `<p>${legalLinkify(p)}</p>`).join('')}`).join('\n')}
         <p>${isEn ? 'Questions about this page? ' : '对本页有疑问？'} <a href="${routeTo('/feedback/', lang)}">${isEn ? 'Contact us through the feedback form.' : '通过反馈表单联系我们。'}</a></p>
       </div>
     </div>`,

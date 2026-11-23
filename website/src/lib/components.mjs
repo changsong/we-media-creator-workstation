@@ -46,7 +46,7 @@ const HERO = {
     download: '下载桌面版 (Windows / macOS / Linux)',
     downloadShort: '下载桌面版',
     pricing: '查看授权价格 (¥49.9起)',
-    micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="whitespace-nowrap text-on-surface font-medium">无需申请 API</span> ｜ 数据完全保存在本机 SQLite',
+    micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="whitespace-nowrap text-on-surface font-medium">国内平台免 API 申请</span> ｜ 数据完全保存在本机 SQLite',
   },
   en: {
     badge: 'New in 2026',
@@ -57,7 +57,7 @@ const HERO = {
     download: 'Download for desktop (Windows / macOS / Linux)',
     downloadShort: 'Download for desktop',
     pricing: 'See pricing (from $10)',
-    micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="whitespace-nowrap text-on-surface font-medium">No API keys</span> ｜ Everything stays in local SQLite',
+    micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="whitespace-nowrap text-on-surface font-medium">No API keys for domestic platforms</span> ｜ Everything stays in local SQLite',
   },
 };
 
@@ -90,6 +90,51 @@ export function hero({ lang }) {
     <p class="font-body-sm text-body-sm text-text-dark-secondary">${c.micro}</p>
   </div>
   <div class="app-mockup w-full flex justify-center">${mockup}</div>
+</section>`;
+}
+
+/* ------------------------------------------------------- About the app */
+
+const ABOUT = {
+  zh: {
+    eyebrow: '应用说明',
+    title: '媒管家（WeMedia Creator）是什么？',
+    body: '媒管家（WeMedia Creator）是一款本地优先的自媒体内容工作台桌面应用，运行于 Windows、macOS 与 Linux。你把选题、排期、素材和各平台发布集中到一个应用里：国内平台通过你本人的浏览器登录态自动发布，YouTube 与 TikTok 通过 Google / TikTok 官方 OAuth 授权接入，仅使用上传视频所需的最小权限，把你在应用里选中的视频上传到你自己的频道。账号、素材与授权令牌都只保存在你自己的电脑上，不上传到我们的服务器。',
+    points: [
+      '用途：内容规划、排期、多平台发布与发布后数据复盘',
+      '海外授权：仅申请上传视频所需权限，用于你本人频道的视频上传',
+      '数据存放：账号、素材与授权令牌只保存在本机，界面掩码显示',
+      '随时撤销：在应用内「断开授权」或在平台的第三方应用页撤销授权',
+      '合规：不使用 Google / TikTok 数据训练 AI 模型，也不用于生成深度伪造或未经同意的私密影像（NCII）',
+    ],
+  },
+  en: {
+    eyebrow: 'What this app does',
+    title: 'What is WeMedia Creator?',
+    body: 'WeMedia Creator (媒管家) is a local-first desktop workspace for content creation, running on Windows, macOS, and Linux. It brings topic planning, scheduling, assets, and multi-platform publishing into one app: domestic Chinese platforms publish through your own browser session, while YouTube and TikTok connect through official Google / TikTok OAuth using the minimum scope needed to upload a video to your own channel. Your accounts, assets, and authorization tokens stay on your own computer and are never uploaded to our servers.',
+    points: [
+      'Purpose: plan, schedule, publish to multiple platforms, and review post-publish metrics',
+      'Overseas authorization: only the scope needed to upload video to your own channel',
+      'Data storage: accounts, assets, and tokens are kept locally and shown masked',
+      'Revoke anytime: use "Disconnect" in the app or remove access on the platform’s third-party apps page',
+      'Compliance: does not use Google / TikTok data to train AI models or to create deepfakes or non-consensual intimate imagery (NCII)',
+    ],
+  },
+};
+
+export function aboutApp({ lang }) {
+  const c = ABOUT[lang] || ABOUT.zh;
+  const points = c.points.map((p) => `<li class="flex items-start gap-3 text-body-md text-on-surface-variant">
+        <span class="material-symbols-outlined text-status-success text-[20px] mt-0.5">check_circle</span>
+        <span>${esc(p)}</span>
+      </li>`).join('');
+  return `<section class="w-full py-space-xl" id="about-app">
+  <div class="max-w-3xl mx-auto px-margin-mobile text-center">
+    ${sectionHeading({ lang, eyebrow: c.eyebrow, title: esc(c.title), desc: esc(c.body) })}
+    <ul class="grid sm:grid-cols-2 gap-space-sm text-left bg-surface-white rounded-2xl p-space-lg shadow-sm">
+      ${points}
+    </ul>
+  </div>
 </section>`;
 }
 

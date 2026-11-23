@@ -93,7 +93,7 @@ export function header({ lang, route, alternates = true }) {
       <span class="flex flex-col">
         <span class="flex items-center gap-space-sm">
           <span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">${esc(t.brand)}</span>
-          <span class="hidden 2xl:inline text-on-surface-variant font-body-sm text-body-sm">${esc(t.brandShort)}</span>
+          ${t.brandShort ? `<span class="hidden sm:inline text-on-surface-variant font-body-sm text-body-sm">${esc(t.brandShort)}</span>` : ''}
           <span class="hidden sm:inline px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-capsule text-body-sm text-[11px]">v${esc(VERSION)}</span>
         </span>
       </span>

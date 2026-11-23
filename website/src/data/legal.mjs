@@ -1,6 +1,6 @@
 export const LEGAL = {
   privacy: {
-    updated: '2026-10-26',
+    updated: '2026-11-23',
     titleZh: '隐私政策',
     titleEn: 'Privacy Policy',
     introZh:
@@ -32,7 +32,27 @@ export const LEGAL = {
         ],
       },
       {
-        h: '四、我们不做什么',
+        h: '四、Google 与 TikTok 授权及数据处理',
+        ps: [
+          '当你连接 YouTube 或 TikTok 时，应用会打开官方 OAuth 授权页，让你用自己的账号登录并同意授权。我们只申请发布视频所必需的最小权限：YouTube 为 youtube.upload（上传视频到你的频道），TikTok 为 user.info.basic（读取昵称用于显示账号）与 video.upload（上传视频到收件箱）。应用不会读取你的观看记录、订阅列表、私信或其它无关数据。',
+          '授权后得到的访问令牌与刷新令牌仅保存在你本机对应账号的数据目录中（明文落盘、界面掩码显示），不会上传到我们的服务器，也不会提供给任何第三方。应用只用该权限把你主动选择发布的视频上传到你本人的频道或收件箱。',
+          '你可以随时在本应用「连接设置 → 海外渠道」点击「断开授权」，或在 Google 账号「第三方应用与网站」（https://myaccount.google.com/permissions ）与 TikTok 的第三方应用设置页撤销授权。撤销后应用立即失去访问能力，本机对应的令牌文件也会被清除。',
+          '我们不会出售、转让你的 Google 用户数据，不会将其用于广告，也不允许人工读取（除经你明确同意为排查问题、或法律要求的必要情形外）。我们对通过 Google API 获取的信息的使用与转移，遵守 Google API 服务用户数据政策（https://developers.google.com/terms/api-services-user-data-policy ），包括其中的 Limited Use（有限使用）要求，仅将其用于提供或改进用户可见、以本应用功能为核心的上传服务。',
+          '应用不会使用 Google 或 TikTok 的用户数据训练 AI 模型，也不会用于生成未经同意的深度伪造（deepfake）或不涉及同意的亲密影像（NCII）。你上传的视频内容由你自行负责，不得用于上述用途。',
+          'TikTok 收件箱模式：上传完成后视频会进入你的 TikTok 收件箱，需你在 TikTok App 内手动确认发布。应用不会绕过平台审核或替你自动公开发布。',
+        ],
+      },
+      {
+        h: '五、数据共享、保留与删除',
+        ps: [
+          '我们不出售、出租、转让你的任何个人数据，不向广告或数据分析网络共享，也不会将其用于定向广告。',
+          '除为提供你主动发起的发布功能、经你授权直接与 YouTube / TikTok 官方接口通信外，我们不会把你的数据提供给第三方。本应用不经过任何中转服务器转发你的内容或授权令牌。',
+          '桌面应用数据（选题、排期、素材、发布记录、登录态与授权令牌）由你自行保留，直至你清理数据目录或卸载应用；反馈记录由我们保留至你请求删除为止。',
+          '删除方式：桌面数据——清理应用数据目录；反馈记录——通过反馈表单申请删除；授权数据——在应用内「断开授权」或在 Google / TikTok 的账户设置中撤销授权，本机令牌随即清除。',
+        ],
+      },
+      {
+        h: '六、我们不做什么',
         ps: [
           '不读取、不上传你的素材与发布内容。',
           '不收集平台账号密码，不代理你的登录。',
@@ -40,10 +60,10 @@ export const LEGAL = {
         ],
       },
       {
-        h: '五、你的权利',
+        h: '七、你的权利与联系方式',
         ps: [
           '你可以通过反馈表单要求查询或删除你提交过的反馈记录。删除桌面数据只需自行清理数据目录，无需经过我们。',
-          '如果对本政策有疑问，请通过反馈表单联系我们。我们会在合理时间内答复。',
+          '如果对本政策有疑问，请通过反馈表单（https://www.wemediacreator.com/feedback/ ）联系我们，我们会在合理时间内答复。',
         ],
       },
     ],
@@ -72,7 +92,27 @@ export const LEGAL = {
         ],
       },
       {
-        h: '4. What we do not do',
+        h: '4. Google and TikTok authorization and data',
+        ps: [
+          'When you connect YouTube or TikTok, the app opens the official OAuth screen so you can sign in with your own account and grant access. We request only the minimum scope needed to publish video: youtube.upload for YouTube (upload video to your channel), and user.info.basic (read your nickname to label the account) plus video.upload for TikTok (upload video to your inbox). The app does not read your watch history, subscriptions, messages, or other unrelated data.',
+          'Access and refresh tokens obtained after authorization are stored only in your local per-account data directory on your machine (plaintext on disk, masked in the UI). They are never uploaded to our servers or shared with any third party. The app uses the scope only to upload videos you explicitly choose to your own channel or inbox.',
+          'You can revoke access at any time via "Disconnect" under Connections → Overseas channels in the app, or from your Google Account third-party apps page (https://myaccount.google.com/permissions ) and TikTok’s third-party app settings. Revoking immediately removes the app’s access, and the local token file for that account is cleared.',
+          'We do not sell or transfer your Google user data, do not use it for advertising, and do not allow humans to read it (except with your explicit consent to troubleshoot an issue, or where required by law). Our use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy (https://developers.google.com/terms/api-services-user-data-policy ), including the Limited Use requirements, and is used only to provide or improve user-facing features that are central to the app’s upload functionality.',
+          'The app does not use Google or TikTok user data to train AI models, and does not use it to create non-consensual deepfakes or non-consensual intimate imagery (NCII). You are responsible for the videos you upload and may not use them for those purposes.',
+          'TikTok inbox mode: after upload, the video goes to your TikTok inbox and you confirm publishing manually in the TikTok app. The app does not bypass platform review or publish publicly on your behalf.',
+        ],
+      },
+      {
+        h: '5. Data sharing, retention, and deletion',
+        ps: [
+          'We do not sell, rent, or transfer any of your personal data, do not share it with advertising or analytics networks, and do not use it for targeted advertising.',
+          'Apart from providing the publishing features you initiate — communicating directly with the official YouTube / TikTok APIs after you grant authorization — we do not provide your data to third parties. The app does not relay your content or tokens through any intermediary server.',
+          'Desktop app data (ideas, schedules, assets, publish logs, sign-in state, and authorization tokens) is retained by you until you clear the data directory or uninstall the app. Feedback records are retained until you ask us to delete them.',
+          'Deletion: desktop data — clear the app data directory; feedback records — request deletion through the feedback form; authorization data — use "Disconnect" in the app or revoke access in your Google / TikTok account settings, after which the local token is cleared.',
+        ],
+      },
+      {
+        h: '6. What we do not do',
         ps: [
           'We do not read or upload your assets or published content.',
           'We do not collect platform passwords or proxy your sign-in.',
@@ -80,16 +120,16 @@ export const LEGAL = {
         ],
       },
       {
-        h: '5. Your rights',
+        h: '7. Your rights and contact',
         ps: [
           'You can ask us to look up or delete feedback you submitted through the form. Desktop data can be deleted by clearing the data directory yourself — no request needed.',
-          'For questions about this policy, contact us through the feedback form. We will respond within a reasonable time.',
+          'For questions about this policy, contact us through the feedback form (https://www.wemediacreator.com/en/feedback/ ). We will respond within a reasonable time.',
         ],
       },
     ],
   },
   terms: {
-    updated: '2026-11-03',
+    updated: '2026-11-23',
     titleZh: '服务条款',
     titleEn: 'Terms of Service',
     introZh:
@@ -109,6 +149,7 @@ export const LEGAL = {
         ps: [
           '本应用通过你本机的浏览器环境与平台交互，使用你自己的登录态。各平台的用户协议、访问限制与页面结构可能随时变化。',
           '自动化操作仍可能触发平台访问限制或发布失败。我们会提供重试与核验机制，并持续适配改版，但无法承诺自动化 100% 成功，也不对平台侧的账号处置承担责任。请遵守各平台规则，不要用于违规内容或大规模批量操作。',
+          '通过 YouTube / TikTok 发布时，你还需遵守 Google 与 YouTube 服务条款、Google API 服务条款，以及 TikTok 的开发者条款与社区准则。你不得使用本应用或相关渠道上传涉及他人的、未经同意的私密影像（NCII）、深度伪造、侵权、骚扰或其它违法内容；本应用不生成内容，也不提供用于生成此类影像的功能。',
         ],
       },
       {
@@ -163,6 +204,7 @@ export const LEGAL = {
         ps: [
           'The app interacts with platforms through your local browser session. Platform terms, access restrictions, and page structures can change at any time.',
           'Automation may still trigger platform access restrictions or fail. We provide retries and verification and keep adapting to changes, but cannot promise 100% success and are not responsible for platform-side account actions. Follow platform rules and do not use the app for prohibited content or mass bulk operations.',
+          'When publishing to YouTube or TikTok you also agree to the Google and YouTube Terms of Service, the Google APIs Terms of Service, and TikTok’s developer terms and community guidelines. You may not use the app or these channels to upload non-consensual intimate imagery (NCII), deepfakes, infringing, harassing, or otherwise unlawful content regarding others; the app does not generate content and provides no feature to create such imagery.',
         ],
       },
       {

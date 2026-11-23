@@ -279,6 +279,14 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 中文站点位于根路径，兼容误用 /zh/ 前缀的地址
+    if (url.pathname === '/zh' || url.pathname.startsWith('/zh/')) {
+      const rest = url.pathname.replace(/^\/zh\/?/, '');
+      res.writeHead(301, { Location: `/${rest}${url.search}` });
+      res.end();
+      return;
+    }
+
     // 目录地址统一 301 到带尾斜杠的 canonical 形式
     if (url.pathname !== '/' && !url.pathname.endsWith('/') && !path.extname(url.pathname)) {
       const dir = path.join(siteDir, path.normalize(url.pathname).replace(/^([/\\])+/, ''));

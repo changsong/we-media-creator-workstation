@@ -3,7 +3,7 @@ import { KEYGATE_LOGIN_URL, KEYGATE_PORTAL_URL, KEYGATE_TRIAL_URL } from '../con
 export const UI = {
   zh: {
     brand: '媒管家',
-    brandShort: '/ WeMediaCreator',
+    brandShort: 'WeMedia Creator',
     nav: [
       { key: 'features', label: '功能特性', route: '/features/' },
       { key: 'platforms', label: '支持平台', route: '/platforms/' },
@@ -12,7 +12,7 @@ export const UI = {
       { key: 'pricing', label: '价格方案', route: '/pricing/' },
       { key: 'privacy', label: '安全与隐私', route: '/#local-first' },
       { key: 'faq', label: '常见问题', route: '/faq/' },
-      { key: 'account', label: '登录 / 账号', route: KEYGATE_LOGIN_URL },
+      { key: 'account', label: '账号与授权', route: KEYGATE_LOGIN_URL },
     ],
     seePricing: '查看价格',
     trial: '免费试用',
@@ -59,7 +59,7 @@ export const UI = {
             { label: '诚实边界说明', route: '/faq/' },
             { label: '隐私政策', route: '/legal/privacy/' },
             { label: '服务条款', route: '/legal/terms/' },
-            { label: '账号登录方式', route: KEYGATE_LOGIN_URL },
+            { label: '账号与授权方式', route: KEYGATE_LOGIN_URL },
           ],
         },
         {
@@ -141,7 +141,7 @@ export const UI = {
   },
   en: {
     brand: 'WeMedia Creator',
-    brandShort: '/ WeMediaCreator',
+    brandShort: '',
     nav: [
       { key: 'features', label: 'Features', route: '/features/' },
       { key: 'platforms', label: 'Platforms', route: '/platforms/' },
@@ -149,7 +149,7 @@ export const UI = {
       { key: 'pricing', label: 'Pricing', route: '/pricing/' },
       { key: 'privacy', label: 'Privacy', route: '/#local-first' },
       { key: 'faq', label: 'FAQ', route: '/faq/' },
-      { key: 'account', label: 'Sign in', route: KEYGATE_LOGIN_URL },
+      { key: 'account', label: 'Account & licensing', route: KEYGATE_LOGIN_URL },
     ],
     seePricing: 'See pricing',
     trial: 'Start free trial',
@@ -196,7 +196,7 @@ export const UI = {
             { label: 'Honest limitations', route: '/faq/' },
             { label: 'Privacy policy', route: '/legal/privacy/' },
             { label: 'Terms of service', route: '/legal/terms/' },
-            { label: 'How sign-in works', route: KEYGATE_LOGIN_URL },
+            { label: 'Account and licensing', route: KEYGATE_LOGIN_URL },
           ],
         },
         {
