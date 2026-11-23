@@ -46,9 +46,15 @@ Client ID / Secret（TikTok 叫 Client Key / Secret），再回到工作台完�
 
 可选字段：
 
-- **默认可见性**：`unlisted`（默认，拿到链接可分享、搜索不可见）/ `public` / `private`。
+- **默认可见性**：`public`（默认，直接公开发布）/ `unlisted`（拿到链接可分享、搜索不可见）/ `private`（仅自己可见）。
+  想默认不公开，把这里改成 `unlisted` 即可。
 - **默认分类ID**：默认 `22`（人物与博客）；常用分类见
   https://developers.google.com/youtube/v3/docs/videoCategories/list 。
+
+**缩略图**：任务在内容日历里带封面图时，上传成功后会自动设置为 YouTube 缩略图
+（优先取 16:9 封面；会用内置 ffmpeg 处理成 1280×720、≤2MB 的 JPEG）。
+频道需在 YouTube 后台完成手机验证并启用「自定义缩略图」，否则接口会返回 403，
+此时可在 YouTube Studio 里手动上传封面。
 
 ### 5. 配额
 
@@ -122,6 +128,16 @@ http://127.0.0.1:5180/api/oauth/TikTok/callback
 关闭窗口后，把浏览器地址栏里回调页的完整 URL（`http://127.0.0.1:5180/api/oauth/...callback?code=...&state=...`）
 复制，粘贴到连接卡的「粘贴地址栏的完整回调 URL」，点「完成授权」同样能拿到令牌。
 Google 的授权会话有 10 分钟有效期，超时请重新点「授权连接」。
+
+**授权页报 403 access_denied：「尚未完成 Google 验证流程 / 仅供已获批准的测试人员使用」**
+
+说明授权用的 Google 账号不在应用的允许名单里。两种处理：
+
+- 短期：OAuth 同意屏幕 →「目标对象 / Audience」→「测试用户」→ ADD USERS，
+  填入你正在授权的 Gmail（须完全一致）→ 保存后回工作台点「重新授权」。
+- 长期：同一页点「发布应用 / PUBLISH APP」切到正式版。未验证的正式应用首次授权会
+  出现「Google 尚未验证此应用」警告，点「高级 → 继续前往」即可；个人自用足够，
+  且 refresh token 不再 7 天过期。
 
 **提示「授权已失效，请重新授权」**
 

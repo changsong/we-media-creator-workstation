@@ -3363,7 +3363,7 @@
   var connData = null; // 连接设置一览（来自 /api/connections），null 表示尚未加载
   var connLoading = false; // 单飞：一次只发一个请求，避免渲染循环重复拉取
   var connError = null; // 加载失败原因；与 connData 二选一展示
-  var connTab = 'platforms'; // 'platforms' 渠道 Cookie 设置（默认）/ 'proxy' 网络代理
+  var connTab = 'domestic'; // 'domestic' 国内平台（默认）/ 'overseas' 海外平台 / 'proxy' 网络代理
 
   function loadConnections(){
     if(connLoading) return;
@@ -3457,10 +3457,11 @@
       + (oauthCount ? '<span class="chip chip-line">OAuth 授权 ' + oauthCount + '</span>' : '')
       + '</div></div>';
 
-    // Tab：渠道 Cookie 设置（默认）/ 网络代理
-    var activeTab = connTab === 'proxy' ? 'proxy' : 'platforms';
+    // Tab：国内平台 / 海外平台 / 网络代理
+    var activeTab = (connTab === 'proxy' && d.proxy) ? 'proxy' : (connTab === 'overseas' ? 'overseas' : 'domestic');
     html += '<div class="seg mb-space-lg">';
-    html += '<button class="' + (activeTab === 'platforms' ? 'on' : '') + '" data-act="connTab" data-tab="platforms" type="button">渠道连接</button>';
+    html += '<button class="' + (activeTab === 'domestic' ? 'on' : '') + '" data-act="connTab" data-tab="domestic" type="button">国内平台</button>';
+    html += '<button class="' + (activeTab === 'overseas' ? 'on' : '') + '" data-act="connTab" data-tab="overseas" type="button">海外平台</button>';
     if(d.proxy){
       var proxyTabLabel = '网络代理';
       if(d.proxy.enabled) proxyTabLabel += d.proxy.configured ? ' · 已启用' : ' · 待完善';
@@ -3468,26 +3469,29 @@
     }
     html += '</div>';
 
-    html += '<div data-conn-panel="platforms"' + (activeTab === 'platforms' ? '' : ' class="hidden"') + '>';
-    if(!platforms.length){
-      html += '<div class="rounded-2xl bg-surface-container-lowest border border-dashed border-outline-variant p-space-xl text-center text-on-surface-variant">当前筛选下没有渠道，切换右上角「全部平台」查看。</div>';
+    html += '<div data-conn-panel="domestic"' + (activeTab === 'domestic' ? '' : ' class="hidden"') + '>';
+    if(!domestic.length){
+      html += '<div class="rounded-2xl bg-surface-container-lowest border border-dashed border-outline-variant p-space-xl text-center text-on-surface-variant">当前筛选下没有国内平台，切换右上角「全部平台」查看。</div>';
     } else {
-      if(domestic.length){
-        html += '<div class="flex items-center gap-space-sm mb-space-md mt-1">'
-          + '<h3 class="text-label-md font-label-md text-on-surface">国内渠道</h3>'
-          + '<span class="text-label-sm text-on-surface-variant">Cookie 一键登录，登录态复用于采集与发布</span></div>'
-          + '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
-        domestic.forEach(function(p){ html += connCard(p, d); });
-        html += '</div>';
-      }
-      if(overseas.length){
-        html += '<div class="flex items-center gap-space-sm mb-space-md ' + (domestic.length ? 'mt-space-xl' : 'mt-1') + '">'
-          + '<h3 class="text-label-md font-label-md text-on-surface">海外渠道</h3>'
-          + '<span class="text-label-sm text-on-surface-variant">OAuth 官方授权，令牌只保存在本机</span></div>'
-          + '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
-        overseas.forEach(function(p){ html += connCard(p, d); });
-        html += '</div>';
-      }
+      html += '<div class="flex items-center gap-space-sm mb-space-md">'
+        + '<h3 class="text-label-md font-label-md text-on-surface">国内平台</h3>'
+        + '<span class="text-label-sm text-on-surface-variant">Cookie 一键登录，登录态复用于采集与发布</span></div>'
+        + '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
+      domestic.forEach(function(p){ html += connCard(p, d); });
+      html += '</div>';
+    }
+    html += '</div>';
+
+    html += '<div data-conn-panel="overseas"' + (activeTab === 'overseas' ? '' : ' class="hidden"') + '>';
+    if(!overseas.length){
+      html += '<div class="rounded-2xl bg-surface-container-lowest border border-dashed border-outline-variant p-space-xl text-center text-on-surface-variant">当前筛选下没有海外平台，切换右上角「全部平台」查看。</div>';
+    } else {
+      html += '<div class="flex items-center gap-space-sm mb-space-md">'
+        + '<h3 class="text-label-md font-label-md text-on-surface">海外平台</h3>'
+        + '<span class="text-label-sm text-on-surface-variant">OAuth 官方授权，令牌只保存在本机</span></div>'
+        + '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
+      overseas.forEach(function(p){ html += connCard(p, d); });
+      html += '</div>';
     }
     html += '</div>';
 
@@ -3498,7 +3502,7 @@
   }
 
   function switchConnTab(tab){
-    if(tab !== 'platforms' && tab !== 'proxy') return;
+    if(tab !== 'domestic' && tab !== 'overseas' && tab !== 'proxy') return;
     connTab = tab;
     var view = document.querySelector('#view');
     if(!view) return;
