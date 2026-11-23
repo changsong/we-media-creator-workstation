@@ -3,7 +3,25 @@
     "allow": [
       "Bash(rm -rf .chrome-verify tmp-verify/*)",
       "Bash(mkdir -p tmp-verify)",
-      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --no-first-run --user-data-dir=\"D:/workspace/we-media-creator-workstation/.chrome-verify\" --window-size=1440,2200 --virtual-time-budget=7000 --screenshot=\"D:/workspace/we-media-creator-workstation/tmp-verify/home.png\" \"http://127.0.0.1:5180/#home\")"
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --no-first-run --user-data-dir=\"D:/workspace/we-media-creator-workstation/.chrome-verify\" --window-size=1440,2200 --virtual-time-budget=7000 --screenshot=\"D:/workspace/we-media-creator-workstation/tmp-verify/home.png\" \"http://127.0.0.1:5180/#home\")",
+      "Bash(netstat *)",
+      "Bash(taskkill *)",
+      "Bash(node *)",
+      "Bash(npm *)",
+      "Bash(curl *)",
+      "Bash(powershell -NoProfile *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(grep *)",
+      "Bash(od *)",
+      "Bash(cp *)",
+      "Bash(sleep *)"
     ]
   }
 }

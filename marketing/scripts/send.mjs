@@ -23,7 +23,7 @@ import { openSession } from './lib/browser.mjs';
 
 const RISK_PATTERNS = ['安全验证', '人机验证', '操作频繁', '请稍后再试', '访问异常', '账号存在异常', '网络繁忙'];
 const GONE_PATTERNS = ['该用户不存在', '账号已注销', '无法查看该内容'];
-const DAILY_CAP_HARD_LIMIT = 30;
+const DAILY_CAP_HARD_LIMIT = 40;
 
 const args = parseArgs();
 const bank = loadTemplates();
@@ -32,7 +32,7 @@ const keyReader = createKeyReader();
 
 const live = args.live === true && args['dry-run'] !== true;
 const limit = Math.max(1, Math.min(Number(args.limit) || 10, 20));
-const dailyCap = Math.max(1, Math.min(Number(args.cap) || cfg.dailyCap || 20, DAILY_CAP_HARD_LIMIT));
+const dailyCap = Math.max(1, Math.min(Number(args.cap) || cfg.dailyCap || 40, DAILY_CAP_HARD_LIMIT));
 const cooldownDays = Math.max(1, Number(args['cooldown-days']) || cfg.cooldownDays || 30);
 const minFollowers = Math.max(0, Number(args['min-followers']) || 0);
 const maxFollowers = Math.max(0, Number(args['max-followers']) || 0);

@@ -99,7 +99,7 @@
   const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
   const state = {
-    items: [], index: 0, sentToday: 0, dailyCap: 20,
+    items: [], index: 0, sentToday: 0, dailyCap: 40,
     interval: { min: 60, max: 120 }, sentCount: 0, skippedCount: 0,
     waiting: false, waitUntil: 0, timer: null,
     prepared: new Set(), preparing: new Set(),
@@ -126,7 +126,7 @@
       state.sentCount = 0;
       state.skippedCount = 0;
       state.sentToday = Number(data.sentToday) || 0;
-      state.dailyCap = Number(data.dailyCap) || 20;
+      state.dailyCap = Number(data.dailyCap) || 40;
       state.interval = data.intervalSeconds || { min: 60, max: 120 };
       state.prepared.clear();
       state.preparing.clear();
