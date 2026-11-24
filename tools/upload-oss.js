@@ -50,7 +50,8 @@ async function main() {
     bucket: required('OSS_BUCKET'),
     accessKeyId: required('OSS_ACCESS_KEY_ID'),
     accessKeySecret: required('OSS_ACCESS_KEY_SECRET'),
-    secure: true
+    secure: true,
+    timeout: Number(process.env.OSS_TIMEOUT_MS) || 600000
   });
 
   let uploaded = 0;
