@@ -41,11 +41,11 @@ export const FEATURE_BLOCKS = [
     titleZh: '发布中心：排好队，它自己发',
     titleEn: 'Publish center: queue it and walk away',
     bodyZh:
-      '八个平台一次排期，视频、图文、多比例封面；失败可重试，发布后自动核验。公众号支持自动发表，B站投稿失败会自动重试。任务按时间顺序执行，本机浏览器窗口固定尺寸，减少误点与漏发。',
+      '八个国内平台一次排期，视频、图文、多比例封面；失败可重试，发布后自动核验。公众号支持自动发表，B站投稿失败会自动重试。海外另支持 YouTube 与 TikTok：用你自己申请的开发者应用走官方 OAuth，YouTube 直传，TikTok 进入收件箱后在 App 内确认发布。任务按时间顺序执行，本机浏览器窗口固定尺寸，减少误点与漏发。',
     bodyEn:
-      'Schedule all eight platforms at once — video, image posts, multi-ratio covers. Retry failures and verify results automatically, with automated Official Account publishing and automatic retries for Bilibili uploads. Tasks run in time order with a fixed browser window to reduce mis-clicks and missed posts.',
-    bulletsZh: ['八个平台统一队列，按平台筛选与分页', '发布后核验作品状态，失败保留可重试', '固定窗口尺寸与命中校验，减少误操作'],
-    bulletsEn: ['One queue for eight platforms with filters and paging', 'Verify each post and retry failures safely', 'Fixed window size and hit-checking reduce mis-clicks'],
+      'Schedule all eight domestic platforms at once — video, image posts, multi-ratio covers. Retry failures and verify results automatically, with automated Official Account publishing and automatic retries for Bilibili uploads. Overseas, YouTube and TikTok connect through official OAuth using your own developer app: YouTube uploads directly, while TikTok sends the video to your inbox for you to confirm in the app. Tasks run in time order with a fixed browser window to reduce mis-clicks and missed posts.',
+    bulletsZh: ['八个国内平台统一队列，按平台筛选与分页', 'YouTube / TikTok 官方 OAuth 发布，TikTok 走收件箱上传', '发布后核验作品状态，失败保留可重试'],
+    bulletsEn: ['One queue for eight domestic platforms with filters and paging', 'YouTube and TikTok via official OAuth, with TikTok inbox upload', 'Verify each post and retry failures safely'],
   },
   {
     id: 'analytics',
@@ -77,11 +77,11 @@ export const FEATURE_BLOCKS = [
     titleZh: '多账号与多渠道：一份授权，管好整台机器',
     titleEn: 'Multiple accounts and channels on one license',
     bodyZh:
-      '同一台机器可以创建多个运营账号，每个账号最多连接 8 个渠道。顶栏随时切换，重启后自动回到上次使用的账号。账号之间完全隔离——数据库、素材、选题、录音和渠道登录态各自独立，不会串号。一份授权覆盖本机所有账号，定时发布、公众号监控与对标账号更新按账号独立调度；删除账号时整个工作区移入备份目录，可手动恢复。',
+      '同一台机器可以创建多个运营账号，每个账号最多连接 8 个国内渠道，另可连接 YouTube 与 TikTok。顶栏随时切换，重启后自动回到上次使用的账号。账号之间完全隔离——数据库、素材、选题、录音和渠道登录态各自独立，不会串号。一份授权覆盖本机所有账号，定时发布、公众号监控与对标账号更新按账号独立调度；删除账号时整个工作区移入备份目录，可手动恢复。',
     bodyEn:
-      'Create several operating accounts on one machine, each connecting up to eight channels. Switch from the top bar at any time, and the app reopens the last account you used. Accounts are fully isolated — databases, assets, topics, recordings, and channel sessions stay separate, so nothing bleeds across accounts. One license covers every account on the machine, and scheduled publishing, Official Account monitoring, and competitor tracking run per account. Deleting an account moves its whole workspace into a backup folder you can restore manually.',
-    bulletsZh: ['同一台机器管理多个运营账号，顶栏一键切换', '每个账号最多连接 8 个渠道，登录态互相独立', '数据库、素材、选题与录音按账号隔离，不会串号', '一份授权覆盖本机所有账号，后台任务分账号独立调度'],
-    bulletsEn: ['Several operating accounts on one machine with one-click switching', 'Up to eight channels per account, each with its own session', 'Databases, assets, topics, and recordings isolated per account', 'One license for every account, with background tasks scheduled per account'],
+      'Create several operating accounts on one machine, each connecting up to eight domestic channels plus YouTube and TikTok. Switch from the top bar at any time, and the app reopens the last account you used. Accounts are fully isolated — databases, assets, topics, recordings, and channel sessions stay separate, so nothing bleeds across accounts. One license covers every account on the machine, and scheduled publishing, Official Account monitoring, and competitor tracking run per account. Deleting an account moves its whole workspace into a backup folder you can restore manually.',
+    bulletsZh: ['同一台机器管理多个运营账号，顶栏一键切换', '每个账号最多连接 8 个国内渠道，另可连接 YouTube 与 TikTok', '数据库、素材、选题与录音按账号隔离，不会串号', '一份授权覆盖本机所有账号，后台任务分账号独立调度'],
+    bulletsEn: ['Several operating accounts on one machine with one-click switching', 'Up to eight domestic channels per account, plus YouTube and TikTok', 'Databases, assets, topics, and recordings isolated per account', 'One license for every account, with background tasks scheduled per account'],
   },
   {
     id: 'connect',

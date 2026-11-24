@@ -69,7 +69,8 @@ export const PLANS = [
 ];
 
 export const PLAN_FEATURES_ZH = [
-  '8 大平台定时自动发布',
+  '8 大国内平台定时自动发布',
+  '另支持 YouTube / TikTok 海外发布（官方 OAuth）',
   '8 大平台数据自动回流复盘',
   '多运营账号独立隔离，一份授权本机通用',
   '全部功能，无低配版',
@@ -79,7 +80,8 @@ export const PLAN_FEATURES_ZH = [
 ];
 
 export const PLAN_FEATURES_EN = [
-  'Scheduled publishing to all 8 platforms',
+  'Scheduled publishing to all 8 domestic platforms',
+  'YouTube and TikTok publishing through official OAuth',
   'Automatic analytics for all 8 platforms',
   'Isolated operating accounts on one machine, one license for all',
   'All features included, no cut-down tiers',
@@ -219,10 +221,10 @@ export const faqTopics = {
     {
       group: '产品',
       items: [
-        { q: '它到底是什么？', a: '媒管家是一款本地优先的桌面应用。它把选题、排期、发布、数据复盘和素材归档放在同一张工作台里，支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台。' },
-        { q: '和浏览器插件、定时工具有什么不同？', a: '插件通常只能操作单个平台，通用定时工具又依赖平台开放 API。我们通过本机浏览器完成发布，不需要开发者资质；同时把数据回流和复盘做进了同一个应用。' },
-        { q: '支持哪些平台？', a: '自动发布覆盖抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台，8 个平台的作品数据都能自动回流复盘表（知乎目前只覆盖视频作品，回答与文章不计入）。' },
-        { q: '可以同时管理多个运营账号吗？', a: '可以。同一台机器能创建多个运营账号，每个账号最多连接上述 8 个渠道。账号之间数据库、素材、选题、录音与登录态完全隔离，不会串号；一份授权覆盖本机所有账号，定时发布、公众号监控与对标账号更新按账号独立运行。删除账号时整个工作区会移入 legacy 备份目录，可手动恢复。' },
+        { q: '它到底是什么？', a: '媒管家是一款本地优先的桌面应用。它把选题、排期、发布、数据复盘和素材归档放在同一张工作台里，支持抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个国内平台，海外另支持 YouTube 与 TikTok 发布。' },
+        { q: '和浏览器插件、定时工具有什么不同？', a: '插件通常只能操作单个平台，通用定时工具又依赖平台开放 API。国内平台我们通过本机浏览器完成发布，不需要开发者资质；海外平台走 YouTube / TikTok 官方 OAuth。数据回流和复盘都做进了同一个应用。' },
+        { q: '支持哪些平台？', a: '国内自动发布覆盖抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台，作品数据自动回流复盘表（知乎目前只覆盖视频作品，回答与文章不计入）。海外支持 YouTube 与 TikTok：用你自己在开发者后台创建的应用走官方 OAuth，YouTube 直传，TikTok 进入收件箱后在 App 内确认发布。' },
+        { q: '可以同时管理多个运营账号吗？', a: '可以。同一台机器能创建多个运营账号，每个账号最多连接上述 8 个国内渠道，另可连接 YouTube 与 TikTok。账号之间数据库、素材、选题、录音与登录态完全隔离，不会串号；一份授权覆盖本机所有账号，定时发布、公众号监控与对标账号更新按账号独立运行。删除账号时整个工作区会移入 legacy 备份目录，可手动恢复。' },
       ],
     },
     {
@@ -230,7 +232,7 @@ export const faqTopics = {
       items: [
         { q: '需要什么系统？', a: 'Windows 10 及以上、macOS 11 及以上，或 Ubuntu 22.04 及以上的 Linux 发行版。同时需要本机安装 Chrome 或 Edge。' },
         { q: '一定要装 Chrome 吗？', a: '需要。发布与部分数据采集依赖本机 Chrome/Edge 浏览器环境。没有浏览器时，桌面应用仍可管理选题和排期，但无法执行自动发布。' },
-        { q: '需要申请 API 或开发者账号吗？', a: '不需要。你在独立浏览器窗口扫码登录自己的平台账号即可，登录态只保存在本机。' },
+        { q: '需要申请 API 或开发者账号吗？', a: '国内平台不需要：在独立浏览器窗口扫码登录自己的账号即可，登录态只保存在本机。海外 YouTube / TikTok 需要你在 Google Cloud 与 TikTok for Developers 各创建一个自用应用，把 OAuth 凭据填进应用；应用与令牌都只保存在本机。' },
         { q: '账号安全吗？会不会被封？', a: '客户端使用你自己的 IP 和登录态，不经过中转服务器，也不会把账号密码上传云端。自动化仍受平台访问限制影响，我们内置了执行间隔与温和重试，但不能承诺 100% 不受影响。' },
       ],
     },
@@ -265,10 +267,10 @@ export const faqTopics = {
     {
       group: 'Product',
       items: [
-        { q: 'What is it?', a: 'WeMedia Creator is a local-first desktop app that puts topic planning, scheduling, publishing, analytics, and asset archiving in one workspace. It supports Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts.' },
-        { q: 'How is it different from a browser extension or a scheduler?', a: 'Extensions usually handle one platform, while generic schedulers depend on official APIs. We publish through the browser on your own machine, so no developer account is needed, and analytics plus review live in the same app.' },
-        { q: 'Which platforms are supported?', a: 'Publishing covers eight platforms: Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts. Automatic analytics also covers all eight; for Zhihu it collects video works only, so answers and articles are entered manually.' },
-        { q: 'Can I manage several operating accounts at once?', a: 'Yes. One machine can host multiple operating accounts, each connecting up to all eight channels above. Databases, assets, topics, recordings, and sign-in sessions are fully isolated per account, so nothing mixes. A single license covers every account on the machine, and scheduled publishing, Official Account monitoring, and competitor tracking run independently per account. Deleting an account moves its whole workspace into a legacy backup folder you can restore manually.' },
+        { q: 'What is it?', a: 'WeMedia Creator is a local-first desktop app that puts topic planning, scheduling, publishing, analytics, and asset archiving in one workspace. It supports eight domestic platforms — Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts — plus YouTube and TikTok publishing overseas.' },
+        { q: 'How is it different from a browser extension or a scheduler?', a: 'Extensions usually handle one platform, while generic schedulers depend on official APIs. Domestic platforms publish through the browser on your own machine, so no developer account is needed; overseas channels use official YouTube and TikTok OAuth. Analytics and review live in the same app.' },
+        { q: 'Which platforms are supported?', a: 'Domestic publishing covers eight platforms: Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts. Automatic analytics also covers all eight; for Zhihu it collects video works only, so answers and articles are entered manually. Overseas, YouTube uploads directly and TikTok sends the video to your inbox for you to confirm in the app, both through official OAuth with your own developer app.' },
+        { q: 'Can I manage several operating accounts at once?', a: 'Yes. One machine can host multiple operating accounts, each connecting up to the eight domestic channels above, plus YouTube and TikTok. Databases, assets, topics, recordings, and sign-in sessions are fully isolated per account, so nothing mixes. A single license covers every account on the machine, and scheduled publishing, Official Account monitoring, and competitor tracking run independently per account. Deleting an account moves its whole workspace into a legacy backup folder you can restore manually.' },
       ],
     },
     {
@@ -276,7 +278,7 @@ export const faqTopics = {
       items: [
         { q: 'What do I need?', a: 'Windows 10+, macOS 11+, or Ubuntu 22.04+, plus Chrome or Edge installed on the same machine.' },
         { q: 'Do I have to install Chrome?', a: 'Yes. Publishing and some data collection rely on a local Chrome/Edge environment. Without it, you can still organize topics and schedules, but automatic publishing will not run.' },
-        { q: 'Do I need API keys or a developer account?', a: 'No. Sign in to your own platform accounts in an isolated browser window; the session stays on your machine.' },
+        { q: 'Do I need API keys or a developer account?', a: 'Not for domestic platforms: sign in to your own accounts in an isolated browser window and the session stays on your machine. For overseas channels, create your own app in Google Cloud and TikTok for Developers, then paste the OAuth credentials into the app; the app and tokens stay on your computer.' },
         { q: 'Is my account safe? Could it get banned?', a: 'The app uses your own IP and signed-in session, with no relay server and no passwords sent to the cloud. Automation is still subject to platform access restrictions; we add pacing and gentle retries but cannot promise zero risk.' },
       ],
     },

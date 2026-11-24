@@ -221,13 +221,13 @@ function featuresPage(lang) {
 const PLATFORM_HERO = {
   zh: {
     eyebrow: '支持平台',
-    title: '八个平台，一套发布流程',
-    desc: '八个平台都能自动发布，作品数据也都自动回流（知乎目前覆盖视频作品）。每个运营账号最多连接这 8 个渠道，登录态互相独立；每个平台的规则、封面比例与限制，都在各自的指南里写清楚。',
+    title: '八个国内平台，一套发布流程，外加 YouTube 与 TikTok',
+    desc: '八个国内平台都能自动发布，作品数据也都自动回流（知乎目前覆盖视频作品）。海外另支持 YouTube 与 TikTok，用你自用的开发者应用走官方 OAuth 授权。每个运营账号最多连接 8 个国内渠道，登录态互相独立；每个平台的规则、封面比例与限制，都在各自的指南里写清楚。',
   },
   en: {
     eyebrow: 'Platforms',
-    title: 'Eight platforms, one publishing flow',
-    desc: 'All eight platforms publish and sync analytics automatically (Zhihu currently covers video works). Each operating account connects up to these eight channels with its own sessions, and each guide spells out formats, cover ratios, and limits.',
+    title: 'Eight domestic platforms, plus YouTube and TikTok',
+    desc: 'All eight domestic platforms publish and sync analytics automatically (Zhihu currently covers video works). Overseas, YouTube and TikTok connect through official OAuth with your own developer app. Each operating account connects up to these eight domestic channels with its own sessions, and each guide spells out formats, cover ratios, and limits.',
   },
 };
 
@@ -272,8 +272,26 @@ function platformsPage(lang) {
     }),
     contentSection({
       body: `<div class="max-w-6xl mx-auto">
-        ${sectionHeading({ lang, eyebrow: isEn ? 'Coverage at a glance' : '支持矩阵', title: isEn ? 'What is automatic, and what is manual' : '哪些是自动的，哪些需要手动', desc: isEn ? 'Publishing and analytics are automatic on all eight. Zhihu analytics currently covers video works only; answers and articles can still be logged by hand.' : '八个平台都能自动发布，作品数据也都自动回流；知乎目前只覆盖视频作品，回答与文章可在复盘表中手动补充。' })}
+        ${sectionHeading({ lang, eyebrow: isEn ? 'Coverage at a glance' : '支持矩阵', title: isEn ? 'What is automatic, and what is manual' : '哪些是自动的，哪些需要手动', desc: isEn ? 'Publishing and analytics are automatic on all eight domestic platforms. Zhihu analytics currently covers video works only; answers and articles can still be logged by hand.' : '八个国内平台都能自动发布，作品数据也都自动回流；知乎目前只覆盖视频作品，回答与文章可在复盘表中手动补充。' })}
         ${table({ head: [isEn ? 'Platform' : '平台', isEn ? 'Formats' : '内容形式', isEn ? 'Publishing' : '自动发布', isEn ? 'Analytics' : '数据回流'], rows })}
+      </div>`,
+    }),
+    contentSection({
+      body: `<div class="max-w-6xl mx-auto">
+        ${sectionHeading({ lang, eyebrow: isEn ? 'Overseas channels' : '海外渠道', title: isEn ? 'YouTube and TikTok through official OAuth' : 'YouTube 与 TikTok，走官方 OAuth', desc: isEn ? 'Bring your own developer app. YouTube uploads straight to your channel; TikTok sends the video to your inbox and you confirm publishing in the app.' : '使用你自己申请的开发者应用。YouTube 直传频道；TikTok 先把视频送进收件箱，你在 App 内确认发布。' })}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+          ${[
+            ['YouTube', 'YT', 'bg-red-600', isEn ? 'Direct upload to your channel · public by default, unlisted or private optional · automatic 16:9 thumbnail' : '直传你自己的频道 · 默认公开，可改 unlisted / private · 自动设置 16:9 缩略图'],
+            ['TikTok', 'TT', 'bg-black', isEn ? 'Inbox upload · confirm publishing in the TikTok app · no Direct Post review needed' : '收件箱上传 · 在 TikTok App 内确认发布 · 无需等待 Direct Post 审核'],
+          ].map(([name, mark, dot, note]) => `<div class="rounded-2xl bg-surface-white p-5 shadow-sm">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex h-10 w-10 items-center justify-center rounded-full ${dot} text-sm font-bold text-white">${mark}</span>
+              <div class="font-headline-sm text-headline-sm text-on-surface">${name}</div>
+            </div>
+            <p class="mt-4 font-body-sm text-body-sm text-on-surface-variant">${note}</p>
+            <div class="mt-5"><span class="rounded-full bg-surface-container-low px-2.5 py-1 font-label-capsule text-[11px] text-on-surface-variant">${isEn ? 'Publishing only · no analytics yet' : '仅发布 · 暂不含数据回流'}</span></div>
+          </div>`).join('')}
+        </div>
       </div>`,
     }),
     contentSection({
@@ -288,10 +306,10 @@ function platformsPage(lang) {
   return page({
     lang,
     route: '/platforms/',
-    title: isEn ? 'Supported platforms — eight Chinese social networks' : '支持平台｜抖音、视频号、小红书、公众号等 8 个平台',
+    title: isEn ? 'Supported platforms — 8 Chinese networks, YouTube and TikTok' : '支持平台｜抖音、视频号、小红书等 8 个国内平台与 YouTube / TikTok',
     description: isEn
-      ? 'Publishing support for Douyin, WeChat Channels, Xiaohongshu, Official Accounts, Bilibili, Kuaishou, Weibo, and Zhihu, with automatic analytics on all eight.'
-      : '支持抖音、视频号、小红书、公众号、B站、快手、微博、知乎八个平台发布与作品数据自动回流，知乎目前覆盖视频作品。',
+      ? 'Publish to Douyin, WeChat Channels, Xiaohongshu, Official Accounts, Bilibili, Kuaishou, Weibo, and Zhihu with automatic analytics, plus YouTube and TikTok via OAuth.'
+      : '支持抖音、视频号、小红书、公众号、B站、快手、微博、知乎八个国内平台发布与作品数据自动回流，另支持 YouTube 与 TikTok 官方 OAuth 发布。',
     body,
     priority: 0.9,
   });
