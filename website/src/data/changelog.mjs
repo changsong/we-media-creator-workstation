@@ -1,8 +1,31 @@
 export const CHANGELOG = [
   {
+    version: '2.4.0',
+    date: '2026-11-24',
+    current: true,
+    titleZh: '海外渠道：YouTube 与 TikTok 发布',
+    titleEn: 'Overseas channels: YouTube and TikTok publishing',
+    itemsZh: [
+      '连接设置新增海外渠道分区，支持 YouTube 与 TikTok，走官方 OAuth 授权，应用凭据由你自己在开发者后台申请。',
+      'YouTube 直传视频到你的频道，默认公开，可改为 unlisted 或 private；带封面时上传后自动设置 16:9 缩略图。',
+      'TikTok 采用收件箱上传：视频进入你的 TikTok 收件箱，你在 App 内补充文案后手动确认发布，无需等待 Direct Post 审核。',
+      '授权窗口、令牌交换与视频上传都会自动套用「连接设置 → 网络代理」，本机回环地址保持直连以接收回调。',
+      '访问令牌只保存在本机对应账号的数据目录，界面掩码显示；随时可「断开授权」并清除令牌。',
+      '品牌图标与安装包图标更新。',
+    ],
+    itemsEn: [
+      'Connections now has an overseas channels section supporting YouTube and TikTok through official OAuth, with app credentials you obtain from the developer consoles.',
+      'YouTube uploads straight to your channel, public by default and switchable to unlisted or private; when a cover exists it is set as a 16:9 thumbnail automatically after upload.',
+      'TikTok uses inbox upload: the video lands in your TikTok inbox and you add the caption and confirm publishing in the app, so no Direct Post review is required.',
+      'The authorization window, token exchange, and video uploads all honor the proxy under Connections → Network, while loopback stays direct so the callback can load.',
+      'Tokens are stored only in each account\'s local data directory, masked in the UI, and can be cleared at any time with Disconnect.',
+      'Updated brand and installer icons.',
+    ],
+  },
+  {
     version: '2.3.0',
     date: '2026-11-18',
-    current: true,
+    current: false,
     titleZh: '多运营账号，一份授权通用',
     titleEn: 'Multiple operating accounts on one license',
     itemsZh: [
