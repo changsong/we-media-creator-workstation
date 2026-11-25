@@ -18,6 +18,10 @@ const APP_TITLE = '媒管家';
 const APP_ID = 'com.changsong.wemediacreator';
 const STARTUP_TIMEOUT_MS = 60000;
 const LOG_MAX_BYTES = 5 * 1024 * 1024;
+// 窗口的 origin 由端口决定，localStorage 按 origin 隔离。
+// 每次启动换端口会让新手指引、当前账号、编辑草稿全部丢失，因此优先复用固定端口。
+const PREFERRED_PORT = 47180;
+const PORT_SCAN_COUNT = 20;
 
 app.setName('WeMedia Creator Workstation');
 if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
@@ -65,16 +69,27 @@ function openServerLog() {
   return fs.createWriteStream(file, { flags: 'a' });
 }
 
-function pickPort() {
-  return new Promise((resolve, reject) => {
+function probePort(port) {
+  return new Promise((resolve) => {
     const probe = net.createServer();
     probe.unref();
-    probe.on('error', reject);
-    probe.listen(0, '127.0.0.1', () => {
-      const port = probe.address().port;
-      probe.close(() => resolve(port));
+    probe.once('error', () => resolve(false));
+    probe.listen(port, '127.0.0.1', () => {
+      const actual = probe.address().port;
+      probe.close(() => resolve(actual));
     });
   });
+}
+
+async function pickPort() {
+  for (let i = 0; i < PORT_SCAN_COUNT; i += 1) {
+    const port = await probePort(PREFERRED_PORT + i);
+    if (port) return port;
+  }
+  // 首选端口段被占用或保留（Windows 的排除端口范围会直接 EACCES）时退回系统随机端口
+  const fallback = await probePort(0);
+  if (!fallback) throw new Error('无法绑定本地端口，请检查系统端口占用或安全软件');
+  return fallback;
 }
 
 function ping(port) {
