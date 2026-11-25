@@ -1,8 +1,25 @@
 export const CHANGELOG = [
   {
+    version: '2.4.1',
+    date: '2026-11-25',
+    current: true,
+    titleZh: '稳定性修复：新手指引与本地状态',
+    titleEn: 'Stability fixes: onboarding and local state',
+    itemsZh: [
+      '修复每次启动都会重新播放新手操作指引的问题，现在首次启动播放一次后不再自动出现，仍可随时从右下角手动重播。',
+      '修复桌面端重启后当前运营账号选择与编辑中草稿丢失的问题。',
+      '授权回调地址在重启后保持稳定，YouTube 与 TikTok 授权流程更可靠。',
+    ],
+    itemsEn: [
+      'Fixed the onboarding tour replaying on every launch; it now plays once on first launch and stays available from the replay button in the lower-right corner.',
+      'Fixed the desktop app losing the selected operating account and in-progress draft edits after a restart.',
+      'The OAuth callback address is now stable across restarts, making YouTube and TikTok authorization more reliable.',
+    ],
+  },
+  {
     version: '2.4.0',
     date: '2026-11-24',
-    current: true,
+    current: false,
     titleZh: '海外渠道：YouTube 与 TikTok 发布',
     titleEn: 'Overseas channels: YouTube and TikTok publishing',
     itemsZh: [
