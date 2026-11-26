@@ -166,9 +166,7 @@ export function footer({ lang }) {
       <div class="flex flex-wrap items-center gap-4">
         <a class="inline-block py-1 hover:text-text-light-primary transition-colors" href="${routeTo('/legal/terms/', lang)}">${esc(t.footer.terms)}</a>
         <a class="inline-block py-1 hover:text-text-light-primary transition-colors" href="${routeTo('/legal/privacy/', lang)}">${esc(t.footer.privacy)}</a>
-        <a class="inline-block py-1 hover:text-text-light-primary transition-colors" href="https://github.com/changsong/we-media-creator-workstation" target="_blank" rel="noopener">GitHub</a>
         <span>${esc(t.footer.icp)}</span>
-        <span>${esc(t.footer.police)}</span>
       </div>
     </div>
   </div>
@@ -200,7 +198,6 @@ function globalJsonLd(lang) {
       width: 512,
       height: 512,
     },
-    sameAs: ['https://github.com/changsong/we-media-creator-workstation'],
   };
   const site = {
     '@type': 'WebSite',
