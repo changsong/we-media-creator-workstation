@@ -34,6 +34,10 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
         <span id="badgeTopic" class="absolute top-2 right-2 w-4 h-4 bg-error text-on-error text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
         <span class="tooltip">选题池</span>
       </a>
+      <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="studio" href="#studio" title="视频工坊">
+        <span class="material-symbols-outlined text-xl">movie</span>
+        <span class="tooltip">视频工坊</span>
+      </a>
       <a class="nav-link relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all" data-tab="calendar" href="#calendar" title="内容日历">
         <span class="material-symbols-outlined text-xl">calendar_month</span>
         <span class="tooltip">内容日历</span>
@@ -169,6 +173,54 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container
     <div class="flex items-center justify-end gap-space-sm mt-space-sm">
       <button id="modalCancel" class="px-5 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" type="button">取消</button>
       <button id="modalOk" class="px-6 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all" type="button">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="sceneModal" role="dialog" aria-modal="true" aria-labelledby="sceneModalTitle">
+  <div class="modal-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <h3 id="sceneModalTitle" class="text-headline-md font-headline-md text-on-surface">编辑分镜</h3>
+        <p class="text-label-sm text-on-surface-variant mt-1">画面描述与旁白会直接用于生成图片 / 视频和配音。</p>
+      </div>
+      <button id="sceneModalClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <div id="sceneModalBody"></div>
+  </div>
+</div>
+
+<div id="sceneVideoModal" role="dialog" aria-modal="true" aria-labelledby="sceneVideoTitle">
+  <div class="modal-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <h3 id="sceneVideoTitle" class="text-headline-md font-headline-md text-on-surface">分镜视频</h3>
+        <p class="text-label-sm text-on-surface-variant mt-1">播放的是本次图生视频生成的结果。</p>
+      </div>
+      <button id="sceneVideoClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <video id="sceneVideoPlayer" controls playsinline class="w-full rounded-xl bg-black" style="max-height:70vh"></video>
+  </div>
+</div>
+
+<div id="sceneAudioModal" role="dialog" aria-modal="true" aria-labelledby="sceneAudioTitle">
+  <div class="modal-card">
+    <div class="flex items-start justify-between gap-space-md">
+      <div class="min-w-0">
+        <h3 id="sceneAudioTitle" class="text-headline-md font-headline-md text-on-surface">分镜配音</h3>
+        <p class="text-label-sm text-on-surface-variant mt-1">播放该分镜生成的口播配音。</p>
+      </div>
+      <button id="sceneAudioClose" class="shrink-0 w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button" title="关闭">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <div class="flex items-center gap-3 rounded-xl bg-surface-container-low p-space-md">
+      <span class="material-symbols-outlined text-primary text-2xl">graphic_eq</span>
+      <audio id="sceneAudioPlayer" controls class="w-full"></audio>
     </div>
   </div>
 </div>

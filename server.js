@@ -4,6 +4,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { Readable } = require('stream');
 const { URL } = require('url');
 const store = require('./lib/store');
 const accountContext = require('./lib/account-context');
@@ -11,6 +12,7 @@ const accounts = require('./lib/accounts');
 const { tables, tableOrder, publicSchema } = require('./lib/schemas');
 const wechatMonitor = require('./lib/wechat-monitor');
 const channelConnections = require('./lib/channel-connections');
+const aiConfig = require('./lib/ai-config');
 const oauth = require('./lib/oauth');
 const xhsCollector = require('./lib/xhs-collector');
 const douyinCollector = require('./lib/douyin-collector');
@@ -27,6 +29,14 @@ const proxyConfig = require('./lib/proxy-config');
 const browserLogin = require('./lib/browser-login');
 const recordings = require('./lib/recordings');
 const media = require('./lib/media');
+const videoProjects = require('./lib/video/projects');
+const videoAssets = require('./lib/video/assets');
+const videoGenerate = require('./lib/video/generate');
+const videoRender = require('./lib/video/render');
+const videoVoices = require('./lib/video/voices');
+const videoTts = require('./lib/video/tts');
+const videoReference = require('./lib/video/reference');
+const ai = require('./lib/ai');
 const publishTasks = require('./lib/publish-tasks');
 const profile = require('./lib/profile');
 const license = require('./lib/license');
@@ -93,14 +103,15 @@ function sendError(res, err) {
   sendJSON(res, status, body);
 }
 
-function readBody(req) {
+function readBody(req, limit) {
+  const maxBytes = limit || 4 * 1024 * 1024;
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
     req.on('data', (chunk) => {
       size += chunk.length;
-      if (size > 4 * 1024 * 1024) {
-        reject(Object.assign(new Error('请求体过大，单条记录请控制在 4MB 内'), { status: 413 }));
+      if (size > maxBytes) {
+        reject(Object.assign(new Error('请求体过大，单条记录请控制在 ' + Math.round(maxBytes / 1024 / 1024) + 'MB 内'), { status: 413 }));
         req.destroy();
         return;
       }
@@ -730,6 +741,70 @@ async function handleApi(req, res, url) {
       return sendError(res, err);
     }
   }
+  // 用整篇文案让 AI 起候选选题标题
+  const transcriptTitleMatch = url.pathname.match(/^\/api\/trends\/transcript\/([\w-]+)\/title$/);
+  if (transcriptTitleMatch && method === 'POST') {
+    try {
+      return sendJSON(res, 200, await transcript.suggestTitles(transcriptTitleMatch[1]));
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+  // AI 纠错：手动粘贴的文案直接纠错返回
+  if (url.pathname === '/api/trends/transcript/correct' && method === 'POST') {
+    try {
+      const body = await readBody(req);
+      return sendJSON(res, 200, await transcript.correctText(body && body.text));
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+  // AI 纠错：把已提取文案纠错后写回任务
+  const transcriptFixMatch = url.pathname.match(/^\/api\/trends\/transcript\/([\w-]+)\/correct$/);
+  if (transcriptFixMatch && method === 'POST') {
+    try {
+      return sendJSON(res, 200, await transcript.correct(transcriptFixMatch[1]));
+    } catch (err) {
+      return sendError(res, err);
+    }
+  }
+  // 平台没有字幕时，把作品视频代理给前端下载（带上平台需要的 Referer）
+  const transcriptMediaMatch = url.pathname.match(/^\/api\/trends\/transcript\/([\w-]+)\/media$/);
+  if (transcriptMediaMatch && method === 'GET') {
+    let src;
+    try {
+      src = transcript.mediaSource(transcriptMediaMatch[1]);
+    } catch (err) {
+      return sendError(res, err);
+    }
+    try {
+      const headers = { 'User-Agent': 'Mozilla/5.0', Accept: '*/*' };
+      if (src.referer) headers.Referer = src.referer;
+      if (req.headers.range) headers.Range = String(req.headers.range);
+      const upstream = await fetch(src.url, { headers, redirect: 'follow' });
+      if (!upstream.ok) {
+        if (upstream.body && upstream.body.cancel) upstream.body.cancel().catch(() => {});
+        return sendJSON(res, 502, { error: '视频下载失败（HTTP ' + upstream.status + '）' });
+      }
+      const outHeaders = {
+        'Content-Type': upstream.headers.get('content-type') || 'video/mp4',
+        'Accept-Ranges': 'bytes',
+        'Content-Disposition': 'attachment; filename="' + src.fileName + '"'
+      };
+      const contentLength = upstream.headers.get('content-length');
+      if (contentLength) outHeaders['Content-Length'] = contentLength;
+      const contentRange = upstream.headers.get('content-range');
+      if (contentRange) outHeaders['Content-Range'] = contentRange;
+      res.writeHead(upstream.status === 206 ? 206 : 200, outHeaders);
+      if (!upstream.body) return res.end();
+      const stream = Readable.fromWeb(upstream.body);
+      stream.on('error', () => { try { res.destroy(); } catch (e) { /* noop */ } });
+      stream.pipe(res);
+      return;
+    } catch (err) {
+      return sendError(res, Object.assign(new Error('视频下载失败：' + (err.message || err)), { status: 502 }));
+    }
+  }
   // 本地视频上传：原始二进制流，返回 fileId 供文案任务使用
   if (url.pathname === '/api/trends/transcript/upload' && method === 'POST') {
     const rawName = String(url.searchParams.get('name') || '');
@@ -1160,6 +1235,12 @@ async function handleApi(req, res, url) {
         // 代理配置文件损坏不影响连接页展示
         data.proxy = null;
       }
+      // AI 服务密钥（视频工坊使用），与渠道配置同页展示，读取时掩码
+      try {
+        data.ai = aiConfig.getAll();
+      } catch (err) {
+        data.ai = null;
+      }
       // 海外 OAuth 渠道的授权状态（不含令牌明文）
       data.oauthStatus = {};
       Object.keys(data.defs || {}).forEach((p) => {
@@ -1271,6 +1352,556 @@ async function handleApi(req, res, url) {
           }
         }
         return sendJSON(res, 200, { ok: true, connection: rec });
+      } catch (err) {
+        return sendJSON(res, err.status || 400, { error: err.message });
+      }
+    }
+    res.writeHead(405, { Allow: 'GET, PUT, POST' });
+    return res.end();
+  }
+
+  // 视频工坊：项目 / 脚本 / 分镜 / 角色
+  if (parts[1] === 'video') {
+    const wrap = (fn) => {
+      try {
+        return fn();
+      } catch (err) {
+        return sendJSON(res, err.status || 400, { error: err.message });
+      }
+    };
+    const wrapAsync = async (fn) => {
+      try {
+        return await fn();
+      } catch (err) {
+        return sendJSON(res, err.status || 400, { error: err.message });
+      }
+    };
+
+    if (parts[2] === 'meta' && method === 'GET') {
+      return sendJSON(res, 200, {
+        aspects: videoProjects.ASPECTS,
+        statuses: videoProjects.STATUSES,
+        renderModes: videoProjects.RENDER_MODES,
+        sceneStatuses: videoProjects.SCENE_STATUSES
+      });
+    }
+
+    // GET /api/video/models?provider=  列出可用模型（按用途分组）
+    if (parts[2] === 'models' && method === 'GET') {
+      const provider = url.searchParams.get('provider') || '';
+      return wrapAsync(async () => {
+        const grouped = await ai.listModels(provider);
+        return sendJSON(res, 200, { provider: provider || ai.DEFAULT_PROVIDER, models: grouped });
+      });
+    }
+
+    // GET /api/video/assets/:id/file  读取素材文件（支持 Range，前端用 ?account= 指定账号）
+    if (parts[2] === 'assets' && parts[3] && parts[4] === 'file' && (method === 'GET' || method === 'HEAD')) {
+      const found = videoAssets.getFile(decodeURIComponent(parts[3]));
+      if (!found) return sendJSON(res, 404, { error: '素材不存在或文件已丢失' });
+      return serveMediaFile(req, res, found, '素材文件不存在');
+    }
+    // GET/DELETE /api/video/assets/:id  素材元信息 / 删除
+    if (parts[2] === 'assets' && parts[3] && !parts[4]) {
+      const assetId = decodeURIComponent(parts[3]);
+      if (method === 'GET') {
+        const found = videoAssets.getAsset(assetId);
+        if (!found) return sendJSON(res, 404, { error: '素材不存在' });
+        return sendJSON(res, 200, { asset: found.asset });
+      }
+      if (method === 'DELETE') {
+        return wrap(() => sendJSON(res, 200, videoAssets.deleteAsset(assetId)));
+      }
+      res.writeHead(405, { Allow: 'GET, DELETE' });
+      return res.end();
+    }
+
+    // 复刻音色（账号级）：列表 / 上传录音并训练 / 刷新状态 / 试听音频 / 删除
+    if (parts[2] === 'voices') {
+      const voiceId = parts[3] ? decodeURIComponent(parts[3]) : '';
+      if (!voiceId) {
+        if (method === 'GET') {
+          return wrap(() => sendJSON(res, 200, { voices: videoVoices.listVoices(), provider: videoTts.DOUBAO_PROVIDER }));
+        }
+        if (method === 'POST') {
+          const body = await readBody(req, 16 * 1024 * 1024);
+          return wrapAsync(async () => {
+            const m = /^data:([^;,]+);base64,(.+)$/i.exec(String(body.dataUrl || ''));
+            if (!m) return sendJSON(res, 400, { error: '请上传一段录音（wav / mp3 / m4a / ogg / aac）' });
+            const mime = m[1].toLowerCase();
+            const buffer = Buffer.from(m[2], 'base64');
+            if (!buffer.length) return sendJSON(res, 400, { error: '录音内容为空' });
+            if (buffer.length > 10 * 1024 * 1024) return sendJSON(res, 400, { error: '录音需小于 10MB' });
+            const format = videoVoices.extForMime(mime);
+            if (['wav', 'mp3', 'ogg', 'm4a', 'aac', 'pcm'].indexOf(format) < 0) {
+              return sendJSON(res, 400, { error: '不支持该音频格式，请上传 wav / mp3 / m4a / ogg / aac' });
+            }
+            const draft = videoVoices.createVoice({ name: body.name, status: 'training' });
+            const saved = videoVoices.saveSource(draft.id, buffer, mime);
+            // 先落库 speaker 代号：即使训练请求失败，之后也能用原录音「重新提交复刻」
+            const customId = videoTts.customSpeakerId();
+            videoVoices.updateVoice(draft.id, { customId, sourceFile: saved.fileName, sourceMime: saved.mime });
+            try {
+              const cloned = await videoTts.cloneVoice({ buffer, format, name: body.name, customId });
+              let demoFile = null;
+              if (cloned.demoAudio) {
+                try {
+                  const demo = await videoTts.downloadAudio(cloned.demoAudio);
+                  demoFile = videoVoices.saveDemo(draft.id, demo.buffer, demo.mime);
+                } catch (err) { /* 试听下载失败不影响训练 */ }
+              }
+              const voice = videoVoices.updateVoice(draft.id, {
+                provider: videoTts.DOUBAO_PROVIDER,
+                voiceCode: cloned.voiceCode,
+                customId: cloned.customId,
+                modelType: cloned.modelType,
+                status: cloned.status,
+                error: cloned.status === 'failed' ? (cloned.message || '声音复刻失败') : '',
+                sourceFile: saved.fileName,
+                sourceMime: saved.mime,
+                demoFile: demoFile ? demoFile.fileName : null,
+                demoMime: demoFile ? demoFile.mime : null,
+                meta: { demoAudio: cloned.demoAudio || '', message: cloned.message || '' }
+              });
+              return sendJSON(res, 200, { voice });
+            } catch (err) {
+              videoVoices.updateVoice(draft.id, {
+                status: 'failed',
+                error: (err && err.message) || '声音复刻失败',
+                sourceFile: saved.fileName,
+                sourceMime: saved.mime
+              });
+              throw err;
+            }
+          });
+        }
+        res.writeHead(405, { Allow: 'GET, POST' });
+        return res.end();
+      }
+
+      if (parts[4] === 'audio' && (method === 'GET' || method === 'HEAD')) {
+        const kind = url.searchParams.get('kind') === 'source' ? 'source' : 'demo';
+        const found = videoVoices.getFile(voiceId, kind);
+        if (!found) return sendJSON(res, 404, { error: '音色音频不存在或文件已丢失' });
+        return serveMediaFile(req, res, found, '音色音频文件不存在');
+      }
+
+      if (method === 'POST' && parts[4] === 'refresh') {
+        return wrapAsync(async () => {
+          const voice = videoVoices.getVoice(voiceId);
+          if (!voice) return sendJSON(res, 404, { error: '音色不存在' });
+          const latest = await videoTts.queryVoice(voice);
+          const patch = {
+            voiceCode: latest.voiceCode || voice.voiceCode,
+            modelType: latest.modelType == null ? voice.modelType : latest.modelType,
+            status: latest.status,
+            error: latest.status === 'failed' ? (latest.message || '声音复刻失败') : ''
+          };
+          if (latest.demoAudio && latest.status === 'ready') {
+            try {
+              const demo = await videoTts.downloadAudio(latest.demoAudio);
+              const savedDemo = videoVoices.saveDemo(voiceId, demo.buffer, demo.mime);
+              patch.demoFile = savedDemo.fileName;
+              patch.demoMime = savedDemo.mime;
+            } catch (err) { /* 忽略试听下载失败 */ }
+          }
+          const meta = Object.assign({}, voice.meta || {});
+          if (latest.demoAudio) meta.demoAudio = latest.demoAudio;
+          patch.meta = meta;
+          return sendJSON(res, 200, { voice: videoVoices.updateVoice(voiceId, patch) });
+        });
+      }
+
+      // 用已保存的原始录音重新提交复刻（适合开通服务 / 换项目后重试，无需重录）
+      if (method === 'POST' && parts[4] === 'retry') {
+        return wrapAsync(async () => {
+          const voice = videoVoices.getVoice(voiceId);
+          if (!voice) return sendJSON(res, 404, { error: '音色不存在' });
+          const source = videoVoices.getFile(voiceId, 'source');
+          if (!source) return sendJSON(res, 400, { error: '原始录音已丢失，请重新录制并提交复刻' });
+          const buffer = fs.readFileSync(source.filePath);
+          if (!buffer.length) return sendJSON(res, 400, { error: '原始录音文件为空，请重新录制' });
+          const format = videoVoices.extForMime(source.mime);
+          const customId = videoTts.customSpeakerId();
+          videoVoices.updateVoice(voiceId, { customId, status: 'training', error: '' });
+          try {
+            const cloned = await videoTts.cloneVoice({ buffer, format, name: voice.name, customId });
+            let demoFile = null;
+            if (cloned.demoAudio) {
+              try {
+                const demo = await videoTts.downloadAudio(cloned.demoAudio);
+                demoFile = videoVoices.saveDemo(voiceId, demo.buffer, demo.mime);
+              } catch (err) { /* 试听下载失败不影响训练 */ }
+            }
+            const updated = videoVoices.updateVoice(voiceId, {
+              voiceCode: cloned.voiceCode,
+              customId: cloned.customId,
+              modelType: cloned.modelType,
+              status: cloned.status,
+              error: cloned.status === 'failed' ? (cloned.message || '声音复刻失败') : '',
+              demoFile: demoFile ? demoFile.fileName : null,
+              demoMime: demoFile ? demoFile.mime : null,
+              meta: { demoAudio: cloned.demoAudio || '', message: cloned.message || '' }
+            });
+            return sendJSON(res, 200, { voice: updated });
+          } catch (err) {
+            videoVoices.updateVoice(voiceId, { status: 'failed', error: (err && err.message) || '声音复刻失败', customId });
+            throw err;
+          }
+        });
+      }
+
+      if (method === 'DELETE') {
+        return wrap(() => sendJSON(res, 200, videoVoices.deleteVoice(voiceId)));
+      }
+
+      res.writeHead(405, { Allow: 'GET, POST, DELETE' });
+      return res.end();
+    }
+
+    if (parts[2] === 'projects') {
+      const id = parts[3] ? decodeURIComponent(parts[3]) : '';
+      const sub = parts[4] || '';
+
+      if (!id) {
+        if (method === 'GET') return wrap(() => sendJSON(res, 200, { projects: videoProjects.listProjects() }));
+        if (method === 'POST') {
+          const body = await readBody(req);
+          return wrap(() => sendJSON(res, 200, { project: videoProjects.createProject(body) }));
+        }
+        res.writeHead(405, { Allow: 'GET, POST' });
+        return res.end();
+      }
+
+      if (!sub) {
+        if (method === 'GET') {
+          const project = videoProjects.getProject(id);
+          if (!project) return sendJSON(res, 404, { error: '视频项目不存在' });
+          return sendJSON(res, 200, { project });
+        }
+        if (method === 'PUT' || method === 'PATCH') {
+          const body = await readBody(req);
+          return wrap(() => sendJSON(res, 200, { project: videoProjects.updateProject(id, body) }));
+        }
+        if (method === 'DELETE') {
+          return wrap(() => sendJSON(res, 200, videoProjects.deleteProject(id)));
+        }
+        res.writeHead(405, { Allow: 'GET, PUT, PATCH, DELETE' });
+        return res.end();
+      }
+
+      if (sub === 'script') {
+        if (method === 'POST' && parts[5] === 'generate') {
+          const body = await readBody(req);
+          return wrapAsync(async () => sendJSON(res, 200, await videoGenerate.generateScript(id, body)));
+        }
+        if (method === 'GET') {
+          const versionParam = url.searchParams.get('version');
+          const script = versionParam
+            ? videoProjects.getScriptVersion(id, Number(versionParam))
+            : videoProjects.getLatestScript(id);
+          if (!script) return sendJSON(res, 404, { error: '脚本版本不存在' });
+          return sendJSON(res, 200, { script });
+        }
+        if (method === 'POST') {
+          const body = await readBody(req);
+          return wrap(() => sendJSON(res, 200, { script: videoProjects.saveScript(id, body) }));
+        }
+        res.writeHead(405, { Allow: 'GET, POST' });
+        return res.end();
+      }
+
+      if (sub === 'scenes') {
+        if (method === 'POST' && parts[5] === 'plan') {
+          const body = await readBody(req);
+          return wrapAsync(async () => sendJSON(res, 200, await videoGenerate.planScenes(id, body)));
+        }
+        if (method === 'GET') return wrap(() => sendJSON(res, 200, { scenes: videoProjects.listScenes(id) }));
+        if (method === 'POST') {
+          const body = await readBody(req);
+          return wrap(() => sendJSON(res, 200, { scene: videoProjects.addScene(id, body) }));
+        }
+        if (method === 'PUT' || method === 'PATCH') {
+          const body = await readBody(req);
+          return wrap(() => sendJSON(res, 200, { scenes: videoProjects.reorderScenes(id, body.ids) }));
+        }
+        res.writeHead(405, { Allow: 'GET, POST, PUT' });
+        return res.end();
+      }
+
+      // 片头标题：PUT 保存标题文字与显示秒数
+      if (sub === 'title' && (method === 'PUT' || method === 'PATCH')) {
+        const body = await readBody(req);
+        return wrapAsync(async () => sendJSON(res, 200, videoRender.setTitle(id, body)));
+      }
+
+      // 背景音乐：POST 上传/替换 · PUT 调整音量 · DELETE 清除
+      if (sub === 'bgm') {
+        if (method === 'POST') {
+          const body = await readBody(req, 20 * 1024 * 1024);
+          return wrapAsync(async () => sendJSON(res, 200, await videoRender.setBgm(id, body)));
+        }
+        if (method === 'PUT' || method === 'PATCH') {
+          const body = await readBody(req);
+          return wrapAsync(async () => sendJSON(res, 200, videoRender.setBgmVolume(id, body)));
+        }
+        if (method === 'DELETE') {
+          return wrapAsync(async () => sendJSON(res, 200, videoRender.clearBgm(id)));
+        }
+        res.writeHead(405, { Allow: 'POST, PUT, DELETE' });
+        return res.end();
+      }
+
+      // 参考视频：POST 接入（body.fileId 或 body.url）· GET 预览文件 · DELETE 解绑
+      if (sub === 'reference') {
+        if (method === 'POST' && parts[5] === 'frames') {
+          return wrapAsync(async () => sendJSON(res, 200, await videoReference.applyFramesToProject(id, {})));
+        }
+        if (method === 'POST') {
+          const body = await readBody(req);
+          return wrapAsync(async () => sendJSON(res, 200, await videoReference.attach(id, body)));
+        }
+        if ((method === 'GET' || method === 'HEAD') && parts[5] === 'file') {
+          const project = videoProjects.getProject(id);
+          if (!project) return sendJSON(res, 404, { error: '视频项目不存在' });
+          const filePath = videoReference.referenceFilePath(project);
+          if (!filePath || !videoReference.referenceFileExists(project)) {
+            return sendJSON(res, 404, { error: '参考视频不存在' });
+          }
+          const ext = path.extname(filePath).replace('.', '').toLowerCase() || 'mp4';
+          return serveMediaFile(req, res, { filePath, mime: videoAssets.mimeFor(ext) }, '参考视频文件丢失');
+        }
+        if (method === 'DELETE') {
+          return wrap(() => sendJSON(res, 200, videoReference.clear(id)));
+        }
+        res.writeHead(405, { Allow: 'GET, POST, DELETE' });
+        return res.end();
+      }
+
+      // POST /api/video/projects/:id/render  合成整片（缺失片段自动渲染）
+      if (sub === 'render' && method === 'POST') {
+        const body = await readBody(req);
+        return wrapAsync(async () => sendJSON(res, 200, await videoRender.assembleProject(id, body)));
+      }
+
+      // POST /api/video/projects/:id/voice  { voiceId }  绑定/解绑项目配音音色
+      if (sub === 'voice' && method === 'POST') {
+        const body = await readBody(req);
+        return wrap(() => {
+          const project = videoProjects.getProject(id);
+          if (!project) return sendJSON(res, 404, { error: '视频项目不存在' });
+          const voiceId = body.voiceId ? String(body.voiceId) : '';
+          if (voiceId && !videoVoices.getVoice(voiceId)) return sendJSON(res, 404, { error: '音色不存在' });
+          const settings = Object.assign({}, project.settings || {});
+          if (voiceId) settings.ttsVoiceId = voiceId;
+          else delete settings.ttsVoiceId;
+          return sendJSON(res, 200, { project: videoProjects.updateProject(id, { settings }) });
+        });
+      }
+
+      if (sub === 'assets') {
+        if (method === 'GET') {
+          const kind = url.searchParams.get('kind') || '';
+          return wrap(() => sendJSON(res, 200, { assets: videoAssets.listAssets(id, kind) }));
+        }
+        res.writeHead(405, { Allow: 'GET' });
+        return res.end();
+      }
+
+      if (sub === 'characters') {
+        if (method === 'GET') return wrap(() => sendJSON(res, 200, { characters: videoProjects.listCharacters(id) }));
+        if (method === 'POST') {
+          const body = await readBody(req);
+          return wrap(() => sendJSON(res, 200, { character: videoProjects.addCharacter(id, body) }));
+        }
+        res.writeHead(405, { Allow: 'GET, POST' });
+        return res.end();
+      }
+
+      return sendJSON(res, 404, { error: '接口不存在' });
+    }
+
+    const sceneId = parts[2] === 'scenes' && parts[3] ? decodeURIComponent(parts[3]) : '';
+    if (sceneId) {
+      // POST /api/video/scenes/:id/image  生成该分镜的图片素材
+      if (method === 'POST' && parts[4] === 'image') {
+        const body = await readBody(req);
+        return wrapAsync(async () => {
+          const scene = videoProjects.getSceneRow(sceneId);
+          if (!scene) return sendJSON(res, 404, { error: '分镜不存在' });
+          return sendJSON(res, 200, await videoGenerate.generateSceneImage(scene.project_id, sceneId, body));
+        });
+      }
+      // POST /api/video/scenes/:id/audio  用旁白生成配音
+      if (method === 'POST' && parts[4] === 'audio') {
+        const body = await readBody(req);
+        return wrapAsync(async () => {
+          const scene = videoProjects.getSceneRow(sceneId);
+          if (!scene) return sendJSON(res, 404, { error: '分镜不存在' });
+          return sendJSON(res, 200, await videoGenerate.generateSceneAudio(scene.project_id, sceneId, body));
+        });
+      }
+      // POST /api/video/scenes/:id/video  以该分镜图片为首帧创建图生视频任务
+      if (method === 'POST' && parts[4] === 'video') {
+        const body = await readBody(req);
+        return wrapAsync(async () => {
+          const scene = videoProjects.getSceneRow(sceneId);
+          if (!scene) return sendJSON(res, 404, { error: '分镜不存在' });
+          return sendJSON(res, 200, await videoGenerate.createSceneVideo(scene.project_id, sceneId, body));
+        });
+      }
+      // GET /api/video/scenes/:id/video  轮询图生视频任务
+      if (method === 'GET' && parts[4] === 'video') {
+        return wrapAsync(async () => {
+          const scene = videoProjects.getSceneRow(sceneId);
+          if (!scene) return sendJSON(res, 404, { error: '分镜不存在' });
+          return sendJSON(res, 200, await videoGenerate.pollSceneVideo(sceneId));
+        });
+      }
+      // POST /api/video/scenes/:id/segment  渲染该分镜为统一规格片段
+      if (method === 'POST' && parts[4] === 'segment') {
+        const body = await readBody(req);
+        return wrapAsync(async () => {
+          const scene = videoProjects.getSceneRow(sceneId);
+          if (!scene) return sendJSON(res, 404, { error: '分镜不存在' });
+          return sendJSON(res, 200, await videoRender.renderSceneSegment(scene.project_id, sceneId, body));
+        });
+      }
+      // POST /api/video/scenes/:id/ref-frame  取参考视频对应时间点的画面作为首帧
+      if (method === 'POST' && parts[4] === 'ref-frame') {
+        const body = await readBody(req);
+        return wrapAsync(async () => {
+          const scene = videoProjects.getSceneRow(sceneId);
+          if (!scene) return sendJSON(res, 404, { error: '分镜不存在' });
+          return sendJSON(res, 200, await videoReference.applyFrameToScene(scene.project_id, sceneId, body));
+        });
+      }
+      if (method === 'PUT' || method === 'PATCH') {
+        const body = await readBody(req);
+        return wrap(() => sendJSON(res, 200, { scene: videoProjects.updateScene(sceneId, body) }));
+      }
+      if (method === 'DELETE') {
+        return wrap(() => sendJSON(res, 200, videoProjects.deleteScene(sceneId)));
+      }
+      return sendJSON(res, 405, { error: '不支持的请求方式' });
+    }
+
+    const characterId = parts[2] === 'characters' && parts[3] ? decodeURIComponent(parts[3]) : '';
+    if (characterId) {
+      // POST /api/video/characters/:id/refs  上传角色参考图（内联 data URL）
+      if (method === 'POST' && parts[4] === 'refs') {
+        const body = await readBody(req);
+        return wrapAsync(async () => {
+          const row = videoProjects.getCharacterRow(characterId);
+          if (!row) return sendJSON(res, 404, { error: '角色不存在' });
+          if (!body.dataUrl) return sendJSON(res, 400, { error: '缺少参考图内容' });
+          const asset = await videoAssets.saveFromUrl(row.project_id, {
+            kind: 'image',
+            dataUrl: body.dataUrl,
+            provider: 'upload',
+            meta: { role: 'character-ref', characterId }
+          });
+          let refs = [];
+          try { refs = JSON.parse(row.refs || '[]'); } catch (e) { refs = []; }
+          refs = refs.concat(asset.id).slice(-4);
+          return sendJSON(res, 200, { character: videoProjects.updateCharacter(characterId, { refs }), asset });
+        });
+      }
+      // DELETE /api/video/characters/:id/refs/:assetId  删除参考图
+      if (method === 'DELETE' && parts[4] === 'refs' && parts[5]) {
+        const assetId = decodeURIComponent(parts[5]);
+        return wrap(() => {
+          const row = videoProjects.getCharacterRow(characterId);
+          if (!row) return sendJSON(res, 404, { error: '角色不存在' });
+          let refs = [];
+          try { refs = JSON.parse(row.refs || '[]'); } catch (e) { refs = []; }
+          videoAssets.deleteAsset(assetId);
+          return sendJSON(res, 200, { character: videoProjects.updateCharacter(characterId, { refs: refs.filter((r) => r !== assetId) }) });
+        });
+      }
+      // POST /api/video/characters/:id/anchor/active  把某张候选设为当前定妆图
+      if (method === 'POST' && parts[4] === 'anchor' && parts[5] === 'active') {
+        const body = await readBody(req);
+        return wrap(() => {
+          const row = videoProjects.getCharacterRow(characterId);
+          if (!row) return sendJSON(res, 404, { error: '角色不存在' });
+          let anchors = [];
+          try { anchors = JSON.parse(row.anchors || '[]'); } catch (e) { anchors = []; }
+          const assetId = String(body.assetId || '');
+          const found = (Array.isArray(anchors) ? anchors : []).some((a) => a && a.assetId === assetId);
+          if (!found) return sendJSON(res, 400, { error: '定妆图候选不存在' });
+          return sendJSON(res, 200, { character: videoProjects.updateCharacter(characterId, { anchorAssetId: assetId }) });
+        });
+      }
+      // DELETE /api/video/characters/:id/anchor/:assetId  删除某张候选定妆图
+      if (method === 'DELETE' && parts[4] === 'anchor' && parts[5]) {
+        const assetId = decodeURIComponent(parts[5]);
+        return wrap(() => {
+          const row = videoProjects.getCharacterRow(characterId);
+          if (!row) return sendJSON(res, 404, { error: '角色不存在' });
+          let anchors = [];
+          try { anchors = JSON.parse(row.anchors || '[]'); } catch (e) { anchors = []; }
+          const all = Array.isArray(anchors) ? anchors : [];
+          if (!all.some((a) => a && a.assetId === assetId)) {
+            return sendJSON(res, 404, { error: '定妆图候选不存在' });
+          }
+          const list = all.filter((a) => a && a.assetId !== assetId);
+          videoAssets.deleteAsset(assetId);
+          const patch = { anchors: list };
+          if (row.anchor_asset_id === assetId) patch.anchorAssetId = list.length ? list[list.length - 1].assetId : null;
+          return sendJSON(res, 200, { character: videoProjects.updateCharacter(characterId, patch) });
+        });
+      }
+      // POST /api/video/characters/:id/anchor  生成定妆图（可传 style / setActive / profile）
+      if (method === 'POST' && parts[4] === 'anchor' && !parts[5]) {
+        const body = await readBody(req);
+        return wrapAsync(async () => sendJSON(res, 200, await videoGenerate.generateCharacterAnchor(characterId, body)));
+      }
+      if (method === 'PUT' || method === 'PATCH') {
+        const body = await readBody(req);
+        return wrap(() => sendJSON(res, 200, { character: videoProjects.updateCharacter(characterId, body) }));
+      }
+      if (method === 'DELETE') {
+        return wrap(() => sendJSON(res, 200, videoProjects.deleteCharacter(characterId)));
+      }
+      return sendJSON(res, 405, { error: '不支持的请求方式' });
+    }
+
+    return sendJSON(res, 404, { error: '接口不存在' });
+  }
+
+  // AI 服务密钥（视频工坊）
+  if (parts[1] === 'ai-config') {
+    const provider = decodeURIComponent(parts[2] || '');
+    // GET /api/ai-config → 全量（含定义与掩码）
+    if (!provider && method === 'GET') {
+      return sendJSON(res, 200, aiConfig.getAll());
+    }
+    if (!provider) {
+      return sendJSON(res, 404, { error: '未指定 AI 服务' });
+    }
+    if (!aiConfig.DEFS[provider]) {
+      return sendJSON(res, 404, { error: '未知 AI 服务：' + provider });
+    }
+    // GET /api/ai-config/:provider
+    if (method === 'GET') {
+      return sendJSON(res, 200, aiConfig.get(provider));
+    }
+    // POST /api/ai-config/:provider/test  （必须置于通用保存之前）
+    if (method === 'POST' && parts[3] === 'test') {
+      const body = await readBody(req);
+      try {
+        return sendJSON(res, 200, await aiConfig.test(provider, body));
+      } catch (err) {
+        return sendJSON(res, err.status || 400, { error: err.message });
+      }
+    }
+    // PUT /api/ai-config/:provider  { enabled, fields }
+    if (method === 'PUT' || method === 'POST') {
+      const body = await readBody(req);
+      try {
+        const rec = aiConfig.save(provider, body);
+        return sendJSON(res, 200, { ok: true, config: rec });
       } catch (err) {
         return sendJSON(res, err.status || 400, { error: err.message });
       }
