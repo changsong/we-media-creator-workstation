@@ -6192,8 +6192,8 @@
   function studioCharactersCard(d){
     var list = d.characters || [];
     var s = '<div class="soft-card p-space-lg">';
-    s += '<div class="flex items-center justify-between mb-space-sm"><h4 class="text-label-md font-label-md text-on-surface">角色设定</h4><span class="chip chip-line">' + list.length + ' 个</span></div>';
-    s += '<p class="text-label-sm text-on-surface-variant mb-space-sm">描述越具体（外貌 / 服装 / 年龄），跨场景一致性越稳定。上传本人照片后可生成插画 / 3D 等风格定妆图，分镜只用风格图，避免真人照片触发视频合规拦截。</p>';
+    s += '<div class="flex items-center justify-between mb-space-sm"><h4 class="text-label-md font-label-md text-on-surface">角色设定<span class="text-[11px] font-normal text-on-surface-variant ml-1">账号共享</span></h4><span class="chip chip-line">' + list.length + ' 个</span></div>';
+    s += '<p class="text-label-sm text-on-surface-variant mb-space-sm">所有视频项目共用这份角色库，新建项目无需重复添加。描述越具体（外貌 / 服装 / 年龄），跨场景一致性越稳定。上传本人照片后可生成插画 / 3D 等风格定妆图，分镜只用风格图，避免真人照片触发视频合规拦截。</p>';
     if(list.length){
       s += '<div class="flex flex-col gap-2 mb-space-sm">';
       list.forEach(function(c){
@@ -7293,7 +7293,7 @@
     }
     request('/video/characters/' + encodeURIComponent(id) + '/anchor', {
       method:'POST',
-      body: JSON.stringify({ style: style, setActive: true })
+      body: JSON.stringify({ style: style, setActive: true, projectId: d.id })
     })
       .then(function(){
         STUDIO.charBusy = null;
@@ -7340,7 +7340,7 @@
       .then(function(dataUrl){
         return request('/video/characters/' + encodeURIComponent(id) + '/refs', {
           method:'POST',
-          body: JSON.stringify({ dataUrl: dataUrl })
+          body: JSON.stringify({ dataUrl: dataUrl, projectId: d.id })
         });
       })
       .then(function(){
@@ -7365,7 +7365,11 @@
     var isScene = kind === 'scene';
     studioConfirm(
       isProject ? '删除这个视频项目？' : (isScene ? '删除这个分镜？' : '删除这个角色？'),
-      '「' + (name || '未命名') + '」' + (isProject ? '的脚本、分镜、角色与已生成素材将一并删除，无法恢复。' : '将被删除。'),
+      isProject
+        ? '「' + (name || '未命名') + '」的脚本、分镜与已生成素材将一并删除，无法恢复（账号共享的角色会保留）。'
+        : isScene
+          ? '「' + (name || '未命名') + '」将被删除。'
+          : '「' + (name || '未命名') + '」属于账号共享角色，删除后所有视频项目都无法再选用，无法恢复。',
       function(){
         var d = STUDIO.detail;
         if(isProject){

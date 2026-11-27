@@ -1795,7 +1795,9 @@ async function handleApi(req, res, url) {
           const row = videoProjects.getCharacterRow(characterId);
           if (!row) return sendJSON(res, 404, { error: '角色不存在' });
           if (!body.dataUrl) return sendJSON(res, 400, { error: '缺少参考图内容' });
-          const asset = await videoAssets.saveFromUrl(row.project_id, {
+          const projectId = videoProjects.characterStorageProjectId(row, body.projectId);
+          if (!projectId) return sendJSON(res, 400, { error: '账号下还没有视频项目，无法保存角色参考图' });
+          const asset = await videoAssets.saveFromUrl(projectId, {
             kind: 'image',
             dataUrl: body.dataUrl,
             provider: 'upload',
