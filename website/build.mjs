@@ -101,6 +101,7 @@ function main() {
   fs.writeFileSync(path.join(siteDir, '404.html'), render404(), 'utf8');
   fs.writeFileSync(path.join(siteDir, 'sitemap.xml'), renderSitemap(routes), 'utf8');
   fs.writeFileSync(path.join(siteDir, 'robots.txt'), renderRobots(), 'utf8');
+  fs.writeFileSync(path.join(siteDir, 'ads.txt'), '# No authorized digital advertising sellers for this site.\n', 'utf8');
   const llms = renderLlms();
   fs.writeFileSync(path.join(siteDir, 'llms.txt'), llms.short, 'utf8');
   fs.writeFileSync(path.join(siteDir, 'llms-full.txt'), llms.full, 'utf8');

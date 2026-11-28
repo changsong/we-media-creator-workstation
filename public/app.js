@@ -112,7 +112,7 @@
     trend:{
       tab:'accounts', accounts:[], works:[], status:null, platforms:null, proxy:null,
       error:'', addUrl:'', addPlatform:'小红书', adding:false, filter:'all', sort:'latest',
-      tx:{ url:'', job:null, error:'', fileId:'', fileName:'', fileSize:0, uploading:false, uploadPct:0, uploadXhr:null, asr:null, asrLoading:false }
+      tx:{ url:'', manual:'', job:null, error:'', fileId:'', fileName:'', fileSize:0, uploading:false, uploadPct:0, uploadXhr:null, asr:null, asrLoading:false, titleBusy:false, titleOptions:[], fixBusy:false, fixInfo:null }
     }
   };
   var editing = { dbKey:null, recordId:null, record:null };
@@ -1442,6 +1442,7 @@
         html += '<td class="py-3 px-2 align-top max-w-[110px]">' + (ref ? '<a href="' + esc(ref) + '" target="_blank" rel="noopener" class="link-arrow text-label-sm inline-flex items-center gap-0.5" title="' + esc(ref) + '"><span class="material-symbols-outlined text-[13px]">link</span>' + esc(hostOf(ref) || '链接') + '</a>' : '<span class="text-outline text-label-sm">—</span>') + '</td>';
         html += '<td class="py-3 px-2 align-top">' + quickSelect('topic', r, '状态', STATUS, statusClass(r['状态'])) + '</td>';
         html += '<td class="py-3 pr-4 pl-2 align-top"><div class="flex items-center justify-end gap-1">';
+        html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface hover:bg-surface-container-high whitespace-nowrap" data-act="topicToVideo" data-id="' + esc(r['_id']) + '" type="button" title="用这条选题创建视频"><span class="material-symbols-outlined text-[13px]">movie</span>做视频</button>';
         if(canSchedule) html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-tertiary-fixed text-[10px] font-semibold text-on-tertiary-fixed-variant hover:brightness-95 whitespace-nowrap" data-act="toSchedule" data-db="topic" data-id="' + esc(r['_id']) + '" type="button"><span class="material-symbols-outlined text-[13px]">calendar_add_on</span>排期</button>';
         html += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" data-act="edit" data-db="topic" data-id="' + esc(r['_id']) + '" type="button" title="编辑"><span class="material-symbols-outlined text-base">edit</span></button>';
         html += '<button class="w-7 h-7 rounded-full hover:bg-error-container/60 flex items-center justify-center text-on-surface-variant hover:text-error" data-act="del" data-db="topic" data-id="' + esc(r['_id']) + '" data-name="' + esc(r['选题']) + '" type="button" title="删除"><span class="material-symbols-outlined text-base">delete</span></button>';
@@ -1715,9 +1716,10 @@
     html += '<div id="transcriptFileArea">' + transcriptFileAreaHtml() + '</div>';
     html += '</div>';
     html += '<span class="helper">视频、音频都支持；ffmpeg 抽音频和语音识别都在本机完成，文件不会上传云端</span></div>';
+    html += '<div class="fld"><label class="lab">或直接粘贴文案</label><textarea id="transcriptManual" class="ta" rows="3" placeholder="已有文字？把口播稿 / 会议记录粘贴到这里，可用 AI 纠错后再转选题或存素材">' + esc(t.tx.manual || '') + '</textarea><div class="flex justify-end mt-1"><button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-low text-label-sm font-semibold text-on-surface hover:bg-surface-container-high disabled:opacity-50" data-act="transcriptManualUse" type="button"><span class="material-symbols-outlined text-base">content_paste_go</span>使用粘贴的文案</button></div></div>';
     html += asrStatusHtml();
     html += '<div class="flex items-center gap-2 mt-space-sm flex-wrap">';
-    html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="transcriptStart" type="button"><span class="material-symbols-outlined text-base">subtitles</span>' + (t.tx.fileId ? '转写本地视频' : '提取文案') + '</button>';
+    html += '<button class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90" data-act="transcriptStart" type="button"><span class="material-symbols-outlined text-base">subtitles</span>提取文案</button>';
     html += trendProxyChip(t.proxy);
     html += '</div>';
     html += '<p id="transcriptError" class="mt-2 text-label-sm text-error"' + (t.tx.error ? '' : ' style="display:none"') + '>' + esc(t.tx.error || '') + '</p>';
@@ -1777,6 +1779,9 @@
       html += '<div class="rounded-xl bg-error-container/50 px-4 py-4">';
       html += '<div class="flex items-center gap-1.5 text-label-md font-semibold text-on-error-container"><span class="material-symbols-outlined text-base">error</span>提取失败</div>';
       html += '<p class="mt-1.5 text-label-sm text-on-error-container">' + esc(job.error || '未知错误') + '</p>';
+      if(job.downloadUrl){
+        html += '<a href="' + esc(job.downloadUrl) + '" download class="mt-2 inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-label-sm font-semibold text-on-surface hover:bg-surface-container-high"><span class="material-symbols-outlined text-base">download</span>下载视频</a>';
+      }
       if(job.platform) html += '<p class="mt-1 text-[11px] text-on-error-container/80">平台：' + esc(job.platform) + '</p>';
       html += '</div>';
       return html;
@@ -1784,6 +1789,7 @@
     var sourceLabel = job.source === 'caption' ? '平台字幕'
       : job.source === 'whisper' ? '本地语音识别'
       : job.source === 'note' ? '图文正文'
+      : job.source === 'manual' ? '直接粘贴'
       : job.source === 'mock' ? '演示数据' : '字幕';
     html += '<div class="flex items-start justify-between gap-2 mb-2">';
     html += '<div class="min-w-0"><p class="text-[13px] font-semibold text-on-surface leading-snug line-clamp-2">' + esc(job.title || '已提取视频文案') + '</p>';
@@ -1795,12 +1801,28 @@
     html += '</div></div></div>';
 
     html += '<div class="flex flex-wrap items-center gap-2 mb-3">';
-    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold hover:opacity-90" data-act="transcriptToTopic" type="button"><span class="material-symbols-outlined text-[13px]">add_task</span>转选题</button>';
+    var fixBusy = tx.fixBusy;
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50" data-act="transcriptFix" type="button"' + (fixBusy ? ' disabled' : '') + ' title="AI 只改错别字、错词与标点，不改写内容"><span class="material-symbols-outlined text-[13px]">' + (fixBusy ? 'hourglass_top' : 'spellcheck') + '</span>' + (fixBusy ? '纠错中…' : 'AI 纠错') + '</button>';
+    var titleBusy = tx.titleBusy;
+    if(job.id){
+      html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50" data-act="transcriptSuggestTitle" type="button"' + (titleBusy ? ' disabled' : '') + '><span class="material-symbols-outlined text-[13px]">' + (titleBusy ? 'hourglass_top' : 'auto_awesome') + '</span>' + (titleBusy ? '起名中…' : 'AI 起名') + '</button>';
+    }
+    html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold hover:opacity-90 disabled:opacity-50" data-act="transcriptToTopic" type="button"' + (fixBusy ? ' disabled' : '') + '><span class="material-symbols-outlined text-[13px]">add_task</span>转选题</button>';
     html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="transcriptSaveAsset" type="button"><span class="material-symbols-outlined text-[13px]">inventory_2</span>存素材库</button>';
     html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="transcriptCopy" type="button"><span class="material-symbols-outlined text-[13px]">content_copy</span>复制</button>';
     html += '<button class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-[10px] font-semibold text-on-surface-variant hover:bg-surface-container-high" data-act="transcriptDownload" type="button"><span class="material-symbols-outlined text-[13px]">download</span>下载 TXT</button>';
     if(job.resolvedUrl) html += '<a href="' + esc(job.resolvedUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 text-[10px] text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[13px]">open_in_new</span>看原作</a>';
     html += '</div>';
+
+    var titleOpts = tx.titleOptions || [];
+    if(titleOpts.length){
+      html += '<div class="flex flex-wrap items-center gap-1.5 mb-3"><span class="text-[11px] text-on-surface-variant">选一个标题：</span>';
+      titleOpts.forEach(function(title){
+        html += '<button class="px-2.5 py-1 rounded-full bg-primary/10 text-[11px] font-semibold text-primary hover:bg-primary/20" data-act="transcriptPickTitle" data-title="' + esc(title) + '" type="button">' + esc(title) + '</button>';
+      });
+      html += '<button class="text-on-surface-variant hover:text-on-surface" data-act="transcriptDismissTitles" type="button" title="收起"><span class="material-symbols-outlined text-[15px]">close</span></button>';
+      html += '</div>';
+    }
 
     if((job.segments || []).length){
       html += '<div class="rounded-xl bg-surface-container-low px-3 py-2.5 mb-2 max-h-56 overflow-y-auto">';
@@ -1809,8 +1831,23 @@
       });
       html += '</div>';
     }
-    html += '<div class="rounded-xl border border-surface-container-high px-3 py-2.5"><p class="text-[11px] font-semibold text-on-surface-variant mb-1">整篇文案</p>';
-    html += '<pre class="whitespace-pre-wrap break-words font-sans text-[12px] leading-relaxed text-on-surface max-h-72 overflow-y-auto">' + esc(job.text || '') + '</pre></div>';
+    html += '<div class="rounded-xl border border-surface-container-high px-3 py-2.5"><p class="text-[11px] font-semibold text-on-surface-variant mb-1">整篇文案' + (tx.fixInfo ? ' · 已 AI 纠错' : '') + '</p>';
+    html += '<pre class="whitespace-pre-wrap break-words font-sans text-[12px] leading-relaxed text-on-surface max-h-72 overflow-y-auto">' + esc(job.text || '') + '</pre>';
+    if(tx.fixInfo){
+      var changes = tx.fixInfo.changes || [];
+      if(changes.length){
+        html += '<div class="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] text-on-surface-variant"><span>修正 ' + changes.length + ' 处：</span>';
+        changes.slice(0, 8).forEach(function(c){
+          html += '<span class="px-1.5 py-0.5 rounded bg-surface-container-low"><span class="line-through opacity-60">' + esc(c.from) + '</span> → ' + esc(c.to) + '</span>';
+        });
+        if(changes.length > 8) html += '<span>等</span>';
+        html += '</div>';
+      } else {
+        html += '<p class="mt-1.5 text-[11px] text-on-surface-variant">未发现明显的错别字或病句。</p>';
+      }
+      if((job.segments || []).length) html += '<p class="mt-1 text-[10px] text-outline">纠错只改整篇文案；上方分段时间轴保持原样。</p>';
+    }
+    html += '</div>';
     return html;
   }
 
@@ -1875,7 +1912,7 @@
       var dlPct = Math.max(2, Math.min(100, num(dl.progress)));
       html += '<div class="mt-2 flex items-center gap-2"><div class="flex-1 h-1.5 rounded-full bg-surface-container-high overflow-hidden"><div class="h-full bg-primary transition-all" style="width:' + dlPct + '%"></div></div><span class="shrink-0">' + dlPct + '%</span></div>';
     } else if(model.ready){
-      html += '<p class="mt-1 text-[#2f8f5b]">语音模型已就绪，可直接转写本地视频。</p>';
+      html += '<p class="mt-1 text-[#2f8f5b]">语音模型已就绪，选择本地视频后会自动开始转写。</p>';
     } else if(!wh.available){
       html += '<p class="mt-1">安装 whisper.cpp 后可下载并使用语音模型。</p>';
     } else if(dl.state === 'error'){
@@ -1954,8 +1991,6 @@
     tx.fileSize = 0;
     renderTranscriptFileArea();
     renderTranscriptResult();
-    var startBtn = document.querySelector('[data-act="transcriptStart"]');
-    if(startBtn) startBtn.innerHTML = '<span class="material-symbols-outlined text-base">subtitles</span>提取文案';
   }
 
   function uploadTranscriptFile(file){
@@ -2011,10 +2046,9 @@
       tx.fileSize = res.size || file.size;
       renderTranscriptFileArea();
       renderTranscriptResult();
-      var startBtn = document.querySelector('[data-act="transcriptStart"]');
-      if(startBtn) startBtn.innerHTML = '<span class="material-symbols-outlined text-base">subtitles</span>转写本地视频';
       loadAsrStatus();
-      toast('视频已上传，可以开始转写');
+      toast('上传完成，开始本地转写…');
+      startTranscript();
     }).catch(function(err){
       tx.uploading = false;
       tx.fileId = '';
@@ -2057,14 +2091,15 @@
       body: JSON.stringify(payload)
     }).then(function(job){
       tx.job = job;
+      tx.titleOptions = [];
+      tx.titleBusy = false;
+      tx.fixInfo = null;
       // 本地文件在任务结束时会被服务端删除，界面同步清空，避免重复提交
       if(tx.fileId){
         tx.fileId = '';
         tx.fileName = '';
         tx.fileSize = 0;
         renderTranscriptFileArea();
-        var startBtn = document.querySelector('[data-act="transcriptStart"]');
-        if(startBtn) startBtn.innerHTML = '<span class="material-symbols-outlined text-base">subtitles</span>提取文案';
       }
       renderTranscriptResult();
       startTranscriptPoll();
@@ -2087,8 +2122,13 @@
         if(!running){
           clearInterval(trendTxTimer);
           trendTxTimer = null;
-          if(next.status === 'done') toast('文案提取完成 · 共 ' + (next.segments || []).length + ' 段', 'ok');
-          else toast('文案提取失败：' + (next.error || '未知错误'), 'err');
+          if(next.status === 'done'){
+            toast('文案提取完成 · 共 ' + (next.segments || []).length + ' 段', 'ok');
+            // 提取完成后自动调用 AI 纠错，避免用户手动再点一次
+            if(!state.trend.tx.fixBusy && !state.trend.tx.fixInfo) transcriptFix(true);
+          } else {
+            toast('文案提取失败：' + (next.error || '未知错误'), 'err');
+          }
         }
       }).catch(function(err){
         clearInterval(trendTxTimer);
@@ -2141,17 +2181,94 @@
   function transcriptToTopic(){
     var job = state.trend.tx.job;
     if(!job || !job.text){ toast('还没有可用的文案', 'err'); return; }
+    if(state.trend.tx.fixBusy){ toast('AI 正在纠错文案，请稍候再转选题', 'err'); return; }
     var flat = String(job.text).replace(/\s+/g, ' ').trim();
     openEditor('topic', null, {
-      subText: '来自' + (job.platform || '视频') + '文案 · 确认后保存为选题',
+      subText: '来自' + (job.platform || '视频') + '文案 · 点「保存到数据库」完成转选题',
       fill: {
         '选题': String(job.title || flat.slice(0, 50) || '视频文案转选题').slice(0, 60),
         '状态': '待写',
         '切入角度': '参考原视频口播结构，保留开场钩子和核心结论，换成本账号的实操步骤与真实案例。文案节选：' + flat.slice(0, 160) + (flat.length > 160 ? '…' : ''),
         '标签': ['热点'],
-        '参考链接': job.resolvedUrl || job.url || ''
+        '参考链接': job.resolvedUrl || job.url || '',
+        '参考文案': String(job.text || '').slice(0, 20000)
       }
     });
+  }
+
+  function transcriptManualUse(){
+    var tx = state.trend.tx;
+    var text = String(tx.manual || '').trim();
+    if(!text){ toast('请先粘贴文案', 'err'); return; }
+    tx.job = {
+      id: '', url: '', resolvedUrl: '', platform: '手动录入', status: 'done', stage: '', progress: 100,
+      title: text.replace(/\s+/g, ' ').slice(0, 50), author: '', duration: 0,
+      source: 'manual', text: text, segments: [], error: ''
+    };
+    tx.titleOptions = [];
+    tx.fixInfo = null;
+    renderTranscriptResult();
+    toast('已载入粘贴的文案，正在自动 AI 纠错…');
+    transcriptFix(true);
+  }
+
+  function transcriptFix(auto){
+    var tx = state.trend.tx;
+    var job = tx.job;
+    if(!job || !String(job.text || '').trim()){ toast('还没有可纠错的文案', 'err'); return; }
+    if(tx.fixBusy) return;
+    tx.fixBusy = true;
+    renderTranscriptResult();
+    var p = job.id
+      ? request('/trends/transcript/' + encodeURIComponent(job.id) + '/correct', { method: 'POST' })
+      : request('/trends/transcript/correct', { method: 'POST', body: JSON.stringify({ text: job.text }) });
+    p.then(function(res){
+      tx.fixBusy = false;
+      if(res && typeof res.text === 'string') job.text = res.text;
+      tx.fixInfo = { changes: (res && res.changes) || [], changed: !!(res && res.changed) };
+      renderTranscriptResult();
+      var n = (tx.fixInfo.changes || []).length;
+      if(auto) toast(n ? ('AI 已自动纠错，修正 ' + n + ' 处') : 'AI 已自动检查文案，未发现明显错误', 'ok');
+      else toast(n ? ('AI 纠错完成，修正 ' + n + ' 处') : 'AI 检查完成，未发现明显错误', 'ok');
+    }, function(err){
+      tx.fixBusy = false;
+      renderTranscriptResult();
+      toast('AI 纠错失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function transcriptSuggestTitle(){
+    var tx = state.trend.tx;
+    var job = tx.job;
+    if(!job || job.status !== 'done' || !job.text){ toast('请先完成文案提取', 'err'); return; }
+    if(tx.titleBusy) return;
+    tx.titleBusy = true;
+    tx.titleOptions = [];
+    renderTranscriptResult();
+    request('/trends/transcript/' + encodeURIComponent(job.id) + '/title', { method: 'POST' }).then(function(res){
+      tx.titleBusy = false;
+      tx.titleOptions = (res && res.titles) || [];
+      renderTranscriptResult();
+      if(!tx.titleOptions.length) toast('AI 没有返回可用标题，请重试', 'err');
+    }, function(err){
+      tx.titleBusy = false;
+      renderTranscriptResult();
+      toast('AI 起名失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function transcriptPickTitle(title){
+    var tx = state.trend.tx;
+    if(!tx.job) return;
+    tx.job.title = String(title || '').trim().slice(0, 60);
+    tx.titleOptions = [];
+    renderTranscriptResult();
+    toast('已选用标题：' + tx.job.title);
+  }
+
+  function transcriptDismissTitles(){
+    state.trend.tx.titleOptions = [];
+    renderTranscriptResult();
   }
 
   function transcriptSaveAsset(){
@@ -2364,19 +2481,26 @@
     if(work.comments) metrics.push(compactNum(work.comments) + ' 评论');
     if(work.collects) metrics.push(compactNum(work.collects) + ' 收藏');
     if(work.reads) metrics.push(compactNum(work.reads) + ' 播放');
+    var fill = {
+      '选题': String(work.title || '').slice(0, 60),
+      '状态': '待写',
+      '切入角度': '参考' + work.platform + '对标账号「' + (work.accountName || '') + '」的' +
+        (work.itemType === 'video' ? '视频' : '图文') + '：' + (work.title || '') +
+        (metrics.length ? '（' + metrics.join(' / ') + '）' : '') +
+        '。可借鉴其选题角度和结构，换成本账号的实操步骤与真实案例。',
+      '爆款潜力评分': score,
+      '标签': tags,
+      '参考链接': work.itemUrl || ''
+    };
+    // 若刚为这条作品提取过文案，把文案一并存进选题的「参考文案」
+    var tjob = state.trend && state.trend.tx ? state.trend.tx.job : null;
+    if(tjob && tjob.status === 'done' && tjob.text && work.itemUrl &&
+       (tjob.url === work.itemUrl || tjob.resolvedUrl === work.itemUrl)){
+      fill['参考文案'] = String(tjob.text).slice(0, 20000);
+    }
     openEditor('topic', null, {
-      subText: '来自' + work.platform + '对标账号 · 确认后保存为选题',
-      fill: {
-        '选题': String(work.title || '').slice(0, 60),
-        '状态': '待写',
-        '切入角度': '参考' + work.platform + '对标账号「' + (work.accountName || '') + '」的' +
-          (work.itemType === 'video' ? '视频' : '图文') + '：' + (work.title || '') +
-          (metrics.length ? '（' + metrics.join(' / ') + '）' : '') +
-          '。可借鉴其选题角度和结构，换成本账号的实操步骤与真实案例。',
-        '爆款潜力评分': score,
-        '标签': tags,
-        '参考链接': work.itemUrl || ''
-      }
+      subText: '来自' + work.platform + '对标账号 · 点「保存到数据库」完成转选题',
+      fill: fill
     });
   }
 
@@ -3363,7 +3487,7 @@
   var connData = null; // 连接设置一览（来自 /api/connections），null 表示尚未加载
   var connLoading = false; // 单飞：一次只发一个请求，避免渲染循环重复拉取
   var connError = null; // 加载失败原因；与 connData 二选一展示
-  var connTab = 'domestic'; // 'domestic' 国内平台（默认）/ 'overseas' 海外平台 / 'proxy' 网络代理
+  var connTab = 'domestic'; // 'domestic' 国内平台（默认）/ 'overseas' 海外平台 / 'ai' AI 服务 / 'proxy' 网络代理
 
   function loadConnections(){
     if(connLoading) return;
@@ -3438,6 +3562,13 @@
     }).length;
     var cookieCount = d.platforms.filter(function(p){ return d.defs[p].apiMode === 'cookie'; }).length;
     var oauthCount = d.platforms.filter(function(p){ return d.defs[p].apiMode === 'oauth'; }).length;
+    var aiReady = d.ai ? d.ai.providers.filter(function(p){
+      var cfg = d.ai.configs[p];
+      if(!cfg) return false;
+      return d.ai.defs[p].fields.filter(function(f){ return !f.optional; }).every(function(f){
+        return cfg.fields[f.key] && cfg.fields[f.key].hasValue;
+      });
+    }).length : 0;
     var html = '';
     html += '<div class="flex items-end justify-between mb-space-lg gap-space-md flex-wrap">'
       + '<div><h2 class="text-headline-md font-headline-md text-on-surface">连接设置</h2>'
@@ -3450,18 +3581,24 @@
       + '<div class="flex items-center gap-3 min-w-0">'
       + '<span class="w-10 h-10 rounded-2xl bg-[#E2DFFF] text-[#444465] flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-xl">shield_lock</span></span>'
       + '<div class="min-w-0"><p class="text-label-md font-label-md text-on-surface">凭证只保存在本机，读取时自动掩码</p>'
-      + '<p class="text-label-sm text-on-surface-variant">配置文件 data/channel-connections.json；密钥不会回传明文，留空保存即保持原值。</p></div></div>'
+      + '<p class="text-label-sm text-on-surface-variant">渠道凭证保存在 data/channel-connections.json，AI 密钥保存在 data/ai-config.json；密钥不会回传明文，留空保存即保持原值。</p></div></div>'
       + '<div class="flex items-center gap-2 flex-wrap">'
       + '<span class="chip chip-mint">已启用 ' + enabledCount + ' / ' + d.platforms.length + '</span>'
       + '<span class="chip chip-honey">Cookie 登录 ' + cookieCount + '</span>'
       + (oauthCount ? '<span class="chip chip-line">OAuth 授权 ' + oauthCount + '</span>' : '')
+      + (d.ai ? '<span class="chip chip-line">AI 服务 ' + aiReady + ' / ' + d.ai.providers.length + '</span>' : '')
       + '</div></div>';
 
-    // Tab：国内平台 / 海外平台 / 网络代理
-    var activeTab = (connTab === 'proxy' && d.proxy) ? 'proxy' : (connTab === 'overseas' ? 'overseas' : 'domestic');
+    // Tab：国内平台 / 海外平台 / AI 服务 / 网络代理
+    var activeTab = (connTab === 'proxy' && d.proxy) ? 'proxy'
+      : (connTab === 'ai' && d.ai) ? 'ai'
+      : (connTab === 'overseas' ? 'overseas' : 'domestic');
     html += '<div class="seg mb-space-lg">';
     html += '<button class="' + (activeTab === 'domestic' ? 'on' : '') + '" data-act="connTab" data-tab="domestic" type="button">国内平台</button>';
     html += '<button class="' + (activeTab === 'overseas' ? 'on' : '') + '" data-act="connTab" data-tab="overseas" type="button">海外平台</button>';
+    if(d.ai){
+      html += '<button class="' + (activeTab === 'ai' ? 'on' : '') + '" data-act="connTab" data-tab="ai" type="button">AI 服务' + (aiReady ? ' · ' + aiReady : '') + '</button>';
+    }
     if(d.proxy){
       var proxyTabLabel = '网络代理';
       if(d.proxy.enabled) proxyTabLabel += d.proxy.configured ? ' · 已启用' : ' · 待完善';
@@ -3495,6 +3632,16 @@
     }
     html += '</div>';
 
+    if(d.ai){
+      html += '<div data-conn-panel="ai"' + (activeTab === 'ai' ? '' : ' class="hidden"') + '>';
+      html += '<div class="flex items-center gap-space-sm mb-space-md">'
+        + '<h3 class="text-label-md font-label-md text-on-surface">AI 服务</h3>'
+        + '<span class="text-label-sm text-on-surface-variant">视频工坊生成脚本、分镜、画面与配音时使用；按需配置，密钥只保存在本机</span></div>'
+        + '<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">';
+      d.ai.providers.forEach(function(p){ html += aiCard(p, d); });
+      html += '</div></div>';
+    }
+
     if(d.proxy){
       html += '<div data-conn-panel="proxy"' + (activeTab === 'proxy' ? '' : ' class="hidden"') + '>' + proxyCard(d) + '</div>';
     }
@@ -3502,7 +3649,7 @@
   }
 
   function switchConnTab(tab){
-    if(tab !== 'domestic' && tab !== 'overseas' && tab !== 'proxy') return;
+    if(tab !== 'domestic' && tab !== 'overseas' && tab !== 'ai' && tab !== 'proxy') return;
     connTab = tab;
     var view = document.querySelector('#view');
     if(!view) return;
@@ -3777,6 +3924,159 @@
       connData = null;
       loadConnections();
       toast('代理密码已清除', 'ok');
+    }).catch(function(err){
+      toast('清除失败：' + err.message, 'err');
+    });
+  }
+
+  var AI_ICON = { '火山方舟':'bolt', '阿里百炼':'cloud', 'MiniMax':'graphic_eq' };
+  var AI_TINT = {
+    '火山方舟':'bg-[#FFE3D3] text-[#8A3B0F]',
+    '阿里百炼':'bg-[#D5EAF7] text-[#2C495E]',
+    'MiniMax':'bg-[#E2DFFF] text-[#444465]'
+  };
+
+  function aiCard(p, d){
+    var def = d.ai.defs[p];
+    var cfg = d.ai.configs[p] || { enabled:false, fields:{}, updatedAt:null };
+    var enabled = cfg.enabled === true;
+    var required = def.fields.filter(function(f){ return !f.optional; });
+    var filled = required.filter(function(f){
+      var fv = cfg.fields[f.key];
+      return fv && fv.hasValue;
+    }).length;
+    var configured = filled === required.length;
+    var savedAt = cfg.updatedAt ? '更新于 ' + esc(fmtDateTime(cfg.updatedAt)) : '尚未配置';
+    var html = '';
+    html += '<div data-ai-card="' + esc(p) + '" class="rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm p-space-lg flex flex-col gap-space-md">';
+    // 头部：图标 + 服务名 + 控制台 + 状态 + 启用开关
+    html += '<div class="flex items-start justify-between gap-3">';
+    html += '<div class="flex items-center gap-3 min-w-0">'
+      + '<span class="w-11 h-11 rounded-2xl ' + (AI_TINT[p] || 'bg-[#F2F3F6] text-[#44474A]') + ' flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-xl">' + (AI_ICON[p] || 'auto_awesome') + '</span></span>'
+      + '<div class="min-w-0"><div class="flex items-center gap-2 flex-wrap">'
+      + '<span class="text-label-md font-label-md text-on-surface">' + esc(p) + '</span>'
+      + '<a class="chip chip-line hover:opacity-90 transition-opacity" href="' + esc(def.docs) + '" target="_blank" rel="noopener" title="打开官方控制台">控制台<span class="material-symbols-outlined text-[12px]">open_in_new</span></a>'
+      + (configured ? '<span class="chip chip-mint">已配置</span>' : '<span class="chip chip-line">待配置</span>')
+      + (enabled ? '<span class="chip chip-mint">已启用</span>' : '')
+      + '</div>'
+      + '<p class="text-label-sm text-on-surface-variant mt-1">视频工坊的脚本、分镜、画面与配音生成使用该服务</p></div></div>';
+    html += '<button class="shrink-0 px-3 py-1.5 rounded-full text-label-sm font-label-sm ' + (enabled ? 'bg-surface-container-low text-on-surface hover:bg-surface-container-high' : 'bg-primary text-on-primary hover:opacity-90') + '" data-act="aiToggle" data-provider="' + esc(p) + '" type="button">' + (enabled ? '停用' : '启用') + '</button>';
+    html += '</div>';
+    html += '<p class="text-label-sm text-on-surface-variant leading-relaxed">' + esc(def.note) + '</p>';
+    // 字段
+    html += '<div class="flex flex-col gap-space-sm">';
+    def.fields.forEach(function(f){
+      var fv = cfg.fields[f.key] || { value:'', hasValue:false };
+      var ph = f.placeholder || (f.secret ? (fv.hasValue ? '已配置 · 留空则保持不变' : '请输入密钥') : (f.optional ? '选填' : '请输入'));
+      var shown = f.secret ? '' : fv.value;
+      html += '<div class="fld" style="margin-bottom:0">'
+        + '<label class="lab">' + esc(f.key)
+        + (f.optional ? ' <span class="text-on-surface-variant text-[11px] normal-case tracking-normal">（选填）</span>' : '')
+        + (f.secret ? ' <span class="text-on-surface-variant text-[11px] normal-case tracking-normal">（密钥）</span>' : '')
+        + (f.secret && fv.hasValue ? '<span class="ml-auto inline-flex items-center gap-1"><span class="chip chip-mint">已保存</span><button class="chip chip-line hover:bg-[#FCE3DD] hover:text-[#8E3B26]" data-act="aiClear" data-provider="' + esc(p) + '" data-key="' + esc(f.key) + '" type="button">清除</button></span>' : '')
+        + '</label>'
+        + '<input class="inp" type="' + (f.secret ? 'password' : 'text') + '" data-ai-field="1" data-provider="' + esc(p) + '" data-key="' + esc(f.key) + '" data-secret="' + (f.secret ? '1' : '0') + '" data-has="' + (fv.hasValue ? '1' : '0') + '" value="' + esc(shown) + '" placeholder="' + esc(ph) + '" autocomplete="off" spellcheck="false">'
+        + (f.hint ? '<span class="helper">' + esc(f.hint) + '</span>' : '')
+        + '</div>';
+    });
+    html += '</div>';
+    html += '<p class="text-label-sm text-on-surface-variant hidden" data-ai-msg="' + esc(p) + '"></p>';
+    // 底部操作
+    html += '<div class="flex items-center justify-between gap-2 pt-space-sm border-t border-surface-container mt-auto">';
+    html += '<div class="min-w-0"><p class="text-label-sm text-on-surface-variant truncate">' + savedAt + '</p>'
+      + '<p class="text-label-sm ' + (configured ? 'text-[#1B6F43]' : 'text-[#9A3B3B]') + '">' + (configured ? '必填项已填写' : '待填写 ' + (required.length - filled) + ' 项必填') + '</p></div>';
+    html += '<div class="flex items-center gap-2 shrink-0">';
+    html += '<button class="px-4 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="aiTest" data-provider="' + esc(p) + '" type="button">测试连接</button>';
+    html += '<button class="inline-flex items-center gap-1 px-5 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" data-act="aiSave" data-provider="' + esc(p) + '" type="button"><span class="material-symbols-outlined text-base">save</span>保存</button>';
+    html += '</div></div>';
+    html += '</div>';
+    return html;
+  }
+
+  function aiCollect(provider){
+    var inputs = document.querySelectorAll('#view input[data-ai-field="1"][data-provider="' + provider + '"]');
+    var fields = {};
+    for(var i = 0; i < inputs.length; i++){
+      var el = inputs[i];
+      var key = el.getAttribute('data-key');
+      var secret = el.getAttribute('data-secret') === '1';
+      var has = el.getAttribute('data-has') === '1';
+      var val = el.value;
+      if(secret){
+        fields[key] = val !== '' ? val : (has ? '__KEEP_EXISTING__' : '');
+      } else {
+        fields[key] = val;
+      }
+    }
+    return fields;
+  }
+
+  function aiEnabled(provider){
+    if(connData && connData.ai && connData.ai.configs[provider]) return connData.ai.configs[provider].enabled === true;
+    var btn = document.querySelector('#view button[data-act="aiToggle"][data-provider="' + provider + '"]');
+    return btn ? btn.textContent.trim() === '停用' : false;
+  }
+
+  function aiSave(provider){
+    request('/ai-config/' + encodeURIComponent(provider), {
+      method: 'PUT',
+      body: JSON.stringify({ enabled: aiEnabled(provider), fields: aiCollect(provider) })
+    }).then(function(){
+      connData = null;
+      loadConnections();
+      toast(provider + ' 密钥已保存', 'ok');
+    }).catch(function(err){
+      toast('保存失败：' + err.message, 'err');
+    });
+  }
+
+  function aiTest(provider){
+    var btn = document.querySelector('#view button[data-act="aiTest"][data-provider="' + provider + '"]');
+    var msg = document.querySelector('#view [data-ai-msg="' + provider + '"]');
+    if(btn){ btn.disabled = true; btn.textContent = '测试中…'; }
+    if(msg){ msg.className = 'text-label-sm text-on-surface-variant'; msg.textContent = '正在校验密钥…'; }
+    request('/ai-config/' + encodeURIComponent(provider) + '/test', {
+      method: 'POST',
+      body: JSON.stringify({ fields: aiCollect(provider) })
+    }).then(function(resp){
+      var text = (resp && resp.message) || '已完成校验';
+      if(msg){
+        msg.className = 'text-label-sm ' + (resp.ok ? 'text-[#1B6F43]' : 'text-[#9A3B3B]');
+        msg.textContent = (resp.ok ? '✓ ' : '✕ ') + text;
+      }
+      toast(provider + '：' + text, resp.ok ? 'ok' : 'err');
+    }).catch(function(err){
+      if(msg){ msg.className = 'text-label-sm text-[#9A3B3B]'; msg.textContent = '✕ ' + err.message; }
+      toast('测试失败：' + err.message, 'err');
+    }).finally(function(){
+      if(btn && document.body.contains(btn)){ btn.disabled = false; btn.textContent = '测试连接'; }
+    });
+  }
+
+  function aiToggle(provider){
+    var next = !aiEnabled(provider);
+    request('/ai-config/' + encodeURIComponent(provider), {
+      method: 'PUT',
+      body: JSON.stringify({ enabled: next, fields: aiCollect(provider) })
+    }).then(function(){
+      connData = null;
+      loadConnections();
+      toast(provider + (next ? ' 已启用' : ' 已停用'), 'ok');
+    }).catch(function(err){
+      toast('操作失败：' + err.message, 'err');
+    });
+  }
+
+  function aiClear(provider, key){
+    var fields = aiCollect(provider);
+    fields[key] = '';
+    request('/ai-config/' + encodeURIComponent(provider), {
+      method: 'PUT',
+      body: JSON.stringify({ enabled: aiEnabled(provider), fields: fields })
+    }).then(function(){
+      connData = null;
+      loadConnections();
+      toast(provider + ' 的 ' + key + ' 已清除', 'ok');
     }).catch(function(err){
       toast('清除失败：' + err.message, 'err');
     });
@@ -5371,6 +5671,1739 @@
     $('modal').classList.add('on');
   }
 
+  /* ---------- view: 视频工坊 ---------- */
+  var STUDIO_ASPECT_LABEL = { '16:9':'16:9 横屏', '9:16':'9:16 竖屏', '1:1':'1:1 方形', '4:5':'4:5 竖版' };
+  var STUDIO_STATUS = [
+    { key:'draft', label:'草稿', color:'#82877e' },
+    { key:'briefing', label:'简报中', color:'#b8863b' },
+    { key:'scripting', label:'脚本中', color:'#3b7ea1' },
+    { key:'storyboarding', label:'分镜中', color:'#6f66a8' },
+    { key:'rendering', label:'成片中', color:'#a07e00' },
+    { key:'done', label:'已完成', color:'#2f8f5b' }
+  ];
+  var STUDIO_STYLES = ['清爽科技感', '国风插画', '真实纪实', '扁平插画', '电影质感', '赛博霓虹', '温暖治愈', '3D 卡通'];
+  var STUDIO_SCENE_STATUS = {
+    pending:{ label:'待生成', color:'#82877e' },
+    generating:{ label:'生成中', color:'#a07e00' },
+    ready:{ label:'就绪', color:'#2f8f5b' },
+    failed:{ label:'失败', color:'#c25454' },
+    locked:{ label:'已锁定', color:'#3b7ea1' }
+  };
+
+  var STUDIO = {
+    loaded:false, loading:false, error:'',
+    projects:[], meta:{ aspects:{ '16:9':{width:1920,height:1080}, '9:16':{width:1080,height:1920}, '1:1':{width:1080,height:1080}, '4:5':{width:1080,height:1350} } },
+    detailId:null, detail:null, detailLoading:false,
+    createOpen:false, creating:false,
+    form:{ topicCode:'', title:'', aspect:'16:9', style:'', brief:'' },
+    pendingAspect:null, sceneId:null, sceneModalId:null, viewScript:null,
+    scriptMode:'', ref:'', refUploading:false, refUploadPct:0, refFramesBusy:false, refBusy:null,
+    genScript:false, genScenes:false, genImageId:null, genAudioId:null, genVideoId:null, rendering:false,
+    charBusy:null, charStyleId:null, charStyle:'',
+    voices:[], voicesLoaded:false, voiceBusy:false, voiceRefreshId:null,
+    voiceName:'', voiceRec:{ recording:false, converting:false, duration:0, blob:null, url:null, chunks:[], recorder:null, stream:null, timer:null }
+  };
+
+  function downscaleImage(file, maxSize, quality){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onerror = function(){ reject(new Error('读取图片失败')); };
+      reader.onload = function(){
+        var img = new Image();
+        img.onerror = function(){ reject(new Error('图片格式不支持')); };
+        img.onload = function(){
+          var scale = Math.min(1, (maxSize || 1280) / Math.max(img.width, img.height));
+          var cw = Math.max(1, Math.round(img.width * scale));
+          var ch = Math.max(1, Math.round(img.height * scale));
+          var cv = document.createElement('canvas');
+          cv.width = cw; cv.height = ch;
+          cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+          resolve(cv.toDataURL('image/jpeg', quality || 0.85));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function fileToDataUrl(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onerror = function(){ reject(new Error('读取音频失败')); };
+      reader.onload = function(){ resolve(reader.result); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function studioVoiceAudioUrl(voiceId, kind){
+    return API + '/video/voices/' + encodeURIComponent(voiceId) + '/audio?kind=' + (kind === 'source' ? 'source' : 'demo') +
+      (ACCOUNT.id ? '&account=' + encodeURIComponent(ACCOUNT.id) : '');
+  }
+
+  function studioAssetUrl(assetId){
+    return API + '/video/assets/' + encodeURIComponent(assetId) + '/file' +
+      (ACCOUNT.id ? '?account=' + encodeURIComponent(ACCOUNT.id) : '');
+  }
+
+  function studioReferenceUrl(projectId){
+    return API + '/video/projects/' + encodeURIComponent(projectId) + '/reference/file' +
+      (ACCOUNT.id ? '?account=' + encodeURIComponent(ACCOUNT.id) : '');
+  }
+
+  function studioRefMeta(ref){
+    if(!ref) return '';
+    var bits = [];
+    if(ref.width && ref.height) bits.push(ref.width + '×' + ref.height);
+    if(ref.durationMs) bits.push(studioSecLabel(ref.durationMs));
+    if(ref.sizeBytes) bits.push(fmtBytes(ref.sizeBytes));
+    return String(ref.fileName || '参考视频') + (bits.length ? ' · ' + bits.join(' · ') : '');
+  }
+
+  function studioStatusMeta(key){
+    for(var i = 0; i < STUDIO_STATUS.length; i++){ if(STUDIO_STATUS[i].key === key) return STUDIO_STATUS[i]; }
+    return STUDIO_STATUS[0];
+  }
+  function studioSceneStatusMeta(key){
+    return STUDIO_SCENE_STATUS[key] || { label:key || '—', color:'#82877e' };
+  }
+  function studioAspectLabel(key){
+    return STUDIO_ASPECT_LABEL[key] || key || '';
+  }
+  function studioAspectSeg(current, actName){
+    var html = '<div class="seg" role="tablist">';
+    for(var i = 0; i < Object.keys(STUDIO_ASPECT_LABEL).length; i++){
+      var key = Object.keys(STUDIO_ASPECT_LABEL)[i];
+      html += '<button class="stab' + (current === key ? ' on' : '') + '" data-act="' + actName + '" data-val="' + key + '" type="button">' + esc(STUDIO_ASPECT_LABEL[key]) + '</button>';
+    }
+    return html + '</div>';
+  }
+  function studioStyleChips(inputId, current){
+    var cur = String(current || '').trim();
+    var html = '<div class="flex flex-wrap gap-1.5 mt-1.5">';
+    STUDIO_STYLES.forEach(function(name){
+      var on = cur === name;
+      html += '<button type="button" data-act="studioStylePick" data-target="' + inputId + '" data-value="' + esc(name) + '" class="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ' + (on ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high') + '">' + esc(name) + '</button>';
+    });
+    return html + '</div>';
+  }
+  function studioSecLabel(ms){
+    var s = Math.round(num(ms) / 100) / 10;
+    return s + 's';
+  }
+
+  function loadStudioMeta(){
+    if(STUDIO.meta && STUDIO.meta.aspects) return Promise.resolve(STUDIO.meta);
+    return request('/video/meta').then(function(m){ if(m) STUDIO.meta = m; return STUDIO.meta; }).catch(function(){ return STUDIO.meta; });
+  }
+  function loadStudioProjects(){
+    STUDIO.loading = true;
+    return request('/video/projects').then(function(r){
+      STUDIO.projects = (r && r.projects) || [];
+      STUDIO.loaded = true;
+      STUDIO.error = '';
+    }).catch(function(err){
+      STUDIO.error = errMsg(err);
+    }).then(function(){ STUDIO.loading = false; });
+  }
+  function loadStudioProject(id){
+    STUDIO.detailLoading = true;
+    STUDIO.detailFailed = false;
+    return request('/video/projects/' + encodeURIComponent(id)).then(function(r){
+      STUDIO.detail = r.project;
+      STUDIO.detailId = id;
+      STUDIO.sceneId = null;
+      STUDIO.viewScript = null;
+    }).catch(function(err){
+      STUDIO.detailFailed = true;
+      toast('视频项目加载失败：' + errMsg(err), 'err');
+    }).then(function(){ STUDIO.detailLoading = false; });
+  }
+  function loadStudioVoices(){
+    return request('/video/voices').then(function(r){
+      STUDIO.voices = (r && r.voices) || [];
+      STUDIO.voicesLoaded = true;
+    }).catch(function(err){
+      STUDIO.voiceError = errMsg(err);
+    });
+  }
+
+  function ensureStudio(){
+    if(STUDIO.busy) return;
+    var needList = !STUDIO.loaded && !STUDIO.error;
+    var needDetail = STUDIO.detailId && !STUDIO.detail && !STUDIO.detailFailed;
+    var needVoices = STUDIO.detailId && !STUDIO.voicesLoaded;
+    if(!needList && !needDetail && !needVoices) return;
+    STUDIO.busy = true;
+    var jobs = [loadStudioMeta()];
+    if(needList) jobs.push(loadStudioProjects());
+    if(needDetail) jobs.push(loadStudioProject(STUDIO.detailId));
+    if(needVoices) jobs.push(loadStudioVoices());
+    Promise.all(jobs).then(function(){
+      STUDIO.busy = false;
+      if(state.view === 'studio') render();
+    });
+  }
+  function openStudioProject(id){
+    if(STUDIO.detailId === id && STUDIO.detail) { render(); return; }
+    STUDIO.createOpen = false;
+    STUDIO.detail = null;
+    STUDIO.detailId = id;
+    STUDIO.detailFailed = false;
+    STUDIO.sceneId = null;
+    STUDIO.viewScript = null;
+    STUDIO.pendingAspect = null;
+    STUDIO.scriptMode = '';
+    STUDIO.ref = '';
+    STUDIO.refUploading = false;
+    STUDIO.refUploadPct = 0;
+    STUDIO.refFramesBusy = false;
+    STUDIO.refBusy = null;
+    STUDIO.genScript = false;
+    STUDIO.genScenes = false;
+    STUDIO.genImageId = null;
+    STUDIO.genAudioId = null;
+    STUDIO.genVideoId = null;
+    STUDIO.rendering = false;
+    STUDIO.charBusy = null;
+    studioVoiceResetRec();
+    STUDIO.voiceName = '';
+    render();
+  }
+
+  function viewStudio(){
+    if(STUDIO.detailId) return viewStudioDetail();
+    return viewStudioList();
+  }
+
+  function viewStudioList(){
+    var html = '<div class="fade-in">';
+    html += '<div class="soft-card px-space-lg py-space-md flex flex-wrap items-center justify-between gap-space-md mb-space-md">';
+    html += '<div class="flex items-center gap-2 min-w-0"><span class="kicker-dot"></span><h3 class="text-headline-sm font-headline-sm text-on-surface truncate">视频工坊</h3><span class="chip chip-line">选题 → 脚本 → 分镜 → 成片</span></div>';
+    html += '<div class="flex items-center gap-2">';
+    html += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="studioRefresh" type="button"><span class="material-symbols-outlined text-base">refresh</span>刷新</button>';
+    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-primary text-on-primary rounded-full text-label-md font-label-md shadow-sm hover:opacity-90 transition-all" data-act="studioToggleCreate" type="button"><span class="material-symbols-outlined text-base">add</span>' + (STUDIO.createOpen ? '收起新建' : '新建视频') + '</button>';
+    html += '</div></div>';
+
+    if(STUDIO.createOpen) html += studioCreateCard();
+    if(STUDIO.error) html += '<div class="soft-card px-space-lg py-space-md text-label-md text-error mb-space-md">加载失败：' + esc(STUDIO.error) + '</div>';
+
+    var list = STUDIO.projects;
+    if(!STUDIO.loaded && STUDIO.loading){
+      html += '<div class="soft-card px-space-lg py-space-xl text-center text-label-md text-on-surface-variant">正在加载视频项目…</div>';
+    } else if(!list.length){
+      html += emptyState('还没有视频项目', '从选题池选择一条选题，或点「新建视频」开始', 'movie');
+    } else {
+      html += '<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-space-md">';
+      list.forEach(function(p){ html += studioProjectCard(p); });
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function studioProjectCard(p){
+    var st = studioStatusMeta(p.status);
+    var html = '<div class="soft-card p-space-lg flex flex-col gap-space-sm hover:shadow-md transition-shadow">';
+    html += '<div class="flex items-start justify-between gap-2">';
+    html += '<div class="min-w-0"><div class="mono text-[11px] font-semibold text-on-surface-variant">' + esc(p.code) + '</div>';
+    html += '<h4 class="text-headline-sm font-headline-sm text-on-surface leading-snug mt-0.5 line-clamp-2">' + esc(p.title || '未命名视频') + '</h4></div>';
+    html += '<span class="chip chip-line shrink-0" style="color:' + st.color + '">' + esc(st.label) + '</span>';
+    html += '</div>';
+    if(p.topicTitle && p.topicTitle !== p.title) html += '<p class="text-label-sm text-on-surface-variant line-clamp-1">选题：' + esc(p.topicTitle) + '</p>';
+    html += '<div class="flex flex-wrap gap-1">';
+    html += '<span class="chip chip-line">' + esc(studioAspectLabel(p.aspect)) + '</span>';
+    html += '<span class="chip chip-line">' + (p.sceneCount || 0) + ' 个分镜</span>';
+    if(p.scriptVersion) html += '<span class="chip chip-line">脚本 v' + p.scriptVersion + '</span>';
+    html += '</div>';
+    html += '<div class="flex items-center justify-between mt-space-sm">';
+    html += '<span class="text-label-sm text-on-surface-variant">更新于 ' + fmtDateTime(p.updatedAt) + '</span>';
+    html += '<div class="flex items-center gap-1">';
+    html += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-label-md hover:opacity-90" data-act="studioOpen" data-id="' + esc(p.id) + '" type="button">打开</button>';
+    html += '<button class="w-7 h-7 rounded-full hover:bg-error-container/60 flex items-center justify-center text-on-surface-variant hover:text-error" data-act="studioDelete" data-id="' + esc(p.id) + '" data-name="' + esc(p.title || p.code) + '" type="button" title="删除项目"><span class="material-symbols-outlined text-base">delete</span></button>';
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function studioReadCreateForm(){
+    var topicEl = $('studioTopic'), titleEl = $('studioTitle'), styleEl = $('studioStyle'), briefEl = $('studioBrief');
+    if(topicEl) STUDIO.form.topicCode = topicEl.value;
+    if(titleEl) STUDIO.form.title = titleEl.value;
+    if(styleEl) STUDIO.form.style = styleEl.value;
+    if(briefEl) STUDIO.form.brief = briefEl.value;
+  }
+
+  function studioCreateCard(){
+    var f = STUDIO.form;
+    var opts = '<option value="">不关联选题（自由创作）</option>';
+    DATA.topic.forEach(function(t){
+      var code = t['选题ID'] || '';
+      opts += '<option value="' + esc(code) + '"' + (f.topicCode === code ? ' selected' : '') + '>' + esc(code + ' · ' + (t['选题'] || '未命名')) + '</option>';
+    });
+    var html = '<div class="soft-card p-space-lg mb-space-md">';
+    html += '<div class="flex items-center gap-2 mb-space-sm"><span class="kicker-dot"></span><h4 class="text-headline-sm font-headline-sm text-on-surface">新建视频项目</h4><span class="chip chip-line">可关联选题池</span></div>';
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">关联选题</label><select id="studioTopic" class="inp">' + opts + '</select></div>';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">视频标题</label><input id="studioTitle" class="inp" maxlength="120" value="' + esc(f.title) + '" placeholder="标题会作为成片标题与脚本主题"></div>';
+    html += '</div>';
+    html += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">画幅</label>' + studioAspectSeg(f.aspect, 'studioCreateAspect') + '</div>';
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm mt-space-sm">';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">画面风格</label><input id="studioStyle" class="inp" maxlength="60" value="' + esc(f.style) + '" placeholder="选一个预设，或自定义风格"><span class="helper">点选预设风格，也可自行输入</span>' + studioStyleChips('studioStyle', f.style) + '</div>';
+    html += '<div class="fld" style="margin-bottom:0"><label class="lab">补充说明</label><input id="studioStyleHint" class="inp" disabled value="用于后续 AI 生成脚本时的整体风格锚点"></div>';
+    html += '</div>';
+    html += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">创作简报（可选）</label><textarea id="studioBrief" class="ta" rows="3" placeholder="留空即可：选题有参考文案时会自动带入完整文案，没有文案时带入切入角度">' + esc(f.brief) + '</textarea></div>';
+    html += '<div class="flex items-center justify-end gap-space-sm mt-space-sm">';
+    html += '<button class="px-5 py-2 rounded-full bg-surface-container-low text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-act="studioCancelCreate" type="button">取消</button>';
+    html += '<button class="inline-flex items-center gap-1 px-6 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 transition-all disabled:opacity-50" data-act="studioCreate" type="button"' + (STUDIO.creating ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">movie</span>' + (STUDIO.creating ? '创建中…' : '创建项目') + '</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function viewStudioDetail(){
+    var d = STUDIO.detail;
+    if(!d || d.id !== STUDIO.detailId){
+      return '<div class="soft-card px-space-lg py-space-xl text-center text-label-md text-on-surface-variant">正在加载项目…</div>';
+    }
+    var st = studioStatusMeta(d.status);
+    var html = '<div class="fade-in">';
+    html += '<div class="soft-card px-space-lg py-space-md flex flex-wrap items-center justify-between gap-space-md mb-space-md">';
+    html += '<div class="flex items-center gap-2 min-w-0">';
+    html += '<button class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high shrink-0" data-act="studioBack" type="button" title="返回列表"><span class="material-symbols-outlined">arrow_back</span></button>';
+    html += '<div class="min-w-0"><div class="mono text-[11px] text-on-surface-variant">' + esc(d.code) + ' · ' + esc(studioAspectLabel(d.aspect)) + '</div>';
+    html += '<h3 class="text-headline-sm font-headline-sm text-on-surface truncate">' + esc(d.title || '未命名视频') + '</h3></div>';
+    html += '<span class="chip chip-line shrink-0" style="color:' + st.color + '">' + esc(st.label) + '</span>';
+    html += '</div>';
+    html += '<div class="flex items-center gap-2">';
+    html += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md text-on-surface hover:bg-surface-container-high" data-act="studioOpenConnections" type="button"><span class="material-symbols-outlined text-base">cable</span>连接设置</button>';
+    html += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-primary text-on-primary rounded-full text-label-md font-label-md shadow-sm hover:opacity-90" data-act="studioSaveProject" type="button"><span class="material-symbols-outlined text-base">save</span>保存项目</button>';
+    html += '</div></div>';
+
+    html += '<div class="grid grid-cols-12 gap-space-md items-start">';
+    html += '<div class="col-span-12 xl:col-span-8 flex flex-col gap-space-md min-w-0">';
+    html += studioBriefCard(d);
+    html += studioScriptCard(d);
+    html += studioScenesCard(d);
+    html += '</div>';
+    html += '<div class="col-span-12 xl:col-span-4 flex flex-col gap-space-md">';
+    html += studioCharactersCard(d);
+    html += studioVoiceCard(d);
+    html += studioPipelineCard(d);
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function studioBriefCard(d){
+    var s = '<div class="soft-card p-space-lg">';
+    s += '<div class="flex items-center justify-between mb-space-sm"><h4 class="text-label-md font-label-md text-on-surface">创作简报</h4><span class="text-label-sm text-on-surface-variant">标题 · 状态 · 画幅 · 风格</span></div>';
+    s += '<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">标题</label><input id="studioPTitle" class="inp" maxlength="120" value="' + esc(d.title) + '"></div>';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">项目状态</label><select id="studioPStatus" class="inp">';
+    STUDIO_STATUS.forEach(function(st){ s += '<option value="' + st.key + '"' + (d.status === st.key ? ' selected' : '') + '>' + esc(st.label) + '</option>'; });
+    s += '</select></div>';
+    s += '</div>';
+    s += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">画幅</label>' + studioAspectSeg(STUDIO.pendingAspect || d.aspect, 'studioAspect') + '</div>';
+    s += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">画面风格</label><input id="studioPStyle" class="inp" maxlength="60" value="' + esc(d.style) + '" placeholder="选一个预设，或自定义风格">' + studioStyleChips('studioPStyle', d.style) + '</div>';
+    s += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">创作简报（供 AI 写脚本）</label><textarea id="studioPBrief" class="ta" rows="5">' + esc(d.brief) + '</textarea></div>';
+    s += studioReferenceBlock(d);
+    s += '</div>';
+    return s;
+  }
+
+  function studioReferenceBlock(d){
+    var ref = d.settings && d.settings.reference;
+    var s = '<div class="mt-space-md pt-space-md" style="border-top:1px solid rgba(0,0,0,.07)">';
+    s += '<div class="flex flex-wrap items-center justify-between gap-2">';
+    s += '<div class="flex items-center gap-2 min-w-0"><span class="material-symbols-outlined text-base text-on-surface-variant">video_library</span><span class="text-label-md font-label-md text-on-surface shrink-0">参考原片</span>';
+    if(ref) s += '<span class="chip chip-line truncate" title="' + esc(studioRefMeta(ref)) + '">' + esc(studioRefMeta(ref)) + '</span>';
+    else s += '<span class="text-label-sm text-on-surface-variant">可选：接入原片后可抽取原片画面直接做分镜首帧，减少失真</span>';
+    s += '</div><div class="flex items-center gap-2">';
+    if(!ref){
+      s += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md text-on-surface hover:bg-surface-container-high disabled:opacity-50" data-act="studioPickRef" type="button"' + (STUDIO.refUploading ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (STUDIO.refUploading ? 'hourglass_top' : 'upload') + '</span>' + (STUDIO.refUploading ? '上传中 ' + (STUDIO.refUploadPct || 0) + '%' : '接入参考视频') + '</button>';
+    } else {
+      var framesBusy = STUDIO.refFramesBusy;
+      s += '<a href="' + studioReferenceUrl(d.id) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md text-on-surface hover:bg-surface-container-high"><span class="material-symbols-outlined text-base">play_circle</span>预览</a>';
+      s += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90 disabled:opacity-50" data-act="studioRefFrames" type="button"' + (framesBusy ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (framesBusy ? 'hourglass_top' : 'photo_library') + '</span>' + (framesBusy ? '取帧中…' : '按原片生成分镜图') + '</button>';
+      s += '<button class="w-8 h-8 rounded-full hover:bg-error-container/60 flex items-center justify-center text-on-surface-variant hover:text-error" data-act="studioRefRemove" type="button" title="移除参考视频"><span class="material-symbols-outlined text-base">delete</span></button>';
+    }
+    s += '</div></div>';
+    s += '<input id="studioRefFile" type="file" accept="video/*,.mkv,.flv,.ts,.m4v" class="hidden">';
+    s += '</div>';
+    return s;
+  }
+
+  function studioScriptCard(d){
+    var script = (STUDIO.viewScript && STUDIO.viewScript.projectId === d.id) ? STUDIO.viewScript : (d.script || { version:0, contentMd:'', source:'user' });
+    var versions = d.versions || [];
+    var s = '<div class="soft-card p-space-lg">';
+    s += '<div class="flex flex-wrap items-center justify-between gap-2 mb-space-sm">';
+    s += '<div class="flex items-center gap-2"><h4 class="text-label-md font-label-md text-on-surface">脚本编辑器</h4><span class="chip chip-line">v' + (script.version || 0) + ' · ' + (script.source === 'ai' ? 'AI 生成' : '人工编辑') + '</span></div>';
+    s += '<div class="flex flex-wrap items-center gap-2">';
+    if(versions.length){
+      s += '<select id="studioVersion" class="inp" style="width:auto;max-width:16rem">';
+      versions.forEach(function(v){
+        s += '<option value="' + v.version + '"' + (v.version === script.version ? ' selected' : '') + '>v' + v.version + ' · ' + esc(v.note || (v.source === 'ai' ? 'AI' : '人工')) + ' · ' + fmtDateTime(v.createdAt) + '</option>';
+      });
+      s += '</select>';
+    }
+    var mode = STUDIO.scriptMode || (d.settings && d.settings.scriptMode) || 'faithful';
+    s += '<select id="studioScriptMode" class="inp" style="width:auto" title="保真：保留原句旁白，只设计画面；原创：AI 按简报重写脚本">';
+    s += '<option value="faithful"' + (mode === 'faithful' ? ' selected' : '') + '>保真 · 原句直切镜</option>';
+    s += '<option value="creative"' + (mode === 'creative' ? ' selected' : '') + '>原创 · AI 改写</option>';
+    s += '</select>';
+    s += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-full bg-surface-container-low text-on-surface text-label-md font-label-md hover:bg-surface-container-high disabled:opacity-50" data-act="studioGenScript" type="button"' + (STUDIO.genScript ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (STUDIO.genScript ? 'hourglass_top' : 'auto_awesome') + '</span>' + (STUDIO.genScript ? '生成中…' : 'AI 生成脚本') + '</button>';
+    s += '<button class="inline-flex items-center gap-1.5 px-space-md py-2 bg-primary text-on-primary rounded-full text-label-md font-label-md shadow-sm hover:opacity-90" data-act="studioSaveScript" type="button"><span class="material-symbols-outlined text-base">save</span>保存为新版本</button>';
+    s += '</div></div>';
+    if(mode === 'faithful'){
+      s += '<div class="fld mt-space-xs" style="margin-bottom:0"><label class="lab">对标参考</label><input id="studioScriptRef" class="inp" disabled value="" placeholder="保真模式保留创作简报里的原句，不改写旁白，此处无需填写"></div>';
+    } else {
+      s += '<div class="fld mt-space-xs" style="margin-bottom:0"><label class="lab">对标参考（可选，AI 只借鉴结构与节奏，不抄原句）</label><input id="studioScriptRef" class="inp" value="' + esc(STUDIO.ref || '') + '" placeholder="粘贴对标视频的要点、文案或链接；也可直接写进创作简报"></div>';
+    }
+    s += '<textarea id="studioScript" class="ta mt-space-sm" rows="14" placeholder="在这里写或粘贴视频脚本；保存为新版本后，下一步会把脚本拆成分镜。">' + esc(script.contentMd || '') + '</textarea>';
+    s += '<div class="flex items-center justify-between mt-space-xs text-label-sm text-on-surface-variant"><span>保存会新增版本，不会覆盖历史脚本；AI 生成同样新增版本。</span><span>共 ' + versions.length + ' 个版本</span></div>';
+    s += '</div>';
+    return s;
+  }
+
+  function studioScenesCard(d){
+    var scenes = d.scenes || [];
+    var hasRef = !!(d.settings && d.settings.reference);
+    var faithful = !!(d.settings && d.settings.scriptMode === 'faithful');
+    var s = '<div class="soft-card p-space-lg">';
+    s += '<div class="flex flex-wrap items-center justify-between gap-2 mb-space-sm"><div class="flex items-center gap-2"><h4 class="text-label-md font-label-md text-on-surface">分镜（场景）</h4><span class="chip chip-line">' + scenes.length + ' 个</span></div>';
+    s += '<div class="flex items-center gap-2">';
+    s += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md text-on-surface hover:bg-surface-container-high disabled:opacity-50" data-act="studioGenScenes" type="button"' + (STUDIO.genScenes ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (STUDIO.genScenes ? 'hourglass_top' : 'auto_awesome_motion') + '</span>' + (STUDIO.genScenes ? '拆分中…' : (faithful ? '按脚本切分镜' : 'AI 拆分分镜')) + '</button>';
+    s += '<button class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md text-on-surface hover:bg-surface-container-high" data-act="studioAddScene" type="button"><span class="material-symbols-outlined text-base">add</span>新增分镜</button>';
+    s += '</div></div>';
+    if(!scenes.length){
+      s += '<p class="text-label-sm text-on-surface-variant">还没有分镜。保存脚本后可在下一步自动拆分，或手动新增。</p>';
+    } else {
+      s += '<div class="flex flex-col divide-y divide-surface-container-low">';
+      scenes.forEach(function(sc, i){
+        var sst = studioSceneStatusMeta(sc.status);
+        s += '<div class="py-2.5 flex items-center gap-3">';
+        s += '<span class="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-label-md font-semibold shrink-0">' + sc.idx + '</span>';
+        if(sc.videoAssetId){
+          s += '<button type="button" class="w-14 h-9 rounded-lg overflow-hidden bg-surface-container-low shrink-0 relative block" data-act="studioPlaySceneVideo" data-id="' + esc(sc.id) + '" title="播放视频">';
+          if(sc.imageAssetId) s += '<img src="' + studioAssetUrl(sc.imageAssetId) + '" class="w-full h-full object-cover" alt="分镜图">';
+          s += '<span class="absolute inset-0 flex items-center justify-center bg-black/25"><span class="material-symbols-outlined text-white text-lg">play_circle</span></span></button>';
+        } else if(sc.imageAssetId){
+          s += '<a href="' + studioAssetUrl(sc.imageAssetId) + '" target="_blank" rel="noopener" class="w-14 h-9 rounded-lg overflow-hidden bg-surface-container-low shrink-0 block" title="查看图片"><img src="' + studioAssetUrl(sc.imageAssetId) + '" class="w-full h-full object-cover" alt="分镜图"></a>';
+        } else {
+          s += '<span class="w-14 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant/60 shrink-0"><span class="material-symbols-outlined text-base">image</span></span>';
+        }
+        s += '<div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2">';
+        s += '<span class="text-label-md font-label-md text-on-surface truncate">' + esc(sc.title || ('场景 ' + sc.idx)) + '</span>';
+        s += '<span class="chip chip-line shrink-0">' + (sc.renderMode === 'video' ? '图生视频' : '图片+运镜') + '</span>';
+        s += '<span class="text-label-sm shrink-0" style="color:' + sst.color + '">' + esc(sst.label) + '</span>';
+        if(sc.characterIds && sc.characterIds.length) s += '<span class="chip chip-line shrink-0">' + sc.characterIds.length + ' 角色</span>';
+        s += '</div>';
+        s += '<div class="text-label-sm text-on-surface-variant line-clamp-1 mt-0.5">' + esc(truncate(sc.prompt || sc.narration || '未填写画面描述', 80)) + '</div></div>';
+        s += '<span class="text-label-sm text-on-surface-variant shrink-0">' + studioSecLabel(sc.durationMs) + '</span>';
+        s += '<div class="flex items-center gap-0.5 shrink-0">';
+        var genImgBusy = STUDIO.genImageId === sc.id;
+        s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant disabled:opacity-40" data-act="studioGenSceneImage" data-id="' + esc(sc.id) + '" type="button" title="' + (sc.imageAssetId ? '重新生成图片' : '生成图片') + '"' + (genImgBusy ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (genImgBusy ? 'hourglass_top' : 'add_photo_alternate') + '</span></button>';
+        if(hasRef){
+          var refBusy = STUDIO.refBusy === sc.id;
+          s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant disabled:opacity-40" data-act="studioSceneRefFrame" data-id="' + esc(sc.id) + '" type="button" title="取参考原片对应时间点的画面作为首帧"' + (refBusy ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (refBusy ? 'hourglass_top' : 'filter_frames') + '</span></button>';
+        }
+        var genVidBusy = STUDIO.genVideoId === sc.id;
+        var vidTitle = !sc.imageAssetId ? '先生成图片，再图生视频' : (sc.videoAssetId ? '重新生成视频' : '图生视频');
+        s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center ' + (sc.videoAssetId ? 'text-primary' : 'text-on-surface-variant') + ' disabled:opacity-30" data-act="studioGenSceneVideo" data-id="' + esc(sc.id) + '" type="button" title="' + vidTitle + '"' + (genVidBusy || !sc.imageAssetId ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (genVidBusy ? 'hourglass_top' : 'movie') + '</span></button>';
+        if(sc.videoAssetId){
+          s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-primary" data-act="studioPlaySceneVideo" data-id="' + esc(sc.id) + '" type="button" title="播放视频"><span class="material-symbols-outlined text-base">play_circle</span></button>';
+        }
+        var genAudBusy = STUDIO.genAudioId === sc.id;
+        var audTitle = !String(sc.narration || '').trim() ? '该分镜还没有旁白' : (sc.audioAssetId ? '重新生成配音' : '生成配音');
+        s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center ' + (sc.audioAssetId ? 'text-primary' : 'text-on-surface-variant') + ' disabled:opacity-30" data-act="studioGenSceneAudio" data-id="' + esc(sc.id) + '" type="button" title="' + audTitle + '"' + (genAudBusy || !String(sc.narration || '').trim() ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (genAudBusy ? 'hourglass_top' : 'record_voice_over') + '</span></button>';
+        if(sc.audioAssetId){
+          s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-primary" data-act="studioPlaySceneAudio" data-id="' + esc(sc.id) + '" type="button" title="播放配音"><span class="material-symbols-outlined text-base">play_circle</span></button>';
+        }
+        s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant disabled:opacity-30" data-act="studioMoveScene" data-dir="up" data-id="' + esc(sc.id) + '" type="button" title="上移"' + (i === 0 ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">arrow_upward</span></button>';
+        s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant disabled:opacity-30" data-act="studioMoveScene" data-dir="down" data-id="' + esc(sc.id) + '" type="button" title="下移"' + (i === scenes.length - 1 ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">arrow_downward</span></button>';
+        s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" data-act="studioEditScene" data-id="' + esc(sc.id) + '" type="button" title="编辑分镜"><span class="material-symbols-outlined text-base">edit</span></button>';
+        s += '<button class="w-7 h-7 rounded-full hover:bg-error-container/60 flex items-center justify-center text-on-surface-variant hover:text-error" data-act="studioDeleteScene" data-id="' + esc(sc.id) + '" data-name="' + esc(sc.title || ('场景 ' + sc.idx)) + '" type="button" title="删除分镜"><span class="material-symbols-outlined text-base">delete</span></button>';
+        s += '</div></div>';
+      });
+      s += '</div>';
+    }
+    s += '</div>';
+    return s;
+  }
+
+  function studioSceneEditor(d){
+    var sc = null;
+    (d.scenes || []).forEach(function(x){ if(x.id === STUDIO.sceneId) sc = x; });
+    var v = sc || { title:'', durationMs:5000, shot:'', camera:'', prompt:'', negativePrompt:'', narration:'', onScreenText:'', renderMode:'image', transition:'', characterIds:[] };
+    var chars = d.characters || [];
+    var s = '<div>';
+    s += '<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">分镜标题</label><input id="studioSceneTitle" class="inp" maxlength="120" value="' + esc(v.title) + '"></div>';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">时长（秒）</label><input id="studioSceneDur" class="inp" type="number" min="0.5" max="600" step="0.5" value="' + (Math.round(num(v.durationMs) / 100) / 10) + '"></div>';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">景别</label><input id="studioSceneShot" class="inp" maxlength="60" value="' + esc(v.shot) + '" placeholder="例如：特写 / 中景 / 远景"></div>';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">运镜</label><input id="studioSceneCam" class="inp" maxlength="120" value="' + esc(v.camera) + '" placeholder="例如：缓慢推近 / 横移"></div>';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">生成方式</label><select id="studioSceneMode" class="inp"><option value="image"' + (v.renderMode !== 'video' ? ' selected' : '') + '>图片 + 运镜（Ken Burns）</option><option value="video"' + (v.renderMode === 'video' ? ' selected' : '') + '>图生视频</option></select></div>';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">转场</label><input id="studioSceneTrans" class="inp" maxlength="40" value="' + esc(v.transition) + '" placeholder="例如：淡入淡出"></div>';
+    s += '</div>';
+    s += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">画面描述（图/视频生成提示词）</label><textarea id="studioScenePrompt" class="ta" rows="3" placeholder="主体、动作、环境、光线、镜头语言；角色请引用角色设定">' + esc(v.prompt) + '</textarea></div>';
+    s += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">负面提示词（可选）</label><input id="studioSceneNeg" class="inp" maxlength="2000" value="' + esc(v.negativePrompt) + '" placeholder="例如：模糊、畸形手指、文字水印"></div>';
+    s += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">旁白 / 口播（用于配音）</label><textarea id="studioSceneNarr" class="ta" rows="2">' + esc(v.narration) + '</textarea></div>';
+    s += '<div class="fld mt-space-sm" style="margin-bottom:0"><label class="lab">画面文字（可选）</label><input id="studioSceneText" class="inp" maxlength="500" value="' + esc(v.onScreenText) + '" placeholder="叠加在画面上的字幕/标题"></div>';
+    if(chars.length){
+      s += '<div class="mt-space-sm"><label class="lab">出场角色</label><div class="flex flex-wrap gap-2">';
+      chars.forEach(function(c){
+        var on = (v.characterIds || []).indexOf(c.id) >= 0;
+        s += '<label class="chip chip-line cursor-pointer"><input type="checkbox" class="mr-1" data-scene-char="' + esc(c.id) + '"' + (on ? ' checked' : '') + '>' + esc(c.name) + '</label>';
+      });
+      s += '</div></div>';
+    }
+    s += '<div class="flex items-center justify-end gap-space-sm mt-space-sm">';
+    s += '<button class="px-4 py-2 rounded-full bg-surface-container-lowest text-label-md text-on-surface hover:bg-surface-container-high" data-act="studioCancelScene" type="button">取消</button>';
+    s += '<button class="inline-flex items-center gap-1 px-5 py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md hover:opacity-90" data-act="studioSaveScene" type="button"><span class="material-symbols-outlined text-base">check</span>保存分镜</button>';
+    s += '</div></div>';
+    return s;
+  }
+
+  function syncSceneModal(){
+    var sm = $('sceneModal');
+    if(!sm) return;
+    var d = STUDIO.detail;
+    var open = state.view === 'studio' && d && STUDIO.sceneId;
+    if(!open){
+      if(sm.classList.contains('on')) sm.classList.remove('on');
+      STUDIO.sceneModalId = null;
+      return;
+    }
+    if(STUDIO.sceneModalId !== STUDIO.sceneId || !$('sceneModalBody').firstChild){
+      var title = '编辑分镜';
+      if(STUDIO.sceneId === '__new') title = '新增分镜';
+      else {
+        (d.scenes || []).forEach(function(x){ if(x.id === STUDIO.sceneId && x.idx != null) title = '编辑分镜 ' + x.idx; });
+      }
+      $('sceneModalTitle').textContent = title;
+      $('sceneModalBody').innerHTML = studioSceneEditor(d);
+      STUDIO.sceneModalId = STUDIO.sceneId;
+    }
+    sm.classList.add('on');
+  }
+
+  function studioCharAnchors(c){
+    return (c.anchors || []).filter(function(a){ return a && a.assetId; });
+  }
+
+  function studioCharactersCard(d){
+    var list = d.characters || [];
+    var s = '<div class="soft-card p-space-lg">';
+    s += '<div class="flex items-center justify-between mb-space-sm"><h4 class="text-label-md font-label-md text-on-surface">角色设定<span class="text-[11px] font-normal text-on-surface-variant ml-1">账号共享</span></h4><span class="chip chip-line">' + list.length + ' 个</span></div>';
+    s += '<p class="text-label-sm text-on-surface-variant mb-space-sm">所有视频项目共用这份角色库，新建项目无需重复添加。描述越具体（外貌 / 服装 / 年龄），跨场景一致性越稳定。上传本人照片后可生成插画 / 3D 等风格定妆图，分镜只用风格图，避免真人照片触发视频合规拦截。</p>';
+    if(list.length){
+      s += '<div class="flex flex-col gap-2 mb-space-sm">';
+      list.forEach(function(c){
+        var busy = STUDIO.charBusy === c.id;
+        var anchors = studioCharAnchors(c);
+        var active = null;
+        anchors.forEach(function(a){ if(a.assetId === c.anchorAssetId) active = a; });
+        var styleLabel = active && active.style ? active.style : (c.style ? c.style : '跟随项目');
+        var editing = STUDIO.charStyleId === c.id;
+        s += '<div class="bg-surface-container-low rounded-xl px-3 py-2">';
+        s += '<div class="flex items-start gap-2">';
+        if(c.anchorAssetId){
+          s += '<img src="' + studioAssetUrl(c.anchorAssetId) + '" class="w-11 h-11 rounded-lg object-cover shrink-0" alt="定妆图">';
+        } else {
+          s += '<span class="w-11 h-11 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0"><span class="material-symbols-outlined text-lg">person</span></span>';
+        }
+        s += '<div class="min-w-0 flex-1"><div class="flex items-center gap-1.5 flex-wrap"><span class="text-label-md font-label-md text-on-surface">' + esc(c.name) + '</span>';
+        if((c.refs || []).length) s += '<span class="chip chip-line shrink-0">' + c.refs.length + ' 参考图</span>';
+        s += '<span class="chip chip-line shrink-0">' + esc(styleLabel) + '</span>';
+        if(c.anchorAssetId) s += '<span class="chip chip-mint shrink-0">已定妆</span>';
+        s += '</div><div class="text-label-sm text-on-surface-variant line-clamp-2">' + esc(c.description || '暂无描述') + '</div>';
+        if(anchors.length > 1 || (anchors.length && !c.anchorAssetId)){
+          s += '<div class="flex items-end gap-2 flex-wrap mt-2">';
+          anchors.forEach(function(a){
+            var isCur = a.assetId === c.anchorAssetId;
+            s += '<div class="relative">';
+            s += '<button type="button" data-act="studioCharAnchorUse" data-id="' + esc(c.id) + '" data-asset="' + esc(a.assetId) + '" class="block w-14 h-14 rounded-lg overflow-hidden' + (isCur ? '' : ' opacity-70 hover:opacity-100') + '" style="' + (isCur ? 'box-shadow:0 0 0 2px #3b7ea1' : '') + '" title="' + (isCur ? '当前使用' : '设为当前') + (a.style ? ' · ' + esc(a.style) : '') + '">';
+            s += '<img src="' + studioAssetUrl(a.assetId) + '" class="w-full h-full object-cover" alt="' + esc(a.style || '定妆图') + '">';
+            s += '</button>';
+            s += '<button type="button" data-act="studioCharAnchorDel" data-id="' + esc(c.id) + '" data-asset="' + esc(a.assetId) + '" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-error text-on-error text-[10px] leading-none flex items-center justify-center" title="删除这张定妆图">×</button>';
+            if(a.style) s += '<span class="block text-[10px] text-center text-on-surface-variant mt-0.5 truncate" style="max-width:3.5rem">' + esc(a.style) + '</span>';
+            s += '</div>';
+          });
+          s += '</div>';
+        }
+        s += '</div>';
+        s += '<div class="flex items-center gap-0.5 shrink-0">';
+        s += '<button class="w-7 h-7 rounded-full flex items-center justify-center ' + (editing ? 'bg-primary text-on-primary' : 'hover:bg-surface-container-high text-on-surface-variant') + '" data-act="studioCharStyleOpen" data-id="' + esc(c.id) + '" type="button" title="生成风格化定妆图"><span class="material-symbols-outlined text-base">palette</span></button>';
+        s += '<label class="w-7 h-7 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant cursor-pointer" title="上传本人参考照片"><span class="material-symbols-outlined text-base">upload</span><input type="file" accept="image/*" class="hidden" data-char-upload="' + esc(c.id) + '"></label>';
+        s += '<button class="w-7 h-7 rounded-full hover:bg-error-container/60 flex items-center justify-center text-on-surface-variant hover:text-error" data-act="studioDeleteChar" data-id="' + esc(c.id) + '" data-name="' + esc(c.name) + '" type="button" title="删除角色"><span class="material-symbols-outlined text-base">delete</span></button>';
+        s += '</div></div>';
+        if(editing){
+          var curStyle = STUDIO.charStyle || '';
+          var chipBase = 'px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ';
+          var chipOn = 'bg-primary text-on-primary';
+          var chipOff = 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high';
+          s += '<div class="mt-2 rounded-xl bg-surface-container-lowest px-3 py-2 flex flex-col gap-2">';
+          s += '<div class="text-label-sm text-on-surface-variant">选择风格后生成一张风格化定妆图，会保留为候选；点候选缩略图可设为主用。</div>';
+          s += '<div class="flex flex-wrap gap-1.5">';
+          s += '<button type="button" data-act="studioCharStylePick" data-style="" class="' + chipBase + (!curStyle ? chipOn : chipOff) + '">跟随项目</button>';
+          STUDIO_STYLES.forEach(function(name){
+            s += '<button type="button" data-act="studioCharStylePick" data-style="' + esc(name) + '" class="' + chipBase + (curStyle === name ? chipOn : chipOff) + '">' + esc(name) + '</button>';
+          });
+          s += '</div>';
+          s += '<div class="flex items-center justify-between gap-2">';
+          s += '<span class="text-[11px] text-on-surface-variant">' + ((c.refs || []).length ? '以已上传的 ' + c.refs.length + ' 张照片为长相依据' : '未上传照片，将仅按文字描述生成') + '</span>';
+          s += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90 disabled:opacity-50" data-act="studioCharAnchor" data-id="' + esc(c.id) + '" type="button"' + (busy ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (busy ? 'hourglass_top' : 'auto_fix_high') + '</span>' + (busy ? '生成中…' : '生成定妆图') + '</button>';
+          s += '</div></div>';
+        }
+        s += '</div>';
+      });
+      s += '</div>';
+    }
+    s += '<div class="flex flex-col gap-2">';
+    s += '<input id="studioCharName" class="inp" maxlength="60" placeholder="角色名，例如：主讲人小林">';
+    s += '<textarea id="studioCharDesc" class="ta" rows="3" placeholder="固定描述：年龄、发型、服装、气质、口头禅…"></textarea>';
+    s += '<button class="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md text-on-surface hover:bg-surface-container-high" data-act="studioAddChar" type="button"><span class="material-symbols-outlined text-base">person_add</span>添加角色</button>';
+    s += '</div></div>';
+    return s;
+  }
+
+  var VOICE_STATUS_LABEL = { training:'训练中', ready:'可用', failed:'失败' };
+  function studioVoiceStatusLabel(key){
+    return VOICE_STATUS_LABEL[key] || '未知';
+  }
+  function studioVoiceStatusClass(key){
+    return key === 'ready' ? 'chip-mint' : (key === 'failed' ? 'chip-line text-error' : 'chip-line');
+  }
+
+  function studioVoiceCard(d){
+    var stset = d.settings || {};
+    var boundId = stset.ttsVoiceId || '';
+    var voices = STUDIO.voices || [];
+    var bound = null;
+    voices.forEach(function(v){ if(v.id === boundId) bound = v; });
+    var rec = STUDIO.voiceRec || {};
+    var s = '<div class="soft-card p-space-lg">';
+    s += '<div class="flex items-center justify-between mb-space-sm"><h4 class="text-label-md font-label-md text-on-surface">配音音色</h4><span class="chip ' + (bound && bound.status === 'ready' ? 'chip-mint' : 'chip-line') + '">' + (bound ? esc(bound.name) : '本地系统音色') + '</span></div>';
+    s += '<p class="text-label-sm text-on-surface-variant mb-space-sm">直接录制一段自己的声音复刻成音色，之后分镜配音就用你的声音读旁白。</p>';
+    s += '<div class="fld" style="margin-bottom:0"><label class="lab">本项目使用</label><select id="studioVoicePick" class="inp"' + (rec.recording || rec.converting || STUDIO.voiceBusy ? ' disabled' : '') + '>';
+    s += '<option value=""' + (!boundId ? ' selected' : '') + '>本地系统音色（默认）</option>';
+    voices.forEach(function(v){
+      var extra = v.status === 'ready' ? '' : '（' + studioVoiceStatusLabel(v.status) + '）';
+      s += '<option value="' + esc(v.id) + '"' + (v.id === boundId ? ' selected' : '') + '>' + esc(v.name + extra) + '</option>';
+    });
+    s += '</select></div>';
+    if(bound && bound.status !== 'ready') s += '<p class="text-label-sm text-on-surface-variant mt-1">音色' + studioVoiceStatusLabel(bound.status) + '，完成训练前会自动使用本地音色配音。</p>';
+    if(!boundId){
+      var autoReady = null;
+      voices.forEach(function(v){ if(!autoReady && v.status === 'ready') autoReady = v; });
+      if(autoReady) s += '<p class="text-label-sm text-on-surface-variant mt-1">未指定时，配音会自动使用已训练好的音色「' + esc(autoReady.name) + '」。</p>';
+    }
+    if(bound && bound.status === 'failed' && bound.error) s += '<p class="text-label-sm text-error mt-1">' + esc(bound.error) + '</p>';
+
+    if(voices.length){
+      s += '<div class="flex flex-col gap-1.5 mt-space-sm">';
+      voices.forEach(function(v){
+        var refreshing = STUDIO.voiceRefreshId === v.id;
+        s += '<div class="flex items-center gap-2 bg-surface-container-low rounded-xl px-3 py-2">';
+        s += '<span class="material-symbols-outlined text-lg text-on-surface-variant shrink-0">graphic_eq</span>';
+        s += '<div class="min-w-0 flex-1"><div class="flex items-center gap-1.5 flex-wrap"><span class="text-label-md font-label-md text-on-surface truncate">' + esc(v.name) + '</span>';
+        s += '<span class="chip ' + studioVoiceStatusClass(v.status) + ' shrink-0">' + studioVoiceStatusLabel(v.status) + '</span></div>';
+        if(v.status === 'failed' && v.error) s += '<div class="text-label-sm text-error line-clamp-2">' + esc(v.error) + '</div>';
+        s += '</div>';
+        s += '<div class="flex items-center gap-0.5 shrink-0">';
+        if(v.hasDemo) s += '<a href="' + studioVoiceAudioUrl(v.id, 'demo') + '" target="_blank" rel="noopener" class="w-7 h-7 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant" title="试听音色"><span class="material-symbols-outlined text-base">play_circle</span></a>';
+        if(v.status === 'training' || (v.status === 'failed' && !v.hasSource)) s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant disabled:opacity-40" data-act="studioVoiceRefresh" data-id="' + esc(v.id) + '" type="button" title="刷新训练状态"' + (refreshing ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (refreshing ? 'hourglass_top' : 'refresh') + '</span></button>';
+        if(v.status === 'failed' && v.hasSource) s += '<button class="w-7 h-7 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant disabled:opacity-40" data-act="studioVoiceRetry" data-id="' + esc(v.id) + '" type="button" title="用原录音重新提交复刻"' + (refreshing ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (refreshing ? 'hourglass_top' : 'replay') + '</span></button>';
+        s += '<button class="w-7 h-7 rounded-full hover:bg-error-container/60 flex items-center justify-center text-on-surface-variant hover:text-error" data-act="studioVoiceDelete" data-id="' + esc(v.id) + '" data-name="' + esc(v.name) + '" type="button" title="删除音色"><span class="material-symbols-outlined text-base">delete</span></button>';
+        s += '</div></div>';
+      });
+      s += '</div>';
+    }
+
+    s += '<div class="mt-space-sm flex flex-col gap-2">';
+    s += '<input id="studioVoiceName" class="inp" maxlength="40" placeholder="音色名，例如：我的声音" value="' + esc(STUDIO.voiceName || '') + '">';
+    if(rec.blob){
+      s += '<div class="rounded-xl bg-surface-container-low px-3 py-2 flex flex-col gap-2">';
+      s += '<audio controls src="' + esc(rec.url || '') + '" class="w-full h-9"></audio>';
+      s += '<div class="flex items-center justify-between gap-2"><span class="text-label-sm text-on-surface-variant">已录制 ' + fmtDuration(rec.duration) + '，可先试听</span><span class="flex items-center gap-2">';
+      s += '<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest text-label-sm text-on-surface hover:bg-surface-container-high disabled:opacity-50" data-act="studioVoiceRecDiscard" type="button"' + (STUDIO.voiceBusy ? ' disabled' : '') + '>重录</button>';
+      s += '<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold hover:opacity-90 disabled:opacity-50" data-act="studioVoiceRecSubmit" type="button"' + (STUDIO.voiceBusy ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (STUDIO.voiceBusy ? 'hourglass_top' : 'check') + '</span>' + (STUDIO.voiceBusy ? '提交训练中…' : '提交复刻') + '</button>';
+      s += '</span></div></div>';
+    } else if(rec.converting){
+      s += '<button class="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md text-on-surface opacity-60 pointer-events-none" type="button" disabled><span class="material-symbols-outlined text-base">hourglass_top</span>正在准备音频…</button>';
+    } else if(rec.recording){
+      s += '<button class="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-full bg-[#FCE3DD] text-[#8E3B26] text-label-md font-semibold hover:opacity-90" data-act="studioVoiceRecord" type="button"><span class="material-symbols-outlined text-base">stop</span>停止录制 · <span id="studioVoiceRecTimer">' + fmtDuration(rec.duration) + '</span></button>';
+    } else {
+      s += '<button class="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-full bg-surface-container-low text-label-md text-on-surface hover:bg-surface-container-high' + (STUDIO.voiceBusy ? ' opacity-50 pointer-events-none' : '') + '" data-act="studioVoiceRecord" type="button"><span class="material-symbols-outlined text-base">mic</span>直接录制音色样本</button>';
+    }
+    s += '<p class="text-label-sm text-on-surface-variant">朗读一段话，录制 10～30 秒清晰人声（最长 60 秒），系统自动转成 WAV 并提交复刻。需先在「连接设置 → 豆包语音」填写 API Key，训练完成后音色才可用于配音。</p>';
+    s += '</div></div>';
+    return s;
+  }
+
+  function studioVoiceBind(voiceId){
+    var d = STUDIO.detail;
+    if(!d) return;
+    request('/video/projects/' + encodeURIComponent(d.id) + '/voice', {
+      method:'POST',
+      body: JSON.stringify({ voiceId: voiceId || '' })
+    }).then(function(r){
+      if(r && r.project){
+        STUDIO.detail = r.project;
+        STUDIO.detailId = r.project.id;
+      }
+      render();
+    }).catch(function(err){ toast('设置音色失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioVoiceUpload(file, nameArg){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.voiceBusy) return;
+    if(file.size > 10 * 1024 * 1024){ toast('录音需小于 10MB', 'err'); return; }
+    var nameEl = $('studioVoiceName');
+    var name = nameArg || (nameEl ? nameEl.value.trim() : '') || STUDIO.voiceName || '';
+    STUDIO.voiceName = name;
+    STUDIO.voiceBusy = true;
+    render();
+    fileToDataUrl(file).then(function(dataUrl){
+      return request('/video/voices', {
+        method:'POST',
+        body: JSON.stringify({ name: name, dataUrl: dataUrl })
+      });
+    }).then(function(r){
+      STUDIO.voiceBusy = false;
+      STUDIO.voicesLoaded = false;
+      STUDIO.voiceName = '';
+      studioVoiceResetRec();
+      var v = r && r.voice;
+      return loadStudioVoices().then(function(){
+        render();
+        if(v && v.status === 'ready') toast('音色复刻完成，可以直接使用', 'ok');
+        else toast('录音已提交，音色训练中；稍后点刷新查看状态', 'ok');
+      });
+    }).catch(function(err){
+      STUDIO.voiceBusy = false;
+      STUDIO.voicesLoaded = false;
+      loadStudioVoices().then(render);
+      toast('音色复刻失败：' + errMsg(err), 'err');
+    });
+  }
+
+  /* ---- 直接录制音色样本（录音 → 24k 单声道 WAV → 提交复刻） ---- */
+
+  function studioVoiceStopRecTimer(){
+    var rec = STUDIO.voiceRec;
+    if(rec && rec.timer){ clearInterval(rec.timer); rec.timer = null; }
+  }
+
+  function studioVoiceReleaseRec(){
+    var rec = STUDIO.voiceRec;
+    if(!rec) return;
+    studioVoiceStopRecTimer();
+    if(rec.recorder){
+      rec.recorder.onstop = null;
+      try{ if(rec.recorder.state !== 'inactive') rec.recorder.stop(); }catch(err){}
+    }
+    if(rec.stream){
+      rec.stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(err){} });
+      rec.stream = null;
+    }
+    rec.recorder = null;
+    rec.chunks = [];
+    rec.recording = false;
+    rec.converting = false;
+    rec.duration = 0;
+    rec.blob = null;
+  }
+
+  function studioVoiceResetRec(){
+    var rec = STUDIO.voiceRec;
+    if(!rec) return;
+    studioVoiceReleaseRec();
+    if(rec.url){ URL.revokeObjectURL(rec.url); rec.url = null; }
+  }
+
+  function studioVoiceBlobToWav(blob){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if(!AC || !OAC) return Promise.reject(new Error('浏览器不支持音频转码'));
+    return blob.arrayBuffer().then(function(ab){
+      var ctx = new AC();
+      return ctx.decodeAudioData(ab).then(function(buf){
+        try{ ctx.close(); }catch(err){}
+        var rate = 24000;
+        var frames = Math.max(1, Math.ceil(buf.duration * rate));
+        var off = new OAC(1, frames, rate);
+        var src = off.createBufferSource();
+        src.buffer = buf;
+        src.connect(off.destination);
+        src.start(0);
+        return off.startRendering();
+      }, function(err){
+        try{ ctx.close(); }catch(e){}
+        throw err;
+      });
+    }).then(function(rendered){
+      var data = rendered.getChannelData(0);
+      var buffer = new ArrayBuffer(44 + data.length * 2);
+      var view = new DataView(buffer);
+      function wstr(o, str){ for(var i = 0; i < str.length; i++) view.setUint8(o + i, str.charCodeAt(i)); }
+      wstr(0, 'RIFF'); view.setUint32(4, 36 + data.length * 2, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
+      view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+      view.setUint32(24, 24000, true); view.setUint32(28, 48000, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+      wstr(36, 'data'); view.setUint32(40, data.length * 2, true);
+      for(var i = 0; i < data.length; i++){
+        var s = Math.max(-1, Math.min(1, data[i]));
+        view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      }
+      return { blob: new Blob([buffer], { type:'audio/wav' }), duration: rendered.duration };
+    });
+  }
+
+  function studioVoiceOnRecStop(){
+    var rec = STUDIO.voiceRec;
+    if(!rec) return;
+    var chunks = rec.chunks || [];
+    rec.chunks = [];
+    rec.recorder = null;
+    if(!chunks.length){
+      rec.recording = false;
+      rec.duration = 0;
+      render();
+      toast('没有录到音频，请重试', 'err');
+      return;
+    }
+    if(rec.duration < 3){
+      rec.recording = false;
+      rec.duration = 0;
+      render();
+      toast('录音太短，请至少录制 3 秒', 'err');
+      return;
+    }
+    var blob = new Blob(chunks, { type: (rec.mime || 'audio/webm').split(';')[0] });
+    rec.converting = true;
+    render();
+    studioVoiceBlobToWav(blob).then(function(out){
+      rec.converting = false;
+      rec.blob = out.blob;
+      rec.duration = out.duration || rec.duration;
+      if(rec.url) URL.revokeObjectURL(rec.url);
+      rec.url = URL.createObjectURL(out.blob);
+      render();
+    }).catch(function(err){
+      rec.converting = false;
+      rec.duration = 0;
+      render();
+      toast('音频处理失败：' + ((err && err.message) || '未知错误'), 'err');
+    });
+  }
+
+  function studioVoiceToggleRecord(){
+    var rec = STUDIO.voiceRec;
+    if(!rec || STUDIO.voiceBusy || rec.converting) return;
+    if(rec.recording){ studioVoiceStopRecord(); return; }
+    if(rec.blob) return;
+    if(!voiceSupported()){
+      toast('当前浏览器不支持录音，请使用桌面版 Chrome / Edge', 'err');
+      return;
+    }
+    var nameEl = $('studioVoiceName');
+    STUDIO.voiceName = nameEl ? nameEl.value.trim() : (STUDIO.voiceName || '');
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+      rec.stream = stream;
+      var mime = pickAudioMime();
+      var recorder;
+      try{
+        recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      }catch(err){
+        try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+        rec.stream = null;
+        toast('无法启动录音：' + err.message, 'err');
+        return;
+      }
+      rec.recorder = recorder;
+      rec.mime = mime || 'audio/webm';
+      rec.chunks = [];
+      recorder.ondataavailable = function(ev){ if(ev.data && ev.data.size) rec.chunks.push(ev.data); };
+      recorder.onstop = studioVoiceOnRecStop;
+      try{
+        recorder.start(500);
+      }catch(err){
+        try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+        rec.stream = null;
+        rec.recorder = null;
+        toast('无法启动录音：' + err.message, 'err');
+        return;
+      }
+      rec.recording = true;
+      rec.startedAt = Date.now();
+      rec.duration = 0;
+      render();
+      studioVoiceStopRecTimer();
+      rec.timer = setInterval(function(){
+        if(!rec.recording) return;
+        rec.duration = (Date.now() - rec.startedAt) / 1000;
+        var el = $('studioVoiceRecTimer');
+        if(el) el.textContent = fmtDuration(rec.duration);
+        if(rec.duration >= 60) studioVoiceStopRecord();
+      }, 250);
+    }).catch(function(err){
+      var msg = err && err.name === 'NotAllowedError'
+        ? '麦克风权限被拒绝，请在浏览器地址栏允许后重试'
+        : '无法访问麦克风：' + ((err && err.message) || '未知错误');
+      toast(msg, 'err');
+    });
+  }
+
+  function studioVoiceStopRecord(){
+    var rec = STUDIO.voiceRec;
+    if(!rec || !rec.recording) return;
+    rec.recording = false;
+    studioVoiceStopRecTimer();
+    rec.duration = Math.max(0, (Date.now() - rec.startedAt) / 1000);
+    try{
+      if(rec.recorder && rec.recorder.state !== 'inactive') rec.recorder.stop();
+      else studioVoiceOnRecStop();
+    }catch(err){
+      studioVoiceOnRecStop();
+    }
+    if(rec.stream){
+      try{ rec.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+      rec.stream = null;
+    }
+  }
+
+  function studioVoiceDiscardRecording(){
+    var rec = STUDIO.voiceRec;
+    if(!rec) return;
+    studioVoiceResetRec();
+    render();
+  }
+
+  function studioVoiceSubmitRecording(){
+    var rec = STUDIO.voiceRec;
+    if(!rec || !rec.blob || STUDIO.voiceBusy) return;
+    var nameEl = $('studioVoiceName');
+    STUDIO.voiceName = nameEl ? nameEl.value.trim() : (STUDIO.voiceName || '');
+    studioVoiceUpload(rec.blob, STUDIO.voiceName);
+  }
+
+  function studioVoiceRefresh(id){
+    if(STUDIO.voiceRefreshId) return;
+    STUDIO.voiceRefreshId = id;
+    render();
+    request('/video/voices/' + encodeURIComponent(id) + '/refresh', { method:'POST', body: '{}' })
+      .then(function(r){
+        STUDIO.voiceRefreshId = null;
+        STUDIO.voicesLoaded = false;
+        var v = r && r.voice;
+        return loadStudioVoices().then(function(){
+          render();
+          if(v) toast('音色状态：' + studioVoiceStatusLabel(v.status), v.status === 'ready' ? 'ok' : 'err');
+        });
+      })
+      .catch(function(err){
+        STUDIO.voiceRefreshId = null;
+        render();
+        toast('刷新失败：' + errMsg(err), 'err');
+      });
+  }
+
+  function studioVoiceRetry(id){
+    if(STUDIO.voiceRefreshId) return;
+    STUDIO.voiceRefreshId = id;
+    render();
+    request('/video/voices/' + encodeURIComponent(id) + '/retry', { method:'POST', body: '{}' })
+      .then(function(r){
+        STUDIO.voiceRefreshId = null;
+        STUDIO.voicesLoaded = false;
+        var v = r && r.voice;
+        return loadStudioVoices().then(function(){
+          render();
+          if(v) toast('已重新提交复刻：' + studioVoiceStatusLabel(v.status), v.status === 'failed' ? 'err' : 'ok');
+        });
+      })
+      .catch(function(err){
+        STUDIO.voiceRefreshId = null;
+        STUDIO.voicesLoaded = false;
+        render();
+        toast('重新提交失败：' + errMsg(err), 'err');
+      });
+  }
+
+  function studioVoiceDelete(id){
+    var v = null;
+    (STUDIO.voices || []).forEach(function(x){ if(x.id === id) v = x; });
+    studioConfirm('删除这个音色？', '「' + ((v && v.name) || '未命名') + '」的训练记录与录音将一并删除。', function(){
+      request('/video/voices/' + encodeURIComponent(id), { method:'DELETE' })
+        .then(function(){
+          STUDIO.voicesLoaded = false;
+          STUDIO.loaded = false;
+          var jobs = [loadStudioVoices()];
+          if(STUDIO.detailId) jobs.push(loadStudioProject(STUDIO.detailId));
+          return Promise.all(jobs).then(function(){ render(); toast('音色已删除', 'ok'); });
+        })
+        .catch(function(err){ toast('删除失败：' + errMsg(err), 'err'); });
+    });
+  }
+
+  function studioPipelineCard(d){
+    var scenes = d.scenes || [];
+    var steps = [
+      { t:'脚本', done: !!(d.script && d.script.contentMd && d.script.contentMd.trim()) },
+      { t:'分镜', done: scenes.length > 0 },
+      { t:'画面素材', done: scenes.some(function(s){ return s.imageAssetId || s.videoAssetId; }) },
+      { t:'配音', done: scenes.some(function(s){ return s.audioAssetId; }) },
+      { t:'成片', done: !!d.outputAssetId }
+    ];
+    var allImg = scenes.length > 0 && scenes.every(function(sc){ return sc.imageAssetId || sc.videoAssetId; });
+    var s = '<div class="soft-card p-space-lg">';
+    s += '<div class="flex items-center gap-2 mb-space-sm"><h4 class="text-label-md font-label-md text-on-surface">制作进度</h4><span class="chip chip-line">' + studioAspectLabel(d.aspect) + ' · 1080p</span></div>';
+    s += '<div class="flex flex-wrap gap-1.5 mb-space-sm">';
+    steps.forEach(function(st){ s += '<span class="chip ' + (st.done ? 'chip-mint' : 'chip-line') + '">' + (st.done ? '✓ ' : '') + st.t + '</span>'; });
+    s += '</div>';
+    var stset = d.settings || {};
+    var bgmVol = Math.round(Math.min(1, Math.max(0, num(stset.bgmVolume == null ? 0.35 : stset.bgmVolume))) * 100);
+    s += '<div class="rounded-xl bg-surface-container-low/70 p-3 mb-space-sm">';
+    s += '<div class="flex items-center justify-between mb-1.5"><span class="inline-flex items-center gap-1 text-label-md font-label-md text-on-surface"><span class="material-symbols-outlined text-base">music_note</span>背景音乐</span>';
+    if(stset.bgmAssetId) s += '<button class="text-label-sm text-on-surface-variant underline underline-offset-2" data-act="studioClearBgm" type="button">移除</button>';
+    s += '</div>';
+    if(stset.bgmAssetId){
+      s += '<div class="flex items-center gap-2"><span class="truncate text-label-sm flex-1" title="' + esc(stset.bgmName || '已上传') + '">' + esc(stset.bgmName || '已上传') + '</span>';
+      s += '<input type="range" min="0" max="100" step="5" value="' + bgmVol + '" id="studioBgmVolume" class="w-28" title="背景音乐音量">';
+      s += '<span id="studioBgmVolLabel" class="text-label-sm text-on-surface-variant w-9 text-right">' + bgmVol + '%</span></div>';
+    } else {
+      s += '<div class="flex items-center gap-2"><label class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-label-sm text-on-surface cursor-pointer hover:bg-surface-container-high"><span class="material-symbols-outlined text-base">upload</span>上传音频<input type="file" accept="audio/*" class="hidden" data-bgm-upload></label>';
+      s += '<span class="text-label-sm text-on-surface-variant">mp3 / m4a / wav，≤12MB，循环铺满</span></div>';
+    }
+    s += '</div>';
+    var titleVal = typeof stset.titleText === 'string' ? stset.titleText : (d.title || '');
+    var titleSec = stset.titleSeconds == null ? 3 : stset.titleSeconds;
+    s += '<div class="rounded-xl bg-surface-container-low/70 p-3 mb-space-sm">';
+    s += '<div class="flex items-center gap-1.5 text-label-md font-label-md text-on-surface mb-1.5"><span class="material-symbols-outlined text-base">title</span>片头标题</div>';
+    s += '<div class="flex items-center gap-2"><input id="studioTitleText" class="inp flex-1" maxlength="200" value="' + esc(titleVal) + '" placeholder="留空则不显示标题">';
+    s += '<input id="studioTitleSec" class="inp w-20" type="number" min="1" max="10" step="0.5" value="' + esc(titleSec) + '" title="显示秒数"><span class="text-label-sm text-on-surface-variant shrink-0">秒</span></div>';
+    s += '<p class="text-label-sm text-on-surface-variant mt-1">片头显示在顶部；每镜的「画面文字」会作为字幕烧进对应片段。</p>';
+    s += '</div>';
+    if(d.outputAssetId){
+      s += '<div class="rounded-xl overflow-hidden bg-black mb-space-sm"><video src="' + studioAssetUrl(d.outputAssetId) + '" controls playsinline class="w-full max-h-[420px] bg-black"></video></div>';
+      s += '<a href="' + studioAssetUrl(d.outputAssetId) + '" download class="text-label-sm text-primary underline underline-offset-2">下载成片 MP4</a>';
+    }
+    s += '<button class="w-full inline-flex items-center justify-center gap-1.5 px-space-md py-2 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:opacity-90 disabled:opacity-50" data-act="studioRender" type="button"' + (STUDIO.rendering || !allImg ? ' disabled' : '') + '><span class="material-symbols-outlined text-base">' + (STUDIO.rendering ? 'hourglass_top' : 'movie_edit') + '</span>' + (STUDIO.rendering ? '合成中…' : (d.outputAssetId ? '重新合成成片' : '合成成片')) + '</button>';
+    if(!allImg) s += '<p class="text-label-sm text-on-surface-variant mt-space-xs">全部分镜都生成了画面后即可合成。</p>';
+    else if(!d.outputAssetId) s += '<p class="text-label-sm text-on-surface-variant mt-space-xs">将按顺序为每个分镜加运镜并拼接为 ' + esc(studioAspectLabel(d.aspect)) + ' 成片。</p>';
+    s += '</div>';
+    return s;
+  }
+
+  function studioCreate(){
+    if(STUDIO.creating) return;
+    studioReadCreateForm();
+    var f = STUDIO.form;
+    if(!f.title.trim() && !f.topicCode){ toast('请选择选题或填写视频标题', 'err'); return; }
+    STUDIO.creating = true;
+    render();
+    request('/video/projects', {
+      method:'POST',
+      body: JSON.stringify({ topicCode: f.topicCode, title: f.title.trim(), aspect: f.aspect, style: f.style.trim(), brief: f.brief.trim() })
+    }).then(function(r){
+      STUDIO.creating = false;
+      STUDIO.loaded = false;
+      STUDIO.createOpen = false;
+      STUDIO.form = { topicCode:'', title:'', aspect: f.aspect, style:'', brief:'' };
+      STUDIO.detail = r.project;
+      STUDIO.detailId = r.project.id;
+      STUDIO.sceneId = null;
+      STUDIO.viewScript = null;
+      render();
+      toast('视频项目已创建 · ' + r.project.code, 'ok');
+      return loadStudioProjects();
+    }).catch(function(err){
+      STUDIO.creating = false;
+      render();
+      toast('创建失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function syncStudioDetailInputs(){
+    var d = STUDIO.detail;
+    if(!d) return;
+    if($('studioPTitle')) d.title = $('studioPTitle').value;
+    if($('studioPStatus')) d.status = $('studioPStatus').value;
+    if($('studioPStyle')) d.style = $('studioPStyle').value;
+    if($('studioPBrief')) d.brief = $('studioPBrief').value;
+  }
+
+  function studioSaveProject(){
+    var d = STUDIO.detail;
+    if(!d) return;
+    syncStudioDetailInputs();
+    var payload = {
+      title: (d.title || '').trim(),
+      status: d.status,
+      aspect: STUDIO.pendingAspect || d.aspect,
+      style: d.style,
+      brief: d.brief
+    };
+    if(!payload.title) payload.title = '未命名视频';
+    request('/video/projects/' + encodeURIComponent(d.id), { method:'PUT', body: JSON.stringify(payload) })
+      .then(function(r){
+        STUDIO.detail = r.project;
+        STUDIO.pendingAspect = null;
+        STUDIO.loaded = false;
+        render();
+        toast('项目已保存', 'ok');
+        return loadStudioProjects();
+      })
+      .catch(function(err){ toast('保存失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioSaveScript(){
+    var d = STUDIO.detail;
+    if(!d) return;
+    var ta = $('studioScript');
+    if(!ta) return;
+    request('/video/projects/' + encodeURIComponent(d.id) + '/script', {
+      method:'POST',
+      body: JSON.stringify({ contentMd: ta.value, source:'user', note: (STUDIO.viewScript ? '基于 v' + STUDIO.viewScript.version : '手工编辑') })
+    }).then(function(){
+      STUDIO.viewScript = null;
+      STUDIO.loaded = false;
+      return loadStudioProject(d.id);
+    }).then(function(){
+      render();
+      toast('脚本已保存为新版本', 'ok');
+      return loadStudioProjects();
+    }).catch(function(err){ toast('保存失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioToggleBtn(act, on, idleIcon, idleLabel, busyLabel){
+    var btn = document.querySelector('[data-act="' + act + '"]');
+    if(!btn) return;
+    btn.disabled = !!on;
+    btn.innerHTML = '<span class="material-symbols-outlined text-base">' + (on ? 'hourglass_top' : idleIcon) + '</span>' + (on ? busyLabel : idleLabel);
+  }
+
+  function studioGenScript(){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.genScript) return;
+    if($('studioScriptMode')) STUDIO.scriptMode = $('studioScriptMode').value;
+    if($('studioScriptRef')) STUDIO.ref = $('studioScriptRef').value;
+    var mode = STUDIO.scriptMode || 'faithful';
+    STUDIO.genScript = true;
+    studioToggleBtn('studioGenScript', true, 'auto_awesome', 'AI 生成脚本', '生成中…');
+    request('/video/projects/' + encodeURIComponent(d.id) + '/script/generate', {
+      method:'POST',
+      body: JSON.stringify({ reference: mode === 'faithful' ? '' : (STUDIO.ref || ''), mode: mode })
+    }).then(function(r){
+      STUDIO.genScript = false;
+      STUDIO.viewScript = null;
+      STUDIO.loaded = false;
+      return loadStudioProject(d.id).then(function(){
+        render();
+        toast('脚本已生成 · ' + ((r && r.model) || 'AI'), 'ok');
+        return loadStudioProjects();
+      });
+    }).catch(function(err){
+      STUDIO.genScript = false;
+      render();
+      toast('AI 生成失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function studioGenScenes(){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.genScenes) return;
+    var viewing = STUDIO.viewScript && STUDIO.viewScript.projectId === d.id ? STUDIO.viewScript : null;
+    var verText = viewing ? 'v' + viewing.version + ' 脚本' : '最新脚本';
+    if(d.scenes && d.scenes.length){
+      studioConfirm(
+        '重新拆分分镜？',
+        '现有 ' + d.scenes.length + ' 个分镜将被清空，并按当前编辑器中的' + verText + '重新生成，已生成的图片/视频素材会失效。',
+        function(){ doStudioGenScenes(d); },
+        '重新拆分'
+      );
+    } else {
+      doStudioGenScenes(d);
+    }
+  }
+
+  function doStudioGenScenes(d){
+    STUDIO.genScenes = true;
+    studioToggleBtn('studioGenScenes', true, 'auto_awesome_motion', 'AI 拆分分镜', '拆分中…');
+    // 编辑器里可能选中了历史版本，必须按该版本拆分，不能默认用最新版
+    var viewing = STUDIO.viewScript && STUDIO.viewScript.projectId === d.id ? STUDIO.viewScript : null;
+    var body = { replace: true };
+    if(viewing && viewing.version) body.scriptVersion = viewing.version;
+    request('/video/projects/' + encodeURIComponent(d.id) + '/scenes/plan', {
+      method:'POST',
+      body: JSON.stringify(body)
+    }).then(function(r){
+      STUDIO.genScenes = false;
+      STUDIO.loaded = false;
+      return loadStudioProject(d.id).then(function(){
+        render();
+        toast('已按' + (viewing ? 'v' + viewing.version + ' 脚本' : '最新脚本') + '拆分 ' + ((r && r.scenes) ? r.scenes.length : 0) + ' 个分镜', 'ok');
+        return loadStudioProjects();
+      });
+    }).catch(function(err){
+      STUDIO.genScenes = false;
+      render();
+      toast('拆分失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function studioGenSceneImage(id){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.genImageId) return;
+    STUDIO.genImageId = id;
+    var btn = document.querySelector('[data-act="studioGenSceneImage"][data-id="' + id + '"]');
+    if(btn){
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_top</span>';
+    }
+    request('/video/scenes/' + encodeURIComponent(id) + '/image', { method:'POST', body: '{}' })
+      .then(function(r){
+        STUDIO.genImageId = null;
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id).then(function(){
+          render();
+          toast('分镜图片已生成 · ' + ((r && r.model) || 'AI'), 'ok');
+        });
+      })
+      .catch(function(err){
+        STUDIO.genImageId = null;
+        STUDIO.loaded = false;
+        loadStudioProject(d.id).then(function(){ render(); });
+        toast('图片生成失败：' + errMsg(err), 'err');
+      });
+  }
+
+  /* ---------- 参考原片 ---------- */
+  function uploadStudioBinary(file){
+    return new Promise(function(resolve, reject){
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', API + '/trends/transcript/upload?name=' + encodeURIComponent(file.name));
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      if(ACCOUNT.id) xhr.setRequestHeader('X-Account-Id', ACCOUNT.id);
+      xhr.upload.onprogress = function(ev){
+        if(!ev.lengthComputable) return;
+        STUDIO.refUploadPct = Math.round((ev.loaded / ev.total) * 100);
+        var btn = document.querySelector('[data-act="studioPickRef"]');
+        if(btn) btn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_top</span>上传中 ' + STUDIO.refUploadPct + '%';
+      };
+      xhr.onload = function(){
+        var body = null;
+        try{ body = JSON.parse(xhr.responseText); }catch(err){}
+        if(xhr.status >= 200 && xhr.status < 300 && body && body.fileId) return resolve(body);
+        reject(new Error((body && body.error) || ('上传失败（HTTP ' + xhr.status + '）')));
+      };
+      xhr.onerror = function(){ reject(new Error('上传中断，请确认本地服务仍在运行')); };
+      xhr.send(file);
+    });
+  }
+
+  function studioPickRef(){
+    var input = $('studioRefFile');
+    if(input) input.click();
+  }
+
+  function studioUploadRef(file){
+    var d = STUDIO.detail;
+    if(!d || !file || STUDIO.refUploading) return;
+    var ext = ('.' + String(file.name || '').split('.').pop()).toLowerCase();
+    var ok = ['.mp4', '.mov', '.m4v', '.mkv', '.webm', '.avi', '.flv', '.ts', '.mpg', '.mpeg', '.wmv'];
+    if(ok.indexOf(ext) < 0){ toast('参考片请上传 mp4 / mov / mkv / webm 等视频文件', 'err'); return; }
+    if(file.size > 2 * 1024 * 1024 * 1024){ toast('参考视频不能超过 2GB', 'err'); return; }
+    STUDIO.refUploading = true;
+    STUDIO.refUploadPct = 0;
+    var btn = document.querySelector('[data-act="studioPickRef"]');
+    if(btn){ btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_top</span>上传中 0%'; }
+    uploadStudioBinary(file).then(function(up){
+      return request('/video/projects/' + encodeURIComponent(d.id) + '/reference', {
+        method:'POST',
+        body: JSON.stringify({ fileId: up.fileId, name: up.name || file.name })
+      });
+    }).then(function(res){
+      STUDIO.refUploading = false;
+      if(res && res.project) STUDIO.detail = res.project;
+      STUDIO.loaded = false;
+      render();
+      var ref = res && res.reference;
+      toast('参考视频已接入' + (ref && ref.durationMs ? ' · ' + studioSecLabel(ref.durationMs) : ''), 'ok');
+      return loadStudioProjects();
+    }).catch(function(err){
+      STUDIO.refUploading = false;
+      render();
+      toast('接入参考视频失败：' + errMsg(err), 'err');
+    });
+  }
+
+  function studioRemoveRef(){
+    var d = STUDIO.detail;
+    if(!d) return;
+    studioConfirm('移除参考视频？', '仅解除本项目与原片的关联，已抽取的原片画面仍保留在分镜里。', function(){
+      request('/video/projects/' + encodeURIComponent(d.id) + '/reference', { method:'DELETE' })
+        .then(function(res){
+          if(res && res.project) STUDIO.detail = res.project;
+          STUDIO.loaded = false;
+          render();
+          toast('已移除参考视频', 'ok');
+          return loadStudioProjects();
+        })
+        .catch(function(err){ toast('移除失败：' + errMsg(err), 'err'); });
+    }, '移除');
+  }
+
+  function studioRefFrames(){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.refFramesBusy) return;
+    var count = (d.scenes || []).length;
+    studioConfirm(
+      '按原片生成分镜图？',
+      '将按旁白字数比例定位到原片时间点，为 ' + count + ' 个分镜各抽一帧，覆盖该分镜当前的画面。抽取后可直接图生视频。',
+      function(){ doStudioRefFrames(d); },
+      '开始取帧'
+    );
+  }
+
+  function doStudioRefFrames(d){
+    STUDIO.refFramesBusy = true;
+    render();
+    request('/video/projects/' + encodeURIComponent(d.id) + '/reference/frames', { method:'POST', body:'{}' })
+      .then(function(r){
+        STUDIO.refFramesBusy = false;
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id).then(function(){
+          render();
+          var applied = (r && r.applied) || 0;
+          var failed = (r && r.failed) || [];
+          if(failed.length) toast('已取原片画面 ' + applied + ' 个，' + failed.length + ' 个失败', 'err');
+          else toast('已按原片生成 ' + applied + ' 个分镜图', 'ok');
+          return loadStudioProjects();
+        });
+      })
+      .catch(function(err){
+        STUDIO.refFramesBusy = false;
+        render();
+        toast('按原片取帧失败：' + errMsg(err), 'err');
+      });
+  }
+
+  function studioSceneRefFrame(id){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.refBusy) return;
+    STUDIO.refBusy = id;
+    var btn = document.querySelector('[data-act="studioSceneRefFrame"][data-id="' + id + '"]');
+    if(btn){ btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_top</span>'; }
+    request('/video/scenes/' + encodeURIComponent(id) + '/ref-frame', { method:'POST', body:'{}' })
+      .then(function(r){
+        STUDIO.refBusy = null;
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id).then(function(){
+          render();
+          var at = r && r.atMs ? ' · ' + studioSecLabel(r.atMs) : '';
+          toast('已取原片画面' + at, 'ok');
+        });
+      })
+      .catch(function(err){
+        STUDIO.refBusy = null;
+        render();
+        toast('取原片画面失败：' + errMsg(err), 'err');
+      });
+  }
+
+  function studioGenSceneAudio(id){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.genAudioId) return;
+    STUDIO.genAudioId = id;
+    var btn = document.querySelector('[data-act="studioGenSceneAudio"][data-id="' + id + '"]');
+    if(btn){
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_top</span>';
+    }
+    request('/video/scenes/' + encodeURIComponent(id) + '/audio', { method:'POST', body: '{}' })
+      .then(function(r){
+        STUDIO.genAudioId = null;
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id).then(function(){
+          render();
+          var sec = r && r.durationMs ? studioSecLabel(r.durationMs) : '';
+          if(r && r.warning) toast('配音已生成（' + r.warning + '）', 'err');
+          else toast('配音已生成' + (sec ? ' · ' + sec : ''), 'ok');
+        });
+      })
+      .catch(function(err){
+        STUDIO.genAudioId = null;
+        render();
+        toast('配音失败：' + errMsg(err), 'err');
+      });
+  }
+
+  function studioPlaySceneVideo(id){
+    var d = STUDIO.detail;
+    var scenes = (d && d.scenes) || [];
+    var sc = null;
+    for(var i = 0; i < scenes.length; i++){ if(scenes[i].id === id){ sc = scenes[i]; break; } }
+    if(!sc || !sc.videoAssetId){ toast('该分镜还没有视频', 'err'); return; }
+    var modal = $('sceneVideoModal');
+    var player = $('sceneVideoPlayer');
+    if(!modal || !player) return;
+    $('sceneVideoTitle').textContent = sc.title || ('场景 ' + sc.idx);
+    player.src = studioAssetUrl(sc.videoAssetId);
+    modal.classList.add('on');
+    var p = player.play();
+    if(p && p.catch) p.catch(function(){});
+  }
+
+  function closeSceneVideoModal(){
+    var modal = $('sceneVideoModal');
+    var player = $('sceneVideoPlayer');
+    if(modal) modal.classList.remove('on');
+    if(player){ player.pause(); player.removeAttribute('src'); player.load(); }
+  }
+
+  function studioPlaySceneAudio(id){
+    var d = STUDIO.detail;
+    var scenes = (d && d.scenes) || [];
+    var sc = null;
+    for(var i = 0; i < scenes.length; i++){ if(scenes[i].id === id){ sc = scenes[i]; break; } }
+    if(!sc || !sc.audioAssetId){ toast('该分镜还没有配音', 'err'); return; }
+    var modal = $('sceneAudioModal');
+    var player = $('sceneAudioPlayer');
+    if(!modal || !player) return;
+    $('sceneAudioTitle').textContent = (sc.title || ('场景 ' + sc.idx)) + ' · 配音';
+    player.src = studioAssetUrl(sc.audioAssetId);
+    modal.classList.add('on');
+    var p = player.play();
+    if(p && p.catch) p.catch(function(){});
+  }
+
+  function closeSceneAudioModal(){
+    var modal = $('sceneAudioModal');
+    var player = $('sceneAudioPlayer');
+    if(modal) modal.classList.remove('on');
+    if(player){ player.pause(); player.removeAttribute('src'); player.load(); }
+  }
+
+  function studioGenSceneVideo(id){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.genVideoId) return;
+    STUDIO.genVideoId = id;
+    var btn = document.querySelector('[data-act="studioGenSceneVideo"][data-id="' + id + '"]');
+    if(btn){
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_top</span>';
+    }
+    request('/video/scenes/' + encodeURIComponent(id) + '/video', { method:'POST', body: '{}' })
+      .then(function(){ studioPollSceneVideo(d.id, id, 0); })
+      .catch(function(err){
+        STUDIO.genVideoId = null;
+        STUDIO.loaded = false;
+        loadStudioProject(d.id).then(function(){ render(); });
+        toast('视频生成失败：' + errMsg(err), 'err');
+      });
+  }
+
+  function studioPollSceneVideo(projectId, id, tries, errs){
+    errs = errs || 0;
+    if(STUDIO.genVideoId !== id) return;
+    if(tries >= 90){
+      STUDIO.genVideoId = null;
+      STUDIO.loaded = false;
+      loadStudioProject(projectId).then(function(){ render(); });
+      toast('视频生成超时，请稍后重试', 'err');
+      return;
+    }
+    setTimeout(function(){
+      if(STUDIO.genVideoId !== id) return;
+      request('/video/scenes/' + encodeURIComponent(id) + '/video', { method:'GET' })
+        .then(function(r){
+          if(r && r.status === 'running'){ studioPollSceneVideo(projectId, id, tries + 1, 0); return; }
+          STUDIO.genVideoId = null;
+          STUDIO.loaded = false;
+          if(r && r.status === 'done'){
+            return loadStudioProject(projectId).then(function(){ render(); toast('图生视频完成', 'ok'); });
+          }
+          loadStudioProject(projectId).then(function(){ render(); });
+          toast('视频生成失败：' + errMsg(r && r.error ? r.error : '任务失败'), 'err');
+        })
+        .catch(function(err){
+          // 单次查询失败（例如重建任务时参数自适应）不中断，连续失败才报错
+          if(errs < 2){ studioPollSceneVideo(projectId, id, tries + 1, errs + 1); return; }
+          STUDIO.genVideoId = null;
+          render();
+          toast('视频状态查询失败：' + errMsg(err), 'err');
+        });
+    }, 4000);
+  }
+
+  function studioUploadBgm(file){
+    var d = STUDIO.detail;
+    if(!d || !file) return;
+    if(file.size > 12 * 1024 * 1024){ toast('背景音乐请控制在 12MB 内', 'err'); return; }
+    var reader = new FileReader();
+    reader.onerror = function(){ toast('读取音频失败', 'err'); };
+    reader.onload = function(){
+      request('/video/projects/' + encodeURIComponent(d.id) + '/bgm', {
+        method: 'POST',
+        body: JSON.stringify({ dataUrl: reader.result, name: file.name })
+      }).then(function(){
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id).then(function(){ render(); toast('背景音乐已设置', 'ok'); });
+      }).catch(function(err){ toast('上传背景音乐失败：' + errMsg(err), 'err'); });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function studioSetBgmVolume(pct){
+    var d = STUDIO.detail;
+    if(!d) return;
+    var v = Math.max(0, Math.min(100, Math.round(num(pct)))) / 100;
+    if(d.settings) d.settings.bgmVolume = v;
+    var label = $('studioBgmVolLabel');
+    if(label) label.textContent = Math.round(v * 100) + '%';
+    request('/video/projects/' + encodeURIComponent(d.id) + '/bgm', { method: 'PUT', body: JSON.stringify({ volume: v }) })
+      .catch(function(err){ toast('保存音量失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioClearBgm(){
+    var d = STUDIO.detail;
+    if(!d) return;
+    request('/video/projects/' + encodeURIComponent(d.id) + '/bgm', { method: 'DELETE' })
+      .then(function(){
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id).then(function(){ render(); toast('已移除背景音乐', 'ok'); });
+      })
+      .catch(function(err){ toast('移除背景音乐失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioSetTitle(){
+    var d = STUDIO.detail;
+    if(!d) return;
+    var textEl = $('studioTitleText');
+    var secEl = $('studioTitleSec');
+    var payload = {
+      titleText: textEl ? textEl.value.trim() : '',
+      titleSeconds: secEl ? num(secEl.value) : 3
+    };
+    if(d.settings){
+      d.settings.titleText = payload.titleText;
+      d.settings.titleSeconds = payload.titleSeconds;
+    }
+    request('/video/projects/' + encodeURIComponent(d.id) + '/title', { method:'PUT', body: JSON.stringify(payload) })
+      .then(function(r){ if(r && r.project) STUDIO.detail = r.project; toast('标题设置已保存', 'ok'); })
+      .catch(function(err){ toast('保存标题失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioRender(){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.rendering) return;
+    STUDIO.rendering = true;
+    render();
+    request('/video/projects/' + encodeURIComponent(d.id) + '/render', { method:'POST', body: '{}' })
+      .then(function(r){
+        STUDIO.rendering = false;
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id).then(function(){
+          render();
+          toast('成片已合成 · ' + (r && r.asset ? Math.round((r.asset.sizeBytes || 0) / 1024) + ' KB' : '完成'), 'ok');
+        });
+      })
+      .catch(function(err){
+        STUDIO.rendering = false;
+        loadStudioProject(d.id).then(function(){ render(); });
+        toast('合成失败：' + errMsg(err), 'err');
+      });
+  }
+
+  function studioSaveScene(){
+    var d = STUDIO.detail;
+    if(!d) return;
+    var id = STUDIO.sceneId;
+    var durSec = $('studioSceneDur') ? num($('studioSceneDur').value) : 5;
+    var charIds = [];
+    var boxes = document.querySelectorAll('[data-scene-char]');
+    for(var i = 0; i < boxes.length; i++){ if(boxes[i].checked) charIds.push(boxes[i].getAttribute('data-scene-char')); }
+    var payload = {
+      title: $('studioSceneTitle') ? $('studioSceneTitle').value.trim() : '',
+      durationMs: Math.max(500, Math.round(durSec * 1000)),
+      shot: $('studioSceneShot') ? $('studioSceneShot').value.trim() : '',
+      camera: $('studioSceneCam') ? $('studioSceneCam').value.trim() : '',
+      prompt: $('studioScenePrompt') ? $('studioScenePrompt').value.trim() : '',
+      negativePrompt: $('studioSceneNeg') ? $('studioSceneNeg').value.trim() : '',
+      narration: $('studioSceneNarr') ? $('studioSceneNarr').value.trim() : '',
+      onScreenText: $('studioSceneText') ? $('studioSceneText').value.trim() : '',
+      renderMode: $('studioSceneMode') ? $('studioSceneMode').value : 'image',
+      transition: $('studioSceneTrans') ? $('studioSceneTrans').value.trim() : '',
+      characterIds: charIds
+    };
+    if(!payload.title && !payload.prompt && !payload.narration){ toast('至少填写分镜标题或画面描述', 'err'); return; }
+    var p = (id && id !== '__new')
+      ? request('/video/scenes/' + encodeURIComponent(id), { method:'PUT', body: JSON.stringify(payload) })
+      : request('/video/projects/' + encodeURIComponent(d.id) + '/scenes', { method:'POST', body: JSON.stringify(payload) });
+    p.then(function(){
+      STUDIO.sceneId = null;
+      STUDIO.loaded = false;
+      return loadStudioProject(d.id);
+    }).then(function(){
+      render();
+      toast('分镜已保存', 'ok');
+      return loadStudioProjects();
+    }).catch(function(err){ toast('保存分镜失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioMoveScene(id, dir){
+    var d = STUDIO.detail;
+    if(!d || !d.scenes) return;
+    var ids = d.scenes.map(function(s){ return s.id; });
+    var i = ids.indexOf(id);
+    if(i < 0) return;
+    var j = dir === 'up' ? i - 1 : i + 1;
+    if(j < 0 || j >= ids.length) return;
+    ids.splice(j, 0, ids.splice(i, 1)[0]);
+    request('/video/projects/' + encodeURIComponent(d.id) + '/scenes', { method:'PUT', body: JSON.stringify({ ids: ids }) })
+      .then(function(r){ if(r && r.scenes) d.scenes = r.scenes; STUDIO.loaded = false; render(); })
+      .catch(function(err){ toast('排序失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioAddCharacter(){
+    var d = STUDIO.detail;
+    if(!d) return;
+    var nameEl = $('studioCharName'), descEl = $('studioCharDesc');
+    var name = nameEl ? nameEl.value.trim() : '';
+    if(!name){ toast('请填写角色名', 'err'); return; }
+    request('/video/projects/' + encodeURIComponent(d.id) + '/characters', {
+      method:'POST',
+      body: JSON.stringify({ name: name, description: descEl ? descEl.value.trim() : '' })
+    }).then(function(){
+      STUDIO.loaded = false;
+      return loadStudioProject(d.id);
+    }).then(function(){ render(); toast('角色已添加', 'ok'); })
+      .catch(function(err){ toast('添加失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioCharAnchor(id){
+    var d = STUDIO.detail;
+    if(!d || STUDIO.charBusy) return;
+    STUDIO.charBusy = id;
+    var style = STUDIO.charStyleId === id ? (STUDIO.charStyle || '') : '';
+    var btn = document.querySelector('[data-act="studioCharAnchor"][data-id="' + id + '"]');
+    if(btn){
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_top</span>';
+    }
+    request('/video/characters/' + encodeURIComponent(id) + '/anchor', {
+      method:'POST',
+      body: JSON.stringify({ style: style, setActive: true, projectId: d.id })
+    })
+      .then(function(){
+        STUDIO.charBusy = null;
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id).then(function(){ render(); toast('定妆图已生成，并设为当前', 'ok'); });
+      })
+      .catch(function(err){
+        STUDIO.charBusy = null;
+        render();
+        toast('定妆图生成失败：' + errMsg(err), 'err');
+      });
+  }
+
+  function studioCharAnchorUse(id, assetId){
+    var d = STUDIO.detail;
+    if(!d || !assetId) return;
+    request('/video/characters/' + encodeURIComponent(id) + '/anchor/active', {
+      method:'POST',
+      body: JSON.stringify({ assetId: assetId })
+    }).then(function(){
+      STUDIO.loaded = false;
+      return loadStudioProject(d.id).then(function(){ render(); toast('已切换当前定妆图', 'ok'); });
+    }).catch(function(err){ toast('切换失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioCharAnchorDelete(id, assetId){
+    var d = STUDIO.detail;
+    if(!d || !assetId) return;
+    studioConfirm('删除这张定妆图？', '删除后不可恢复；如果它是当前使用的那张，会自动改用其他候选。', function(){
+      request('/video/characters/' + encodeURIComponent(id) + '/anchor/' + encodeURIComponent(assetId), { method:'DELETE' })
+        .then(function(){
+          STUDIO.loaded = false;
+          return loadStudioProject(d.id).then(function(){ render(); toast('已删除', 'ok'); });
+        })
+        .catch(function(err){ toast('删除失败：' + errMsg(err), 'err'); });
+    });
+  }
+
+  function studioUploadCharRef(id, file){
+    var d = STUDIO.detail;
+    if(!d) return;
+    if(!/^image\//.test(file.type || '')){ toast('请选择图片文件', 'err'); return; }
+    downscaleImage(file, 1280, 0.86)
+      .then(function(dataUrl){
+        return request('/video/characters/' + encodeURIComponent(id) + '/refs', {
+          method:'POST',
+          body: JSON.stringify({ dataUrl: dataUrl, projectId: d.id })
+        });
+      })
+      .then(function(){
+        STUDIO.loaded = false;
+        return loadStudioProject(d.id);
+      })
+      .then(function(){ render(); toast('参考图已上传', 'ok'); })
+      .catch(function(err){ toast('参考图上传失败：' + errMsg(err), 'err'); });
+  }
+
+  function studioDeleteCharacter(id){
+    var d = STUDIO.detail;
+    if(!d) return;
+    request('/video/characters/' + encodeURIComponent(id), { method:'DELETE' })
+      .then(function(){ STUDIO.loaded = false; return loadStudioProject(d.id); })
+      .then(function(){ render(); toast('角色已删除', 'ok'); })
+      .catch(function(err){ toast('删除失败：' + errMsg(err), 'err'); });
+  }
+
+  function askDeleteStudio(kind, id, name){
+    var isProject = kind === 'project';
+    var isScene = kind === 'scene';
+    studioConfirm(
+      isProject ? '删除这个视频项目？' : (isScene ? '删除这个分镜？' : '删除这个角色？'),
+      isProject
+        ? '「' + (name || '未命名') + '」的脚本、分镜与已生成素材将一并删除，无法恢复（账号共享的角色会保留）。'
+        : isScene
+          ? '「' + (name || '未命名') + '」将被删除。'
+          : '「' + (name || '未命名') + '」属于账号共享角色，删除后所有视频项目都无法再选用，无法恢复。',
+      function(){
+        var d = STUDIO.detail;
+        if(isProject){
+          request('/video/projects/' + encodeURIComponent(id), { method:'DELETE' }).then(function(){
+            if(STUDIO.detailId === id){ STUDIO.detailId = null; STUDIO.detail = null; STUDIO.sceneId = null; }
+            STUDIO.loaded = false;
+            render();
+            toast('视频项目已删除', 'ok');
+            return loadStudioProjects();
+          }).catch(function(err){ toast('删除失败：' + errMsg(err), 'err'); });
+          return;
+        }
+        if(!d) return;
+        var p = isScene
+          ? request('/video/scenes/' + encodeURIComponent(id), { method:'DELETE' })
+          : request('/video/characters/' + encodeURIComponent(id), { method:'DELETE' });
+        p.then(function(){
+          if(isScene && STUDIO.sceneId === id) STUDIO.sceneId = null;
+          STUDIO.loaded = false;
+          return loadStudioProject(d.id);
+        }).then(function(){ render(); toast('已删除', 'ok'); })
+          .catch(function(err){ toast('删除失败：' + errMsg(err), 'err'); });
+      }
+    );
+  }
+
+  function studioConfirm(title, text, fn, okLabel){
+    pendingDelete = { kind:'custom', fn: fn };
+    $('modalTitle').textContent = title;
+    $('modalText').textContent = text;
+    $('modalOk').textContent = okLabel || '确认删除';
+    $('modal').classList.add('on');
+  }
+
   /* ---------- render ---------- */
   function render(){
     var v = $('view');
@@ -5380,6 +7413,7 @@
     else if(state.view === 'publish') v.innerHTML = viewPublish();
     else if(state.view === 'review') v.innerHTML = viewReview();
     else if(state.view === 'assets') v.innerHTML = viewAssets();
+    else if(state.view === 'studio'){ v.innerHTML = viewStudio(); ensureStudio(); }
     else if(state.view === 'connections') v.innerHTML = viewConnections();
     syncTopicCheckAll();
 
@@ -5402,13 +7436,19 @@
     var pubBadge = $('badgePublish');
     if(pubBadge) pubBadge.style.display = 'none';
     var exportBtn = $('exportBtn');
-    if(exportBtn) exportBtn.style.display = (state.view === 'connections' || state.view === 'publish') ? 'none' : '';
+    if(exportBtn) exportBtn.style.display = (state.view === 'connections' || state.view === 'publish' || state.view === 'studio') ? 'none' : '';
     syncVoiceIcons();
+    syncSceneModal();
     armPublishPoll();
   }
 
   function switchView(view, opts){
     opts = opts || {};
+    if(view !== 'studio'){
+      if(STUDIO.voiceRec && STUDIO.voiceRec.recording) studioVoiceResetRec();
+      STUDIO.sceneId = null;
+      STUDIO.sceneModalId = null;
+    }
     state.view = view;
     if(!opts.keepQuery) state.q = '';
     state.assetId = opts.assetId || null;
@@ -5418,6 +7458,7 @@
     render();
     scrollTop();
     if(view === 'topics') loadBenchmarks();
+    if(view === 'studio') ensureStudio();
     if(view === 'publish'){
       loadPublishData().then(render).catch(function(err){
         toast('发布队列加载失败：' + errMsg(err), 'err');
@@ -5719,6 +7760,44 @@
       return;
     }
     if(t.id === 'statusFilter'){ state.status = t.value; render(); return; }
+    var cu = t && t.getAttribute ? t.getAttribute('data-char-upload') : null;
+    if(cu){
+      var file = t.files && t.files[0];
+      t.value = '';
+      if(file) studioUploadCharRef(cu, file);
+      return;
+    }
+    if(t && t.hasAttribute && t.hasAttribute('data-bgm-upload')){
+      var bgmFile = t.files && t.files[0];
+      t.value = '';
+      if(bgmFile) studioUploadBgm(bgmFile);
+      return;
+    }
+    if(t.id === 'studioVoicePick'){ studioVoiceBind(t.value); return; }
+    if(t.id === 'studioBgmVolume'){ studioSetBgmVolume(t.value); return; }
+    if(t.id === 'studioTitleText' || t.id === 'studioTitleSec'){ studioSetTitle(); return; }
+    if(t.id === 'studioVersion'){
+      var vd = STUDIO.detail;
+      var ver = parseInt(t.value, 10) || 0;
+      if(vd && ver){
+        request('/video/projects/' + encodeURIComponent(vd.id) + '/script?version=' + ver).then(function(r){
+          STUDIO.viewScript = r.script;
+          render();
+        }).catch(function(err){ toast('读取脚本版本失败：' + errMsg(err), 'err'); });
+      }
+      return;
+    }
+    if(t.id === 'studioTopic'){
+      var code = t.value;
+      STUDIO.form.topicCode = code;
+      var picked = null;
+      DATA.topic.forEach(function(r){ if((r['选题ID'] || '') === code) picked = r; });
+      if(picked){
+        var titleEl = $('studioTitle');
+        if(titleEl && !titleEl.value.trim()) titleEl.value = picked['选题'] || '';
+      }
+      return;
+    }
   });
   viewEl.addEventListener('keydown', function(e){
     if(e.isComposing || e.keyCode === 229) return;
@@ -5745,6 +7824,10 @@
       state.trend.tx.url = t.value;
       return;
     }
+    if(t.id === 'transcriptManual'){
+      state.trend.tx.manual = t.value;
+      return;
+    }
   });
   viewEl.addEventListener('change', function(e){
     var t = e.target;
@@ -5752,6 +7835,18 @@
       var picked = t.files && t.files[0];
       t.value = '';
       selectTranscriptFile(picked);
+      return;
+    }
+    if(t.id === 'studioRefFile'){
+      var refPicked = t.files && t.files[0];
+      t.value = '';
+      studioUploadRef(refPicked);
+      return;
+    }
+    if(t.id === 'studioScriptMode'){
+      STUDIO.scriptMode = t.value;
+      var scriptRefEl = $('studioScriptRef');
+      if(scriptRefEl) scriptRefEl.disabled = t.value === 'faithful';
       return;
     }
   });
@@ -5961,6 +8056,163 @@
       openEditor('topic', null, null);
       return;
     }
+    if(act === 'topicToVideo'){
+      e.preventDefault();
+      var vTopic = null;
+      DATA.topic.forEach(function(r){ if(r['_id'] === id) vTopic = r; });
+      if(!vTopic) return;
+      STUDIO.detailId = null;
+      STUDIO.detail = null;
+      STUDIO.detailFailed = false;
+      STUDIO.sceneId = null;
+      STUDIO.viewScript = null;
+      STUDIO.createOpen = true;
+      STUDIO.form = {
+        topicCode: vTopic['选题ID'] || '',
+        title: vTopic['选题'] || '',
+        aspect: STUDIO.form.aspect || '16:9',
+        style: '',
+        brief: ''
+      };
+      switchView('studio');
+      return;
+    }
+    if(act === 'studioToggleCreate'){
+      e.preventDefault();
+      if(STUDIO.createOpen){ STUDIO.createOpen = false; }
+      else {
+        if(STUDIO.detailId){ STUDIO.detailId = null; STUDIO.detail = null; STUDIO.sceneId = null; STUDIO.viewScript = null; }
+        STUDIO.createOpen = true;
+      }
+      render();
+      return;
+    }
+    if(act === 'studioCancelCreate'){ e.preventDefault(); STUDIO.createOpen = false; render(); return; }
+    if(act === 'studioStylePick'){
+      e.preventDefault();
+      var styleTarget = actEl.getAttribute('data-target');
+      var styleVal = actEl.getAttribute('data-value') || '';
+      var styleInput = $(styleTarget);
+      if(styleInput) styleInput.value = styleVal;
+      var styleGroup = actEl.parentNode;
+      if(styleGroup && styleGroup.querySelectorAll){
+        Array.prototype.forEach.call(styleGroup.querySelectorAll('[data-act="studioStylePick"]'), function(b){
+          var on = b === actEl;
+          b.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ' + (on ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high');
+        });
+      }
+      return;
+    }
+    if(act === 'studioCreateAspect'){
+      e.preventDefault();
+      studioReadCreateForm();
+      STUDIO.form.aspect = actEl.getAttribute('data-val') || '16:9';
+      render();
+      return;
+    }
+    if(act === 'studioCreate'){ e.preventDefault(); studioCreate(); return; }
+    if(act === 'studioRefresh'){
+      e.preventDefault();
+      STUDIO.loaded = false;
+      STUDIO.error = '';
+      STUDIO.detailFailed = false;
+      render();
+      ensureStudio();
+      return;
+    }
+    if(act === 'studioOpen'){ e.preventDefault(); openStudioProject(id); return; }
+    if(act === 'studioDelete'){ e.preventDefault(); askDeleteStudio('project', id, actEl.getAttribute('data-name')); return; }
+    if(act === 'studioBack'){
+      e.preventDefault();
+      STUDIO.detailId = null;
+      STUDIO.detail = null;
+      STUDIO.detailFailed = false;
+      STUDIO.sceneId = null;
+      STUDIO.viewScript = null;
+      STUDIO.pendingAspect = null;
+      STUDIO.scriptMode = '';
+      STUDIO.ref = '';
+      STUDIO.refUploading = false;
+      STUDIO.refUploadPct = 0;
+      STUDIO.refFramesBusy = false;
+      STUDIO.refBusy = null;
+      STUDIO.genScript = false;
+      STUDIO.genScenes = false;
+      STUDIO.genImageId = null;
+      STUDIO.genAudioId = null;
+      STUDIO.genVideoId = null;
+      STUDIO.rendering = false;
+      STUDIO.charBusy = null;
+      STUDIO.charStyleId = null;
+      STUDIO.charStyle = '';
+      studioVoiceResetRec();
+      render();
+      return;
+    }
+    if(act === 'studioOpenConnections'){ e.preventDefault(); switchView('connections'); return; }
+    if(act === 'studioAspect'){
+      e.preventDefault();
+      syncStudioDetailInputs();
+      STUDIO.pendingAspect = actEl.getAttribute('data-val') || null;
+      render();
+      return;
+    }
+    if(act === 'studioSaveProject'){ e.preventDefault(); studioSaveProject(); return; }
+    if(act === 'studioSaveScript'){ e.preventDefault(); studioSaveScript(); return; }
+    if(act === 'studioGenScript'){ e.preventDefault(); studioGenScript(); return; }
+    if(act === 'studioGenScenes'){ e.preventDefault(); studioGenScenes(); return; }
+    if(act === 'studioPickRef'){ e.preventDefault(); studioPickRef(); return; }
+    if(act === 'studioRemoveRef'){ e.preventDefault(); studioRemoveRef(); return; }
+    if(act === 'studioRefFrames'){ e.preventDefault(); studioRefFrames(); return; }
+    if(act === 'studioSceneRefFrame'){ e.preventDefault(); studioSceneRefFrame(id); return; }
+    if(act === 'studioGenSceneImage'){ e.preventDefault(); studioGenSceneImage(id); return; }
+    if(act === 'studioGenSceneAudio'){ e.preventDefault(); studioGenSceneAudio(id); return; }
+    if(act === 'studioGenSceneVideo'){ e.preventDefault(); studioGenSceneVideo(id); return; }
+    if(act === 'studioPlaySceneVideo'){ e.preventDefault(); studioPlaySceneVideo(id); return; }
+    if(act === 'studioPlaySceneAudio'){ e.preventDefault(); studioPlaySceneAudio(id); return; }
+    if(act === 'studioCharAnchor'){ e.preventDefault(); studioCharAnchor(id); return; }
+    if(act === 'studioCharStyleOpen'){
+      e.preventDefault();
+      var willOpen = STUDIO.charStyleId !== id;
+      STUDIO.charStyleId = willOpen ? id : null;
+      STUDIO.charStyle = '';
+      if(willOpen){
+        var sd = STUDIO.detail;
+        if(sd) (sd.characters || []).forEach(function(cc){ if(cc.id === id) STUDIO.charStyle = cc.style || sd.style || ''; });
+      }
+      render();
+      return;
+    }
+    if(act === 'studioCharStylePick'){
+      e.preventDefault();
+      STUDIO.charStyle = actEl.getAttribute('data-style') || '';
+      var chipGroup = actEl.parentNode;
+      if(chipGroup && chipGroup.querySelectorAll){
+        Array.prototype.forEach.call(chipGroup.querySelectorAll('[data-act="studioCharStylePick"]'), function(b){
+          var on = b === actEl;
+          b.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ' + (on ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high');
+        });
+      }
+      return;
+    }
+    if(act === 'studioCharAnchorUse'){ e.preventDefault(); studioCharAnchorUse(id, actEl.getAttribute('data-asset')); return; }
+    if(act === 'studioCharAnchorDel'){ e.preventDefault(); studioCharAnchorDelete(id, actEl.getAttribute('data-asset')); return; }
+    if(act === 'studioRender'){ e.preventDefault(); studioRender(); return; }
+    if(act === 'studioClearBgm'){ e.preventDefault(); studioClearBgm(); return; }
+    if(act === 'studioAddScene'){ e.preventDefault(); STUDIO.sceneId = '__new'; render(); return; }
+    if(act === 'studioEditScene'){ e.preventDefault(); STUDIO.sceneId = id; render(); return; }
+    if(act === 'studioCancelScene'){ e.preventDefault(); STUDIO.sceneId = null; render(); return; }
+    if(act === 'studioSaveScene'){ e.preventDefault(); studioSaveScene(); return; }
+    if(act === 'studioDeleteScene'){ e.preventDefault(); askDeleteStudio('scene', id, actEl.getAttribute('data-name')); return; }
+    if(act === 'studioMoveScene'){ e.preventDefault(); studioMoveScene(id, actEl.getAttribute('data-dir')); return; }
+    if(act === 'studioAddChar'){ e.preventDefault(); studioAddCharacter(); return; }
+    if(act === 'studioDeleteChar'){ e.preventDefault(); askDeleteStudio('character', id, actEl.getAttribute('data-name')); return; }
+    if(act === 'studioVoiceRefresh'){ e.preventDefault(); studioVoiceRefresh(id); return; }
+    if(act === 'studioVoiceRetry'){ e.preventDefault(); studioVoiceRetry(id); return; }
+    if(act === 'studioVoiceDelete'){ e.preventDefault(); studioVoiceDelete(id); return; }
+    if(act === 'studioVoiceRecord'){ e.preventDefault(); studioVoiceToggleRecord(); return; }
+    if(act === 'studioVoiceRecDiscard'){ e.preventDefault(); studioVoiceDiscardRecording(); return; }
+    if(act === 'studioVoiceRecSubmit'){ e.preventDefault(); studioVoiceSubmitRecording(); return; }
     if(act === 'trendConnect'){
       e.preventDefault();
       switchView('connections');
@@ -6068,6 +8320,31 @@
       transcriptToTopic();
       return;
     }
+    if(act === 'transcriptSuggestTitle'){
+      e.preventDefault();
+      transcriptSuggestTitle();
+      return;
+    }
+    if(act === 'transcriptManualUse'){
+      e.preventDefault();
+      transcriptManualUse();
+      return;
+    }
+    if(act === 'transcriptFix'){
+      e.preventDefault();
+      transcriptFix();
+      return;
+    }
+    if(act === 'transcriptPickTitle'){
+      e.preventDefault();
+      transcriptPickTitle(actEl.getAttribute('data-title'));
+      return;
+    }
+    if(act === 'transcriptDismissTitles'){
+      e.preventDefault();
+      transcriptDismissTitles();
+      return;
+    }
     if(act === 'transcriptSaveAsset'){
       e.preventDefault();
       transcriptSaveAsset();
@@ -6128,6 +8405,26 @@
     if(act === 'connTab'){
       e.preventDefault();
       switchConnTab(actEl.getAttribute('data-tab'));
+      return;
+    }
+    if(act === 'aiSave'){
+      e.preventDefault();
+      aiSave(actEl.getAttribute('data-provider'));
+      return;
+    }
+    if(act === 'aiTest'){
+      e.preventDefault();
+      aiTest(actEl.getAttribute('data-provider'));
+      return;
+    }
+    if(act === 'aiToggle'){
+      e.preventDefault();
+      aiToggle(actEl.getAttribute('data-provider'));
+      return;
+    }
+    if(act === 'aiClear'){
+      e.preventDefault();
+      aiClear(actEl.getAttribute('data-provider'), actEl.getAttribute('data-key'));
       return;
     }
     if(act === 'proxySave'){
@@ -6565,7 +8862,7 @@
     } else if(type === 'checkbox'){
       html += '<label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox"' + idAttr + (value ? ' checked' : '') + '><span class="text-label-sm">是</span></label>';
     } else {
-      var longFields = ['成稿Markdown','配图说明','切入角度','复盘备注','备注'];
+      var longFields = ['成稿Markdown','配图说明','切入角度','参考文案','复盘备注','备注'];
       var isLong = longFields.indexOf(name) >= 0;
       if(name === '成稿Markdown'){
         html += '<div class="md-tools mb-1.5"><button type="button" data-md="h2">H2 小标题</button><button type="button" data-md="quote">引用</button><button type="button" data-md="code">代码块</button><button type="button" data-md="list">列表</button></div>';
@@ -6573,7 +8870,8 @@
       } else if(type === 'text'){
         html += '<input type="text" class="inp"' + idAttr + ' value="' + esc(value == null ? '' : value) + '">';
       } else {
-        html += '<textarea class="ta"' + (isLong ? ' rows="3"' : ' rows="2"') + idAttr + '>' + esc(value == null ? '' : value) + '</textarea>';
+        var rows = name === '参考文案' ? ' rows="6"' : (isLong ? ' rows="3"' : ' rows="2"');
+        html += '<textarea class="ta"' + rows + idAttr + '>' + esc(value == null ? '' : value) + '</textarea>';
       }
     }
     html += '</div>';
@@ -7620,6 +9918,7 @@
     pendingDelete = null;
     $('modal').classList.remove('on');
     if(!job) return;
+    if(job.kind === 'custom'){ if(typeof job.fn === 'function') job.fn(); return; }
     if(job.kind === 'recording'){ deleteVoice(job.id); return; }
     if(job.kind === 'publish'){
       request('/publish/tasks/' + encodeURIComponent(job.id), { method: 'DELETE' }).then(function(){
@@ -7643,6 +9942,32 @@
     });
   });
   $('modal').addEventListener('click', function(e){ if(e.target === this){ this.classList.remove('on'); pendingDelete = null; } });
+
+  /* ---------- 分镜编辑弹层 ---------- */
+  if($('sceneModal')){
+    $('sceneModalClose').addEventListener('click', function(){ STUDIO.sceneId = null; render(); });
+    // 弹层在 #view 之外，拿不到 #view 上的 data-act 分发，这里单独处理
+    $('sceneModal').addEventListener('click', function(e){
+      if(e.target === this){ STUDIO.sceneId = null; render(); return; }
+      var el = e.target.closest ? e.target.closest('[data-act]') : null;
+      if(!el) return;
+      var act = el.getAttribute('data-act');
+      if(act === 'studioCancelScene'){ e.preventDefault(); STUDIO.sceneId = null; render(); return; }
+      if(act === 'studioSaveScene'){ e.preventDefault(); studioSaveScene(); return; }
+    });
+  }
+
+  /* ---------- 分镜视频 / 配音播放弹层 ---------- */
+  if($('sceneVideoModal')){
+    $('sceneVideoClose').addEventListener('click', closeSceneVideoModal);
+    $('sceneVideoModal').addEventListener('click', function(e){ if(e.target === this) closeSceneVideoModal(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeSceneVideoModal(); });
+  }
+  if($('sceneAudioModal')){
+    $('sceneAudioClose').addEventListener('click', closeSceneAudioModal);
+    $('sceneAudioModal').addEventListener('click', function(e){ if(e.target === this) closeSceneAudioModal(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeSceneAudioModal(); });
+  }
 
   /* ---------- 主理人资料 ---------- */
   var profileDraftFile = null;
@@ -8097,7 +10422,7 @@
 
   function boot(){
     var initial = (location.hash || '').replace(/^#/, '');
-    if(['home','topics','calendar','publish','review','assets','connections'].indexOf(initial) >= 0) state.view = initial;
+    if(['home','topics','studio','calendar','publish','review','assets','connections'].indexOf(initial) >= 0) state.view = initial;
     setSync('正在连接…', '');
     // 先确定当前账号，再建立 SSE 与拉取数据，避免读到上一个账号的内容
     loadAccounts().then(function(){

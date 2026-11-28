@@ -75,6 +75,88 @@ function clientIp(req) {
   return req.socket.remoteAddress || '';
 }
 
+// 中国大陆/台湾/香港/澳门 IPv4 段，离线数据由 scripts/update-geo.mjs 生成
+const zhRegionRanges = (() => {
+  try {
+    const text = fs.readFileSync(path.join(__dirname, 'geo', 'zh-regions.txt'), 'utf8');
+    const lines = text.split('\n').filter(Boolean);
+    const starts = new Uint32Array(lines.length);
+    const ends = new Uint32Array(lines.length);
+    lines.forEach((line, i) => {
+      const [start, end] = line.split('-').map(Number);
+      starts[i] = start;
+      ends[i] = end;
+    });
+    return { starts, ends };
+  } catch (error) {
+    console.warn(`geo ranges unavailable: ${error.message}`);
+    return null;
+  }
+})();
+
+function ipv4ToInt(ip) {
+  const match = String(ip).match(/^(?:::ffff:)?(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/i);
+  if (!match) return null;
+  const parts = match.slice(1).map(Number);
+  if (parts.some((n) => n > 255)) return null;
+  return ((parts[0] << 24) >>> 0) + (parts[1] << 16) + (parts[2] << 8) + parts[3];
+}
+
+// 本机/内网请求（部署健康检查、反代自身）不做地域跳转
+function isPrivateIp(value) {
+  return value >>> 24 === 10 ||
+    value >>> 24 === 127 ||
+    (value >>> 20) === 0xac1 ||
+    (value >>> 16) === 0xc0a8 ||
+    (value >>> 16) === 0xa9fe ||
+    value === 0;
+}
+
+function isZhRegion(ip) {
+  if (!zhRegionRanges) return false;
+  const value = ipv4ToInt(ip);
+  if (value === null) return false;
+  const { starts, ends } = zhRegionRanges;
+  let lo = 0;
+  let hi = starts.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (value < starts[mid]) hi = mid - 1;
+    else if (value > ends[mid]) lo = mid + 1;
+    else return true;
+  }
+  return false;
+}
+
+const CRAWLER_RE = /googlebot|bingbot|baiduspider|yandex|duckduckbot|sogou|bytespider|applebot|gptbot|claudebot|ccbot|facebookexternalhit|twitterbot|linkedinbot|telegrambot|slackbot|discordbot|petalbot|semrushbot|ahrefsbot|mj12bot/i;
+
+function readCookie(req, name) {
+  const raw = req.headers.cookie || '';
+  for (const part of raw.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() === name) {
+      try {
+        return decodeURIComponent(part.slice(eq + 1).trim());
+      } catch {
+        return '';
+      }
+    }
+  }
+  return '';
+}
+
+// 手动切换语言（cookie）优先；其次看来源地区；爬虫不做地域跳转
+function preferredLang(req) {
+  const cookie = readCookie(req, 'site_lang');
+  if (cookie === 'zh' || cookie === 'en') return cookie;
+  if (CRAWLER_RE.test(String(req.headers['user-agent'] || ''))) return '';
+  const ip = clientIp(req);
+  const value = ipv4ToInt(ip);
+  if (value !== null && isPrivateIp(value)) return '';
+  return isZhRegion(ip) ? 'zh' : 'en';
+}
+
 function cors(req, res) {
   const origin = req.headers.origin;
   if (!origin) return;
@@ -287,6 +369,30 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 目录索引页统一 301 到目录地址，避免 /index.html 被当成重复页面抓取
+    if (url.pathname === '/index.html' || url.pathname.endsWith('/index.html')) {
+      const target = url.pathname.slice(0, -'index.html'.length) || '/';
+      res.writeHead(301, { Location: `${target}${url.search}` });
+      res.end();
+      return;
+    }
+
+    // 浏览器默认会请求 /favicon.ico，重定向到现有图标，避免 404 噪音
+    if (url.pathname === '/favicon.ico') {
+      res.writeHead(301, { Location: '/assets/img-1.png' });
+      res.end();
+      return;
+    }
+
+    // 结账与加油站只有中文页面，英文路径统一回落到中文地址
+    const zhOnly = url.pathname.match(/^\/en(\/(?:checkout|jiayouzhan)(?:\/.*)?)$/);
+    if (zhOnly) {
+      const target = zhOnly[1].endsWith('/') ? zhOnly[1] : `${zhOnly[1]}/`;
+      res.writeHead(301, { Location: `${target}${url.search}` });
+      res.end();
+      return;
+    }
+
     // 目录地址统一 301 到带尾斜杠的 canonical 形式
     if (url.pathname !== '/' && !url.pathname.endsWith('/') && !path.extname(url.pathname)) {
       const dir = path.join(siteDir, path.normalize(url.pathname).replace(/^([/\\])+/, ''));
@@ -297,17 +403,35 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    const file = resolveStatic(url.pathname);
-    if (file) return serveFile(req, res, file);
+    // 首页按访客来源地默认语言：中文地区保持中文，其余地区跳英文；爬虫与手动选择不受影响
+    if (url.pathname === '/' || url.pathname === '/en/') {
+      const lang = preferredLang(req);
+      const target = lang === 'en' && url.pathname === '/' ? '/en/' : lang === 'zh' && url.pathname === '/en/' ? '/' : '';
+      if (target) {
+        res.writeHead(302, {
+          Location: `${target}${url.search}`,
+          'Cache-Control': 'no-store',
+          Vary: 'Cookie, X-Forwarded-For, User-Agent',
+        });
+        res.end();
+        return;
+      }
+    }
 
     const notFound = path.join(siteDir, '404.html');
-    if (fs.existsSync(notFound)) {
-      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-      fs.createReadStream(notFound).pipe(res);
+    const file = resolveStatic(url.pathname);
+    if (file && path.resolve(file) !== path.resolve(notFound)) return serveFile(req, res, file);
+
+    res.writeHead(404, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'X-Robots-Tag': 'noindex',
+    });
+    if (req.method === 'HEAD' || !fs.existsSync(notFound)) {
+      res.end();
       return;
     }
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Not found');
+    fs.createReadStream(notFound).pipe(res);
   } catch (error) {
     console.error(error);
     if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });

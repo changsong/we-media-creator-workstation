@@ -225,6 +225,7 @@ export const faqTopics = {
         { q: '和浏览器插件、定时工具有什么不同？', a: '插件通常只能操作单个平台，通用定时工具又依赖平台开放 API。国内平台我们通过本机浏览器完成发布，不需要开发者资质；海外平台走 YouTube / TikTok 官方 OAuth。数据回流和复盘都做进了同一个应用。' },
         { q: '支持哪些平台？', a: '国内自动发布覆盖抖音、视频号、快手、B 站、微博、小红书、知乎、公众号 8 个平台，作品数据自动回流复盘表（知乎目前只覆盖视频作品，回答与文章不计入）。海外支持 YouTube 与 TikTok：用你自己在开发者后台创建的应用走官方 OAuth，YouTube 直传，TikTok 进入收件箱后在 App 内确认发布。' },
         { q: '可以同时管理多个运营账号吗？', a: '可以。同一台机器能创建多个运营账号，每个账号最多连接上述 8 个国内渠道，另可连接 YouTube 与 TikTok。账号之间数据库、素材、选题、录音与登录态完全隔离，不会串号；一份授权覆盖本机所有账号，定时发布、公众号监控与对标账号更新按账号独立运行。删除账号时整个工作区会移入 legacy 备份目录，可手动恢复。' },
+        { q: '视频工坊要另外收费吗？需要自己准备 AI 账号吗？', a: '视频工坊包含在当前授权里，不单独收费。脚本与画面调用你自己的 AI 服务：支持火山方舟、阿里百炼与 MiniMax，密钥填在「连接设置 → AI 服务」，只保存在本机，生成额度按你在对应平台的账号结算。配音默认可使用系统语音，要复刻音色时再配置豆包语音。不配置任何 AI 服务，也能手动写脚本、上传素材并在本机渲染成片。' },
       ],
     },
     {
@@ -271,6 +272,7 @@ export const faqTopics = {
         { q: 'How is it different from a browser extension or a scheduler?', a: 'Extensions usually handle one platform, while generic schedulers depend on official APIs. Domestic platforms publish through the browser on your own machine, so no developer account is needed; overseas channels use official YouTube and TikTok OAuth. Analytics and review live in the same app.' },
         { q: 'Which platforms are supported?', a: 'Domestic publishing covers eight platforms: Douyin, WeChat Channels, Kuaishou, Bilibili, Weibo, Xiaohongshu, Zhihu, and WeChat Official Accounts. Automatic analytics also covers all eight; for Zhihu it collects video works only, so answers and articles are entered manually. Overseas, YouTube uploads directly and TikTok sends the video to your inbox for you to confirm in the app, both through official OAuth with your own developer app.' },
         { q: 'Can I manage several operating accounts at once?', a: 'Yes. One machine can host multiple operating accounts, each connecting up to the eight domestic channels above, plus YouTube and TikTok. Databases, assets, topics, recordings, and sign-in sessions are fully isolated per account, so nothing mixes. A single license covers every account on the machine, and scheduled publishing, Official Account monitoring, and competitor tracking run independently per account. Deleting an account moves its whole workspace into a legacy backup folder you can restore manually.' },
+        { q: 'Does the video workshop cost extra? Do I need my own AI account?', a: 'The video workshop is included in your license at no extra cost. Scripts and visuals call an AI service you supply: Volcengine Ark, Alibaba Bailian, and MiniMax are supported, with the key stored only on your machine under Connections → AI services, and usage billed by that provider to your own account. Voiceover can use the system voice by default, or Doubao speech when you want a cloned voice. Without any AI service you can still write scripts, upload assets, and render locally.' },
       ],
     },
     {

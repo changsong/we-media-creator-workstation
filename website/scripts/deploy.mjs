@@ -46,7 +46,7 @@ function pack() {
   step('打包站点、服务端脚本、加油站构建源码与百度提交脚本');
   const result = spawnSync('tar', [
     '-czf', localTarballName, '-C', websiteDir,
-    'site', 'server', 'server.mjs', 'build.mjs', 'src',
+    'site', 'server', 'server.mjs', 'build.mjs', 'src', 'geo',
     'scripts/submit-baidu.mjs', 'scripts/seo-check.mjs', 'scripts/jiayouzhan',
   ], {
     cwd: os.tmpdir(),
