@@ -80,6 +80,7 @@ function priorityOf(url) {
   let rank = 3;
   if (pathname === '/' || pathname === '/en/') rank = 0;
   else if (/^\/(en\/)?(download|pricing|features)\//.test(pathname)) rank = 1;
+  else if (/^\/jiayouzhan\/[^/]+\//.test(pathname)) rank = 1;
   else if (/^\/(en\/)?(platforms|use-cases)\//.test(pathname)) rank = 2;
   return rank * 2 + en;
 }
