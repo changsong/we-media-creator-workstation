@@ -1536,7 +1536,7 @@ function checkoutPage(lang) {
           </div>
           <div class="rounded-2xl bg-surface-container-low p-5">
             <div class="font-label-capsule text-label-capsule text-on-surface">退款与发票</div>
-            <p class="mt-2 font-body-sm text-body-sm text-on-surface-variant">支持 14 天无理由退款；如需发票或退款，请通过<a class="text-primary underline decoration-gold-accent underline-offset-2" href="${routeTo('/feedback/?type=license', 'zh')}">反馈表单</a>提交订单号，我们会在 1 个工作日内处理。</p>
+            <p class="mt-2 font-body-sm text-body-sm text-on-surface-variant">支持 14 天无理由退款；如需发票或退款，请通过<a class="text-primary underline decoration-gold-accent underline-offset-2" href="${routeTo('/feedback/#type=license', 'zh')}">反馈表单</a>提交订单号，我们会在 1 个工作日内处理。</p>
           </div>
         </aside>
       </div>`,

@@ -101,8 +101,8 @@ export function header({ lang, route, alternates = true }) {
     <nav class="hidden xl:flex items-center gap-space-md 2xl:gap-space-lg" aria-label="${lang === 'en' ? 'Primary' : '主导航'}">${navLinks}</nav>
     <div class="flex items-center gap-space-sm shrink-0">
       ${alternates ? `<div class="hidden sm:flex items-center bg-surface-container-low px-2 py-1 rounded-full text-on-surface-variant font-label-capsule text-body-sm" aria-label="${esc(t.language)}">
-        <a class="px-2.5 py-1 rounded-full ${lang === 'zh' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'zh')}" hreflang="zh-CN" lang="zh-CN">中</a>
-        <a class="px-2.5 py-1 rounded-full ${lang === 'en' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'en')}" hreflang="en" lang="en">EN</a>
+        <a class="px-2.5 py-1 rounded-full ${lang === 'zh' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'zh')}" hreflang="zh-CN" lang="zh-CN" data-lang-switch="zh">中</a>
+        <a class="px-2.5 py-1 rounded-full ${lang === 'en' ? 'bg-surface-white text-on-surface shadow-[0_1px_3px_rgba(9,12,13,0.05)]' : 'hover:text-on-surface'}" href="${routeTo(route, 'en')}" hreflang="en" lang="en" data-lang-switch="en">EN</a>
       </div>` : ''}
       <div class="hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm">
         <span class="w-2 h-2 rounded-full bg-status-success"></span><span>macOS / Win</span>
@@ -123,8 +123,8 @@ export function header({ lang, route, alternates = true }) {
       ${alternates ? `<div class="sm:col-span-2 flex items-center justify-between rounded-xl bg-surface-container-low px-4 py-2.5">
         <span class="font-body-sm text-body-sm text-on-surface-variant">${esc(t.language)}</span>
         <span class="flex items-center bg-surface-white p-1 rounded-full font-label-capsule text-label-capsule">
-          <a class="px-3 py-1.5 rounded-full ${lang === 'zh' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant'}" href="${routeTo(route, 'zh')}" hreflang="zh-CN" lang="zh-CN">中文</a>
-          <a class="px-3 py-1.5 rounded-full ${lang === 'en' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant'}" href="${routeTo(route, 'en')}" hreflang="en" lang="en">English</a>
+          <a class="px-3 py-1.5 rounded-full ${lang === 'zh' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant'}" href="${routeTo(route, 'zh')}" hreflang="zh-CN" lang="zh-CN" data-lang-switch="zh">中文</a>
+          <a class="px-3 py-1.5 rounded-full ${lang === 'en' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant'}" href="${routeTo(route, 'en')}" hreflang="en" lang="en" data-lang-switch="en">English</a>
         </span>
       </div>` : ''}
     </div>

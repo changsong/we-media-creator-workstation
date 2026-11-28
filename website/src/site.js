@@ -44,6 +44,13 @@
     });
   }
 
+  /* Remember manual language choice so geo-based redirects don't override it */
+  $$('[data-lang-switch]').forEach((link) => {
+    link.addEventListener('click', () => {
+      document.cookie = `site_lang=${link.dataset.langSwitch}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    });
+  });
+
   /* Header shadow on scroll */
   const header = $('#site-header');
   if (header) {
@@ -122,6 +129,8 @@
   if (form) {
     const status = $('#feedback-status');
     const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    for (const [key, value] of hashParams) if (!params.has(key)) params.set(key, value);
     const typeMap = { license: 'license', feature: 'feature', suggestion: 'feature', bug: 'bug', problem: 'bug', partnership: 'partnership' };
     const presetType = typeMap[params.get('type') || ''];
     if (presetType) {

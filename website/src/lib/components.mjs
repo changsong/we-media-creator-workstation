@@ -19,7 +19,7 @@ export function checkoutUrl(plan, lang = 'zh', checkout = '') {
     const sep = checkout.includes('?') ? '&' : '?';
     return `${checkout}${sep}plan=${encodeURIComponent(plan)}&lang=${lang === 'en' ? 'en' : 'zh'}`;
   }
-  return routeTo(`/feedback/?type=license&plan=${encodeURIComponent(plan)}`, lang);
+  return routeTo(`/feedback/#type=license&plan=${encodeURIComponent(plan)}`, lang);
 }
 
 export function sectionHeading({ lang, eyebrow, title, desc = '', center = true, light = false }) {
