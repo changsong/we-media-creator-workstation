@@ -31,11 +31,14 @@ marketing/
     send.mjs                抖音半自动私信（登录 / dry-run / --live）
     send-live.cmd           在 PowerShell 新窗口启动抖音 --live
     reply.mjs               回复建议（关键词模板，可选 Claude）
+    collect-comments.mjs    评论区采集：搜视频 + 抓公开评论 + 意图打分
+    comments.mjs            评论库命令行：列表 / AI 起草 / 打开预填 / 记录 / 统计
     serve.mjs               本地营销看板服务（HTTP + JSON API）
     lib/                    SQLite、浏览器会话、领域清单加载、工具函数
   web/
     index.html              看板页面（平台概览 + 名单）
     send.html               发送台（待发队列 + 平台轮询 + 复制/记录）
+    videos.html             视频评论库（按视频汇总合格评论 + 点评论定位 + 自动复制推广词）
   content/
     douyin-content-plan.md  抖音内容选题与账号包装
   data/                     数据库、浏览器 profile、截图（已 gitignore）
@@ -227,6 +230,121 @@ node marketing/scripts/reply.mjs --ai --log 12 --text "支持哪些平台？"
 - 默认按关键词匹配 `templates.json` 的回复库。
 - `--ai` 需要 `ANTHROPIC_API_KEY`，调用 Claude 生成；失败或出现夸大承诺会回退模板。
 - `--log <id>` 把对方消息和意图记到最近一次触达记录，名单状态改为 `replied`。
+
+## 评论区雷达（评论截流）
+
+按关键词搜视频，抓视频下的公开评论，找出正在问「多平台发布 / 多账号管理 / 自媒体管理工具」的人，用 DeepSeek 结合视频和评论上下文生成回复，再由人确认发送。
+
+### 1. 配置 DeepSeek
+
+把 key 写到 `marketing/.ai.json`（已 gitignore）：
+
+```json
+{
+  "apiKey": "sk-你的 DeepSeek key",
+  "baseUrl": "https://api.deepseek.com/v1",
+  "model": "deepseek-chat"
+}
+```
+
+也支持环境变量 `DEEPSEEK_API_KEY` 或 `MARKETING_AI_KEY`。没有 key 时自动回退内置模板，不会阻断流程。
+
+### 2. 采集评论
+
+```bash
+# 先登录需要登录的平台（抖音 / 快手 / 小红书；B站用主应用连接设置里的 SESSDATA）
+node marketing/scripts/collect-comments.mjs --login --platform douyin,kuaishou,xiaohongshu
+
+# 按默认搜索词跑全部平台（视频号会提示手动导入）
+node marketing/scripts/collect-comments.mjs --platform all --yes
+
+# 只跑抖音 + B站，自定义关键词
+node marketing/scripts/collect-comments.mjs --platform douyin,bilibili --keyword "自媒体工具,多平台发布" --yes
+```
+
+- 默认搜索词在 `outreach/comments.json` 的 `search.keywords`：`自媒体工具 / 如何做自媒体 / 自媒体运营 / 短视频运营 / 矩阵号运营`。
+- 默认每个关键词取前 **100 个视频**（`--videos` 可调，上限 100）；抖音/快手/小红书会滚动搜索页，B站会自动翻页。
+- 100 个视频会逐个打开详情页抓评论，耗时较长；建议一次只跑 1–2 个关键词。只想少开详情页时用 `--videos 2`。
+- 默认每条视频抓 **全部评论**（单视频安全上限 `settings.maxCommentsPerVideo`，默认 1000）；所有评论都会做意图打分，只有命中的进入视频评论库。
+- 全部评论会显著增加耗时，建议一次只跑 1 个关键词；想限制单视频评论数用 `--comments 20`。
+- 意图词库也在 `outreach/comments.json`：多平台发布/同步、多账号/矩阵、管理工具/排期、发布痛点、安全风控、求推荐、竞品讨论。
+- 负向词（招聘、代运营、收徒、互关涨粉、刷量等）直接忽略；视频作者本人的评论、竞品工具号也会跳过。
+- 视频按 `(platform, video_id)` 去重；评论优先按平台评论 ID 去重，拿不到 ID 时按「同视频 + 同作者 + 同内容」兜底去重，跨天重跑不会重复入库。
+- 采集只读公开评论，不碰私信、手机号、粉丝列表。
+- 遇到验证码/操作频繁会停止并截图到 `data/screenshots/`。
+
+### 进度与续跑
+
+采集进度写入 SQLite 的 `collect_progress` 表，按「平台 + 关键词 + 视频 ID」记录：
+
+```bash
+# 查看进度
+node marketing/scripts/collect-comments.mjs --progress --platform douyin
+
+# 默认续跑：已完成的视频下次自动跳过
+node marketing/scripts/collect-comments.mjs --platform douyin --keyword "自媒体工具" --videos 100 --comments 10 --yes
+
+# 已完成视频也重新抓
+node marketing/scripts/collect-comments.mjs --platform douyin --keyword "自媒体工具" --no-resume
+
+# 清空所选平台/关键词的进度，从头开始
+node marketing/scripts/collect-comments.mjs --platform douyin --keyword "自媒体工具" --restart
+```
+
+- 搜索列表顺序变化不影响续跑，因为记录的是视频 ID。
+- 进度会记录当时的评论上限；从固定条数改成「全部」时，旧记录会自动失效并重抓，不会误跳过。
+- 中途遇到验证码停止时，正在抓的视频保持 `in_progress`，下次会重试。
+- 已完成 / 已跳过的视频默认不再打开；要重抓用 `--no-resume` 或 `--restart`。
+
+### 3. 生成与回复
+
+```bash
+# 看待处理队列
+node marketing/scripts/comments.mjs list --status new --limit 20
+
+# 批量生成草稿（DeepSeek 出 3 版，自选最佳；失败回退模板）
+node marketing/scripts/comments.mjs draft --limit 5
+
+# 打开原视频，定位评论，打开回复框并预填（发送仍由人点）
+node marketing/scripts/comments.mjs open --id 12
+
+# 人点完发送后记录
+node marketing/scripts/comments.mjs sent --id 12
+
+# 交互式跑一批：y 已回复 / s 跳过 / j 下一条 / r 重贴 / q 退出
+node marketing/scripts/comments.mjs run --limit 5
+```
+
+也可以直接用网页版：
+
+```bash
+node marketing/scripts/serve.mjs
+# 看板：      http://127.0.0.1:4173/
+# 视频评论库： http://127.0.0.1:4173/videos.html
+```
+
+- 「视频评论库」按视频汇总命中推广意图的评论；点评论原文会打开视频并定位到那条评论，同时自动生成并复制 AI 推广词，你到平台里粘贴、手工发送即可。
+- 推广词可以直接在页面里修改；页面加载时会给前 8 条缺失推广词的评论自动生成，也可以点「批量生成推广词」。
+
+### 4. 视频号
+
+视频号没有公开的网页视频/评论搜索入口，无法自动采集。用「手动添加」把视频链接和评论原文导进来，AI 出稿后复制到微信里回复：
+
+```bash
+node marketing/scripts/comments.mjs add --platform channels \
+  --video-url "https://..." --title "视频标题" --text "评论原文" --draft
+```
+
+网页版在视频评论库点「手动添加视频号」也可以。
+
+### 5. 限额与注意
+
+- 每天总共 10–15 条，单平台默认 5 条；同一视频最多 1 条；同一用户 30 天冷却；发送间隔 3–8 分钟随机。
+- 回复会直接带试用信息（`outreach/comments.json` 的 `settings.ctaMode`，默认「官网 + 31 天试用」）。
+- 评论里提到易创精灵、易媒等竞品时也会进入「竞品讨论」候选；AI 会先认可对方体验，不点名、不贬低竞品，再说明媒管家的差异。
+- 评论区是公开场景，**不要批量刷屏、不要重复文案**；回复里明确说明自己是工具方，不伪装路人。
+- 自动预填依赖平台页面结构，页面改版后可能失效；失败时会退化成「复制文案 + 打开原视频」，手动粘贴即可。
+- 小红书/快手风控更严，建议低频、固定账号跑；遇到验证立即停。
 
 ## 每日流程（约 40 分钟 + 间隔等待）
 

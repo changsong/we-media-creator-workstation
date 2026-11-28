@@ -4,6 +4,7 @@
 //   node marketing/scripts/serve.mjs --port 8080  换端口
 //   node marketing/scripts/serve.mjs --host 0.0.0.0  局域网可访问（谨慎）
 
+import crypto from 'node:crypto';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,6 +12,22 @@ import { fileURLToPath } from 'node:url';
 import { loadTemplates, normalizePlatform, parseArgs, platformLabel } from './lib/util.mjs';
 import { draftFor } from './lib/draft.mjs';
 import { dbFile, getLead, listLeads, markSent, markSkipped, queue, setLeadStatus, stats } from './lib/store.mjs';
+import {
+  commentStats,
+  getComment,
+  listComments,
+  listQualifiedComments,
+  markCommentSent,
+  markCommentSkipped,
+  recentDrafts,
+  saveDraft,
+  setCommentStatus,
+  upsertComment,
+  upsertVideo,
+} from './lib/comments-store.mjs';
+import { generateReply } from './lib/comment-ai.mjs';
+import { loadCommentsConfig, scoreComment } from './lib/comment-intent.mjs';
+import { getPlatform } from './lib/platforms/index.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB_DIR = path.resolve(HERE, '..', 'web');
@@ -18,6 +35,7 @@ const args = parseArgs();
 const PORT = Number(args.port) || 4173;
 const HOST = args.host ? String(args.host) : '127.0.0.1';
 const bank = loadTemplates();
+const commentsConfig = loadCommentsConfig();
 
 // 轮询顺序：一条抖音 → 一条 B站 → 一条小红书 → 一条视频号，循环。
 // 想临时关掉某平台的发送，在 templates.json 的 settings.sendExcludePlatforms 里加平台键。
@@ -46,6 +64,42 @@ async function openDouyinProfile(profileUrl) {
   const result = openChain.then(run, run);
   openChain = result.catch(() => {});
   return result;
+}
+
+let commentOpenChain = Promise.resolve();
+
+async function openCommentReply(comment) {
+  const adapter = getPlatform(comment.platform);
+  if (!adapter) throw new Error(`未知平台 ${comment.platform}`);
+  if (comment.platform === 'channels' || adapter.meta.supportsManual) {
+    return {
+      manual: true,
+      url: comment.video_url || '',
+      draft: comment.draft || '',
+      reason: '视频号没有网页评论区，请复制文案到微信里手动回复',
+    };
+  }
+  if (!comment.video_url) throw new Error('这条评论没有视频链接');
+  if (!browserLib) browserLib = await import('./lib/browser.mjs');
+  const run = async () => {
+    const session = await browserLib.openSession(comment.video_url);
+    try {
+      return await adapter.focusComment({ session, comment, draft: comment.draft || '' });
+    } finally {
+      session.close();
+    }
+  };
+  const result = commentOpenChain.then(run, run);
+  commentOpenChain = result.catch(() => {});
+  return result;
+}
+
+function deriveVideoId(platform, videoUrl, text) {
+  const match = String(videoUrl || '').match(/\/([A-Za-z0-9_-]{6,})(?:[/?#]|$)/);
+  if (match) return match[1];
+  return 'manual_' + crypto.createHash('sha1')
+    .update(`${platform}|${videoUrl}|${text}`)
+    .digest('hex').slice(0, 16);
 }
 
 function isDouyinUrl(raw) {
@@ -130,6 +184,10 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && url.pathname === '/send.html') {
       serveFile(res, 'send.html');
+      return;
+    }
+    if (req.method === 'GET' && url.pathname === '/videos.html') {
+      serveFile(res, 'videos.html');
       return;
     }
     if (req.method === 'GET' && url.pathname === '/favicon.ico') {
@@ -225,6 +283,152 @@ const server = http.createServer(async (req, res) => {
       }
       const ok = setLeadStatus(id, String(payload.status || ''));
       sendJson(res, ok ? 200 : 404, ok ? { ok: true } : { error: `找不到名单 #${id}` });
+      return;
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/comments/overview') {
+      sendJson(res, 200, commentStats());
+      return;
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/comments/qualified') {
+      const platform = normalizePlatform(url.searchParams.get('platform')) || '';
+      const intent = url.searchParams.get('intent') || '';
+      const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 200, 1), 1000);
+      const items = listQualifiedComments({ platform, intent, limit });
+      sendJson(res, 200, { items, stats: commentStats() });
+      return;
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/comments') {
+      const platform = normalizePlatform(url.searchParams.get('platform')) || '';
+      const status = url.searchParams.get('status') || '';
+      const intent = url.searchParams.get('intent') || '';
+      const search = (url.searchParams.get('q') || '').trim();
+      const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 100, 1), 500);
+      sendJson(res, 200, listComments({ platform, status, intent, search, limit }));
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/comments/add') {
+      const raw = await readBody(req);
+      let payload = {};
+      try {
+        payload = JSON.parse(raw || '{}');
+      } catch (err) {
+        sendJson(res, 400, { error: 'JSON 解析失败' });
+        return;
+      }
+      const platform = normalizePlatform(payload.platform) || 'channels';
+      const text = String(payload.text || '').trim();
+      if (!text) {
+        sendJson(res, 400, { error: '评论内容不能为空' });
+        return;
+      }
+      const videoUrl = String(payload.videoUrl || '');
+      const videoId = String(payload.videoId || '').trim() || deriveVideoId(platform, videoUrl, text);
+      const videoRowId = upsertVideo({
+        platform,
+        video_id: videoId,
+        video_url: videoUrl,
+        title: String(payload.title || ''),
+        description: String(payload.description || ''),
+        author: String(payload.author || ''),
+        author_url: String(payload.authorUrl || ''),
+        published_at: String(payload.publishedAt || ''),
+      });
+      const scored = scoreComment(text, commentsConfig);
+      const commentId = upsertComment(videoRowId, {
+        platform,
+        comment_id: String(payload.commentId || ''),
+        author: String(payload.author || ''),
+        author_url: String(payload.authorUrl || ''),
+        text,
+        likes: Number(payload.likes) || 0,
+        published_at: String(payload.publishedAt || ''),
+      }, { intent: scored.intent, score: scored.score, status: 'new' });
+      sendJson(res, 200, { ok: true, comment: getComment(commentId) });
+      return;
+    }
+
+    const commentActionMatch = url.pathname.match(/^\/api\/comments\/(\d+)\/(draft|save|open|sent|skip|status)$/);
+    if (req.method === 'POST' && commentActionMatch) {
+      const id = Number(commentActionMatch[1]);
+      const action = commentActionMatch[2];
+      const comment = getComment(id);
+      if (!comment) {
+        sendJson(res, 404, { error: `找不到评论 #${id}` });
+        return;
+      }
+
+      if (action === 'draft') {
+        const scored = scoreComment(comment.text, commentsConfig);
+        const result = await generateReply({
+          video: { title: comment.video_title, description: comment.video_description },
+          comment,
+          intent: scored,
+          config: commentsConfig,
+          recentDrafts: recentDrafts(30),
+        });
+        saveDraft(id, result.text, result.model);
+        sendJson(res, 200, {
+          ok: true,
+          comment: getComment(id),
+          source: result.source,
+          warning: result.warning,
+          candidates: result.candidates,
+        });
+        return;
+      }
+
+      if (action === 'open') {
+        let current = comment;
+        let generated = null;
+        if (!current.draft) {
+          const scored = scoreComment(current.text, commentsConfig);
+          const reply = await generateReply({
+            video: { title: current.video_title, description: current.video_description },
+            comment: current,
+            intent: scored,
+            config: commentsConfig,
+            recentDrafts: recentDrafts(30),
+          });
+          saveDraft(id, reply.text, reply.model);
+          current = getComment(id);
+          generated = { source: reply.source, warning: reply.warning };
+        }
+        const result = await openCommentReply(current);
+        sendJson(res, 200, { ok: true, ...result, comment: current, generated });
+        return;
+      }
+
+      const raw = await readBody(req);
+      let payload = {};
+      try {
+        payload = JSON.parse(raw || '{}');
+      } catch (err) {
+        sendJson(res, 400, { error: 'JSON 解析失败' });
+        return;
+      }
+
+      if (action === 'save') {
+        saveDraft(id, String(payload.draft || ''), String(payload.model || ''));
+        sendJson(res, 200, { ok: true, comment: getComment(id) });
+        return;
+      }
+      if (action === 'sent') {
+        const draft = String(payload.draft || comment.draft || '');
+        markCommentSent(id, draft);
+        sendJson(res, 200, { ok: true, sentToday: commentStats().sentToday });
+        return;
+      }
+      if (action === 'skip') {
+        markCommentSkipped(id, String(payload.reason || '人工跳过'));
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+      const ok = setCommentStatus(id, String(payload.status || ''));
+      sendJson(res, ok ? 200 : 404, ok ? { ok: true } : { error: `找不到评论 #${id}` });
       return;
     }
 

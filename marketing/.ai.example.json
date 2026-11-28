@@ -1,0 +1,5 @@
+{
+  "apiKey": "sk-替换成你的 DeepSeek API Key",
+  "baseUrl": "https://api.deepseek.com/v1",
+  "model": "deepseek-chat"
+}

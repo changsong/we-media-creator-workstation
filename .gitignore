@@ -14,6 +14,7 @@ website/certs/
 website/.baidu.json
 website/.baidu-submitted.json
 website/.ai.json
+marketing/.ai.json
 website/content/
 website/site.next/
 website/site.old/

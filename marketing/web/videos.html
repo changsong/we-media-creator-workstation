@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>媒管家 · 视频评论库</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #fff; --ink: #1f2430; --muted: #6b7280; --line: #e5e7eb;
+    --accent: #4f46e5; --accent-soft: #eef2ff; --green: #059669; --amber: #d97706; --red: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--ink); font-size: 14px;
+  }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 24px 20px 70px; }
+  header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  header.top h1 { font-size: 20px; margin: 0; }
+  header.top a { color: var(--accent); text-decoration: none; font-size: 13px; }
+  header.top a:hover { text-decoration: underline; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 7px 13px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .card .label { color: var(--muted); font-size: 12px; }
+  .card .value { font-size: 26px; font-weight: 700; margin-top: 4px; }
+  .card .value.green { color: var(--green); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  select, input[type="search"], input[type="text"], input[type="url"], input[type="number"], textarea {
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 13px; background: #fff; color: var(--ink);
+    font-family: inherit;
+  }
+  .meta { color: var(--muted); font-size: 12px; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; background: #f1f5f9; color: #475569; }
+  .tag.douyin { background: #eef6ff; color: #2563eb; }
+  .tag.kuaishou { background: #fff4e6; color: #d97706; }
+  .tag.xiaohongshu { background: #ffe9ec; color: #e11d48; }
+  .tag.channels { background: #e8f7ee; color: var(--green); }
+  .tag.bilibili { background: #e8f1ff; color: #0ea5e9; }
+  .tag.intent { background: var(--accent-soft); color: var(--accent); }
+  .tag.status-new { background: #eef2ff; color: #4f46e5; }
+  .tag.status-drafted { background: #fff7ed; color: #c2410c; }
+  .tag.status-sent { background: #ecfdf5; color: #047857; }
+  .video-block { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .video-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+  .video-head a.title { color: var(--ink); font-weight: 600; text-decoration: none; font-size: 14px; }
+  .video-head a.title:hover { color: var(--accent); text-decoration: underline; }
+  .video-head .video-meta { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .comment-row { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: #fcfcfd; }
+  .comment-row:last-child { margin-bottom: 0; }
+  .comment-row .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .comment-row .row .spacer { flex: 1; }
+  a.comment-link { display: block; color: var(--ink); text-decoration: none; line-height: 1.7; margin-bottom: 10px; padding: 8px 10px; border-radius: 8px; background: #fff; border: 1px dashed var(--line); }
+  a.comment-link:hover { border-color: var(--accent); color: var(--accent); }
+  a.comment-link::before { content: "💬 "; }
+  .draft-label { color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+  textarea.draft { width: 100%; min-height: 92px; white-space: pre-wrap; word-break: break-word; background: #f7f7fb; border: 1px solid var(--line); border-radius: 8px; padding: 11px 13px; margin: 0 0 10px; font-family: inherit; font-size: 13px; line-height: 1.7; resize: vertical; color: var(--ink); }
+  textarea.draft[readonly] { opacity: .8; background: #f3f4f6; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; min-height: 16px; }
+  .empty { color: var(--muted); text-align: center; padding: 34px 0; }
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: #111827; color: #fff; padding: 9px 16px; border-radius: 8px; font-size: 13px;
+    opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; max-width: 82vw;
+  }
+  .toast.show { opacity: 1; }
+  .manual-form { display: none; margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .manual-form.show { display: block; }
+  .manual-form .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .manual-form .grid .full { grid-column: 1 / -1; }
+  .manual-form label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  .manual-form input, .manual-form select, .manual-form textarea { width: 100%; }
+  .manual-form textarea { min-height: 80px; }
+  @media (max-width: 760px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .video-head .video-meta { margin-left: 0; }
+    .manual-form .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>视频评论库</h1>
+      <div class="meta" style="margin-top:4px;">只显示命中推广意图的评论；点评论原文会打开视频并定位，推广词自动生成并复制</div>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a class="btn" href="/">← 返回看板</a>
+      <a class="btn" href="/send.html">发送台 →</a>
+    </div>
+  </header>
+
+  <section class="cards">
+    <div class="card"><div class="label">有合格评论的视频</div><div class="value" id="kpiVideos">–</div></div>
+    <div class="card"><div class="label">合格评论</div><div class="value" id="kpiComments">–</div></div>
+    <div class="card"><div class="label">已回复</div><div class="value green" id="kpiSent">–</div></div>
+    <div class="card"><div class="label">待生成推广词</div><div class="value" id="kpiMissing">–</div></div>
+  </section>
+
+  <section class="panel">
+    <div class="controls">
+      <select id="filterPlatform">
+        <option value="">全部平台</option>
+        <option value="douyin">抖音</option>
+        <option value="kuaishou">快手</option>
+        <option value="xiaohongshu">小红书</option>
+        <option value="bilibili">B站</option>
+        <option value="channels">视频号</option>
+      </select>
+      <select id="filterIntent">
+        <option value="">全部意图</option>
+        <option value="multi_platform">多平台发布</option>
+        <option value="matrix">账号矩阵</option>
+        <option value="management">管理工具</option>
+        <option value="pain">发布痛点</option>
+        <option value="security">安全风控</option>
+        <option value="ask">求推荐</option>
+        <option value="competitor">竞品讨论</option>
+      </select>
+      <select id="filterLimit">
+        <option value="50">50 条</option>
+        <option value="100">100 条</option>
+        <option value="200">200 条</option>
+        <option value="500">500 条</option>
+      </select>
+      <button class="btn" id="reloadBtn">刷新</button>
+      <button class="btn" id="fillBtn">批量生成推广词</button>
+      <button class="btn" id="manualBtn">手动添加视频号</button>
+      <span class="meta" id="statusText"></span>
+    </div>
+
+    <div class="manual-form" id="manualForm">
+      <div class="grid">
+        <div><label>平台</label>
+          <select id="addPlatform">
+            <option value="channels">视频号</option>
+            <option value="douyin">抖音</option>
+            <option value="kuaishou">快手</option>
+            <option value="xiaohongshu">小红书</option>
+            <option value="bilibili">B站</option>
+          </select>
+        </div>
+        <div><label>视频链接（可选）</label><input type="url" id="addVideoUrl" placeholder="https://..." /></div>
+        <div><label>视频标题（可选）</label><input type="text" id="addTitle" placeholder="这条视频在讲什么" /></div>
+        <div><label>评论作者（可选）</label><input type="text" id="addAuthor" placeholder="昵称" /></div>
+        <div class="full"><label>评论原文 *</label><textarea id="addText" placeholder="把评论原文粘进来，例如：多平台发布视频太麻烦了，每天要传好几个后台……"></textarea></div>
+        <div><label>点赞数（可选）</label><input type="number" id="addLikes" value="0" min="0" /></div>
+        <div style="display:flex;align-items:flex-end;"><button class="btn primary" id="addBtn">添加并入库</button></div>
+      </div>
+      <div class="hint">视频号没有公开的网页评论区，用这里手动导入；添加后会进入视频评论库并自动生成推广词。</div>
+    </div>
+  </section>
+
+  <section id="list"><div class="panel empty">加载中…</div></section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const PLATFORM_LABELS = { douyin: '抖音', kuaishou: '快手', xiaohongshu: '小红书', channels: '视频号', bilibili: 'B站', unknown: '未知' };
+  const INTENT_LABELS = { multi_platform: '多平台发布', matrix: '账号矩阵', management: '管理工具', pain: '发布痛点', security: '安全风控', ask: '求推荐', competitor: '竞品讨论' };
+  const STATUS_LABELS = { new: '待处理', drafted: '已起草', sent: '已回复', skipped: '已跳过', blocked: '已拉黑' };
+  const el = (id) => document.getElementById(id);
+  const state = { items: [] };
+  let toastTimer = null;
+
+  function toast(text) {
+    const node = el('toast');
+    node.textContent = text;
+    node.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => node.classList.remove('show'), 2600);
+  }
+  function esc(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  async function api(path, options) {
+    const res = await fetch(path, options);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    return data;
+  }
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  }
+
+  function groupByVideo(items) {
+    const map = new Map();
+    for (const item of items) {
+      if (!map.has(item.video_id)) map.set(item.video_id, { video: item, comments: [] });
+      map.get(item.video_id).comments.push(item);
+    }
+    return Array.from(map.values());
+  }
+
+  function draftText(item) {
+    if (item.draft) return item.draft;
+    if (item.status === 'sent') return '（已回复，无草稿）';
+    return '正在生成推广词…';
+  }
+
+  function commentHtml(item) {
+    const intent = INTENT_LABELS[item.intent] || item.intent || '未识别';
+    return '<article class="comment-row" data-id="' + item.id + '">'
+      + '<div class="row">'
+      + '<span class="tag ' + esc(item.platform) + '">' + esc(PLATFORM_LABELS[item.platform] || item.platform) + '</span>'
+      + '<span class="tag intent">' + esc(intent) + '</span>'
+      + '<span class="tag status status-' + esc(item.status) + '">' + esc(STATUS_LABELS[item.status] || item.status) + '</span>'
+      + '<span class="spacer"></span>'
+      + '<span class="meta">作者 ' + esc(item.author || '匿名') + ' · 赞 ' + Number(item.likes || 0) + ' · 分数 ' + Number(item.score || 0) + '</span>'
+      + '</div>'
+      + '<a href="#" class="comment-link" data-act="open" title="打开视频并定位到这条评论">' + esc(item.text) + '</a>'
+      + '<div class="draft-label">AI 推广词（可直接修改）</div>'
+      + '<textarea class="draft" data-draft="' + item.id + '"' + (item.status === 'sent' ? ' readonly' : '') + '>' + esc(draftText(item)) + '</textarea>'
+      + '<div class="actions">'
+      + '<button class="btn primary" data-act="open">打开视频并定位</button>'
+      + '<button class="btn" data-act="copy">复制推广词</button>'
+      + '<button class="btn" data-act="regen">换一版</button>'
+      + '<button class="btn" data-act="sent">已回复</button>'
+      + '<button class="btn" data-act="skip">跳过</button>'
+      + '</div>'
+      + '<div class="hint" data-hint></div>'
+      + '</article>';
+  }
+
+  function render() {
+    const groups = groupByVideo(state.items);
+    if (!groups.length) {
+      el('list').innerHTML = '<div class="panel empty">还没有命中推广意图的评论。先跑 collect-comments.mjs，或点「手动添加视频号」。</div>';
+      return;
+    }
+    el('list').innerHTML = groups.map(({ video, comments }) => {
+      const platform = PLATFORM_LABELS[video.platform] || video.platform;
+      const title = video.video_title || video.video_url || '(没有视频标题)';
+      return '<section class="video-block">'
+        + '<header class="video-head">'
+        + '<span class="tag ' + esc(video.platform) + '">' + esc(platform) + '</span>'
+        + '<a class="title" href="' + esc(video.video_url || '#') + '" target="_blank" rel="noopener">' + esc(title) + '</a>'
+        + '<span class="video-meta">' + esc(video.video_author || '') + ' · ' + esc(video.video_keyword || '') + ' · 合格评论 ' + comments.length + '</span>'
+        + '</header>'
+        + comments.map(commentHtml).join('')
+        + '</section>';
+    }).join('');
+  }
+
+  function updateSummary() {
+    const videos = new Set(state.items.map((item) => item.video_id)).size;
+    const sent = state.items.filter((item) => item.status === 'sent').length;
+    const missing = state.items.filter((item) => !item.draft && item.status !== 'sent').length;
+    el('kpiVideos').textContent = videos;
+    el('kpiComments').textContent = state.items.length;
+    el('kpiSent').textContent = sent;
+    el('kpiMissing').textContent = missing;
+  }
+
+  function draftNode(id) {
+    return document.querySelector('[data-draft="' + id + '"]');
+  }
+  function setDraftText(id, text) {
+    const node = draftNode(id);
+    if (node) node.value = text;
+  }
+  function readDraft(item) {
+    const node = draftNode(item.id);
+    return node ? node.value.trim() : (item.draft || '');
+  }
+
+  function updateStatus(item) {
+    const row = document.querySelector('.comment-row[data-id="' + item.id + '"]');
+    if (!row) return;
+    const tag = row.querySelector('.tag.status');
+    if (tag) {
+      tag.className = 'tag status status-' + item.status;
+      tag.textContent = STATUS_LABELS[item.status] || item.status;
+    }
+  }
+
+  async function saveDraft(item, draft) {
+    if (!draft || draft === item.draft) return item.draft || draft;
+    const data = await api('/api/comments/' + item.id + '/save', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ draft }),
+    });
+    item.draft = (data.comment && data.comment.draft) || draft;
+    if (data.comment) item.status = data.comment.status || item.status;
+    updateStatus(item);
+    updateSummary();
+    return item.draft;
+  }
+
+  async function generateDraft(item) {
+    setDraftText(item.id, '正在生成推广词…');
+    const data = await api('/api/comments/' + item.id + '/draft', { method: 'POST' });
+    item.draft = (data.comment && data.comment.draft) || '';
+    item.status = (data.comment && data.comment.status) || item.status;
+    setDraftText(item.id, item.draft || '生成失败');
+    updateStatus(item);
+    updateSummary();
+    return item.draft;
+  }
+
+  async function ensureDraft(item) {
+    if (item.draft) return item.draft;
+    return generateDraft(item);
+  }
+
+  async function autoFill(limit) {
+    const missing = state.items.filter((item) => !item.draft && item.status !== 'sent').slice(0, limit);
+    if (!missing.length) return;
+    el('statusText').textContent = '正在生成 ' + missing.length + ' 条推广词…';
+    for (const item of missing) {
+      try {
+        await generateDraft(item);
+      } catch (err) {
+        setDraftText(item.id, '生成失败：' + err.message);
+      }
+    }
+    el('statusText').textContent = '';
+    updateSummary();
+  }
+
+  async function load() {
+    const params = new URLSearchParams();
+    if (el('filterPlatform').value) params.set('platform', el('filterPlatform').value);
+    if (el('filterIntent').value) params.set('intent', el('filterIntent').value);
+    params.set('limit', el('filterLimit').value);
+    el('list').innerHTML = '<div class="panel empty">加载中…</div>';
+    try {
+      const data = await api('/api/comments/qualified?' + params.toString());
+      state.items = data.items || [];
+      render();
+      updateSummary();
+      autoFill(8);
+    } catch (err) {
+      el('list').innerHTML = '<div class="panel empty">加载失败：' + esc(err.message) + '</div>';
+    }
+  }
+
+  async function openComment(item) {
+    let draft = readDraft(item);
+    if (!draft) draft = await ensureDraft(item);
+    draft = await saveDraft(item, draft);
+    await copyText(draft);
+    toast('推广词已复制，正在打开视频并定位评论…');
+    const data = await api('/api/comments/' + item.id + '/open', { method: 'POST' });
+    if (data.comment) {
+      item.draft = data.comment.draft || item.draft;
+      item.status = data.comment.status || item.status;
+      setDraftText(item.id, item.draft);
+      updateStatus(item);
+    }
+    if (data.manual) {
+      toast('视频号：推广词已复制，请到微信里手动回复');
+    } else if (data.prefilled) {
+      toast('已打开视频并定位到评论，推广词已复制');
+    } else {
+      toast((data.reason || '已打开视频') + '；推广词已复制，请手动粘贴');
+    }
+  }
+
+  el('list').addEventListener('click', async (event) => {
+    const trigger = event.target.closest('[data-act]');
+    if (!trigger) return;
+    event.preventDefault();
+    const row = trigger.closest('.comment-row');
+    if (!row) return;
+    const item = state.items.find((entry) => entry.id === Number(row.dataset.id));
+    if (!item) return;
+    const hint = row.querySelector('[data-hint]');
+    const buttons = row.querySelectorAll('button');
+    buttons.forEach((node) => { node.disabled = true; });
+    hint.textContent = '处理中…';
+    try {
+      const act = trigger.dataset.act;
+      if (act === 'open') {
+        hint.textContent = '正在打开浏览器并定位评论…';
+        await openComment(item);
+        hint.textContent = '已复制推广词；浏览器里检查后亲手发送';
+      } else if (act === 'copy') {
+        let draft = readDraft(item);
+        if (!draft) draft = await ensureDraft(item);
+        draft = await saveDraft(item, draft);
+        await copyText(draft);
+        hint.textContent = '推广词已复制';
+        toast('推广词已复制');
+      } else if (act === 'regen') {
+        await generateDraft(item);
+        hint.textContent = '已换一版';
+        toast('已换一版推广词');
+      } else if (act === 'sent') {
+        const draft = readDraft(item);
+        await api('/api/comments/' + item.id + '/sent', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ draft }),
+        });
+        toast('已记录为已回复');
+        await load();
+      } else if (act === 'skip') {
+        await api('/api/comments/' + item.id + '/skip', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ reason: '人工跳过' }),
+        });
+        toast('已跳过');
+        await load();
+      }
+    } catch (err) {
+      hint.textContent = '出错：' + err.message;
+      toast(err.message);
+    } finally {
+      buttons.forEach((node) => { node.disabled = false; });
+    }
+  });
+
+  el('reloadBtn').addEventListener('click', load);
+  el('filterPlatform').addEventListener('change', load);
+  el('filterIntent').addEventListener('change', load);
+  el('filterLimit').addEventListener('change', load);
+  el('fillBtn').addEventListener('click', () => autoFill(30));
+  el('manualBtn').addEventListener('click', () => el('manualForm').classList.toggle('show'));
+  el('addBtn').addEventListener('click', async () => {
+    const text = el('addText').value.trim();
+    if (!text) { toast('先把评论原文填上'); return; }
+    el('addBtn').disabled = true;
+    try {
+      await api('/api/comments/add', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          platform: el('addPlatform').value,
+          videoUrl: el('addVideoUrl').value.trim(),
+          title: el('addTitle').value.trim(),
+          author: el('addAuthor').value.trim(),
+          text,
+          likes: Number(el('addLikes').value) || 0,
+        }),
+      });
+      toast('已添加');
+      el('addText').value = '';
+      el('manualForm').classList.remove('show');
+      await load();
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      el('addBtn').disabled = false;
+    }
+  });
+
+  load();
+</script>
+</body>
+</html>
