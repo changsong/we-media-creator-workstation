@@ -48,6 +48,18 @@ export const FEATURE_BLOCKS = [
     bulletsEn: ['One queue for eight domestic platforms with filters and paging', 'YouTube and TikTok via official OAuth, with TikTok inbox upload', 'Verify each post and retry failures safely'],
   },
   {
+    id: 'studio',
+    icon: 'movie_edit',
+    titleZh: '视频工坊：从选题直接做到成片',
+    titleEn: 'Video workshop: take an idea all the way to a finished cut',
+    bodyZh:
+      '把选题带进创作简报，生成或手写脚本，拆成分镜，逐镜配画面与配音，最后在本机渲染成片。开「保真脚本」时，旁白按原句切镜，AI 只补画面；也可以上传一段参考视频，按旁白比例抽帧作为首帧。角色库按账号共享，同一个角色在多个项目里都能用。',
+    bodyEn:
+      'Carry a topic into the creative brief, generate or write a script, break it into scenes, add visuals and voiceover scene by scene, then render the final cut locally. Faithful mode splits narration at your own sentences so AI supplies visual prompts only. You can also upload a reference video and pull frames at points matched to the narration for use as first frames. Characters are shared at the account level, so one character works across projects.',
+    bulletsZh: ['选题 → 脚本 → 分镜 → 成片，一条链路都在本机', '保真脚本按旁白原句切镜，AI 只补画面不改稿', '参考视频按旁白比例抽帧，直接用作分镜首帧', '角色库账号级共享，16:9 / 9:16 / 1:1 / 4:5 可选', '接入火山方舟、阿里百炼与 MiniMax，密钥只存本机'],
+    bulletsEn: ['Topic to script to scenes to final cut, all on your machine', 'Faithful scripts keep your narration and let AI fill visuals only', 'Reference footage supplies first frames matched to the voiceover', 'Shared character library, with 16:9, 9:16, 1:1, and 4:5 output', 'Works with Volcengine Ark, Alibaba Bailian, and MiniMax; keys stay local'],
+  },
+  {
     id: 'analytics',
     icon: 'insights',
     titleZh: '数据复盘：不用再手抄',

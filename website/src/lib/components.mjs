@@ -38,22 +38,22 @@ export function icon(name, extra = '') {
 
 const HERO = {
   zh: {
-    badge: '2026 全新架构',
-    badgeNote: '本地优先桌面端 · 多账号隔离 · 适配主流新媒体改版',
+    badge: '视频工坊已上线',
+    badgeNote: '本地优先桌面端 · 视频工坊 · 多账号隔离',
     titlePrefix: '八个平台，',
     titleAccent: '一张工作台。',
-    sub: '选题、排期、发布、复盘、沉淀，全在一个本地应用里完成。本机多运营账号独立隔离、一份授权通用；到点自动发布，数据自动回填，账号与素材始终留在你自己的电脑上。',
+    sub: '选题、脚本、分镜、成片、排期、发布、复盘、沉淀，全在一个本地应用里完成。本机多运营账号独立隔离、一份授权通用；到点自动发布，数据自动回填，账号与素材始终留在你自己的电脑上。',
     download: '下载桌面版 (Windows / macOS / Linux)',
     downloadShort: '下载桌面版',
     pricing: '查看授权价格 (¥49.9起)',
     micro: 'Windows 10+ · macOS 11+ · Ubuntu 22.04+ ｜ <span class="whitespace-nowrap text-on-surface font-medium">国内平台免 API 申请</span> ｜ 数据完全保存在本机 SQLite',
   },
   en: {
-    badge: 'New in 2026',
-    badgeNote: 'Local-first desktop · Isolated accounts · Kept current with platform changes',
+    badge: 'Video Workshop is live',
+    badgeNote: 'Local-first desktop · Video workshop · Isolated accounts',
     titlePrefix: 'Eight platforms. ',
     titleAccent: 'One workbench.',
-    sub: 'Plan, schedule, publish, review, and archive everything from one local app. Several operating accounts run isolated on one machine under a single license, and it publishes on time, pulls the numbers back, and keeps your files on your own computer.',
+    sub: 'Plan, script, storyboard, render, schedule, publish, review, and archive everything from one local app. Several operating accounts run isolated on one machine under a single license, and it publishes on time, pulls the numbers back, and keeps your files on your own computer.',
     download: 'Download for desktop (Windows / macOS / Linux)',
     downloadShort: 'Download for desktop',
     pricing: 'See pricing (from $10)',
@@ -99,9 +99,10 @@ const ABOUT = {
   zh: {
     eyebrow: '应用说明',
     title: '媒管家（WeMedia Creator）是什么？',
-    body: '媒管家（WeMedia Creator）是一款本地优先的自媒体内容工作台桌面应用，运行于 Windows、macOS 与 Linux。你把选题、排期、素材和各平台发布集中到一个应用里：国内平台通过你本人的浏览器登录态自动发布，YouTube 与 TikTok 通过 Google / TikTok 官方 OAuth 授权接入，仅使用上传视频所需的最小权限，把你在应用里选中的视频上传到你自己的频道。账号、素材与授权令牌都只保存在你自己的电脑上，不上传到我们的服务器。',
+    body: '媒管家（WeMedia Creator）是一款本地优先的自媒体内容工作台桌面应用，运行于 Windows、macOS 与 Linux。你把选题、脚本、分镜、成片、排期、素材和各平台发布集中到一个应用里：视频工坊在本机完成做片与渲染；国内平台通过你本人的浏览器登录态自动发布；YouTube 与 TikTok 通过 Google / TikTok 官方 OAuth 授权接入，仅使用上传视频所需的最小权限，把你在应用里选中的视频上传到你自己的频道。账号、素材与授权令牌都只保存在你自己的电脑上，不上传到我们的服务器。',
     points: [
-      '用途：内容规划、排期、多平台发布与发布后数据复盘',
+      '用途：内容规划、视频制作、排期、多平台发布与发布后数据复盘',
+      '视频工坊：选题、脚本、分镜、配音到成片都在本机完成，按账号存放',
       '海外授权：仅申请上传视频所需权限，用于你本人频道的视频上传',
       '数据存放：账号、素材与授权令牌只保存在本机，界面掩码显示',
       '随时撤销：在应用内「断开授权」或在平台的第三方应用页撤销授权',
@@ -111,9 +112,10 @@ const ABOUT = {
   en: {
     eyebrow: 'What this app does',
     title: 'What is WeMedia Creator?',
-    body: 'WeMedia Creator (媒管家) is a local-first desktop workspace for content creation, running on Windows, macOS, and Linux. It brings topic planning, scheduling, assets, and multi-platform publishing into one app: domestic Chinese platforms publish through your own browser session, while YouTube and TikTok connect through official Google / TikTok OAuth using the minimum scope needed to upload a video to your own channel. Your accounts, assets, and authorization tokens stay on your own computer and are never uploaded to our servers.',
+    body: 'WeMedia Creator (媒管家) is a local-first desktop workspace for content creation, running on Windows, macOS, and Linux. It brings topic planning, scripts, storyboards, rendering, scheduling, assets, and multi-platform publishing into one app: the video workshop creates and renders on your machine, domestic Chinese platforms publish through your own browser session, and YouTube and TikTok connect through official Google / TikTok OAuth using the minimum scope needed to upload a video to your own channel. Your accounts, assets, and authorization tokens stay on your own computer and are never uploaded to our servers.',
     points: [
-      'Purpose: plan, schedule, publish to multiple platforms, and review post-publish metrics',
+      'Purpose: plan, create video, schedule, publish to multiple platforms, and review post-publish metrics',
+      'Video workshop: script, storyboard, voiceover, and final cut happen locally and stay per account',
       'Overseas authorization: only the scope needed to upload video to your own channel',
       'Data storage: accounts, assets, and tokens are kept locally and shown masked',
       'Revoke anytime: use "Disconnect" in the app or remove access on the platform’s third-party apps page',
@@ -297,6 +299,58 @@ export function workflow({ lang }) {
         : '不再四处拼凑碎片工具，完整覆盖专业创作者日常的每一个关键节点。',
     })}
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">${steps}</div>
+  </div>
+</section>`;
+}
+
+/* ------------------------------------------------------ Video workshop */
+
+const STUDIO = {
+  zh: {
+    eyebrow: '视频工坊',
+    title: '选题不用再交给另一个剪辑软件',
+    desc: '把选题做成一条能发的视频：写脚本、拆分镜、配画面与配音，最后在本机渲染。开「保真脚本」时，AI 只补画面，旁白保留你原本的句子。',
+    flow: ['选题', '创作简报', '脚本', '分镜与配音', '本机渲染成片'],
+    bullets: ['保真脚本按旁白原句切镜，AI 不改稿', '参考视频按旁白比例抽帧，直接当分镜首帧', '角色库账号级共享，多个项目复用同一角色', 'AI 密钥与成片都留在本机'],
+    note: '16:9、9:16、1:1、4:5 四种画幅；图片分镜自动加推拉运镜，统一规格拼接后导出 MP4。',
+    cta: '了解视频工坊',
+  },
+  en: {
+    eyebrow: 'Video workshop',
+    title: 'Stop handing every idea to a separate editor',
+    desc: 'Turn a topic into a video you can publish: write the script, break it into scenes, add visuals and voiceover, then render locally. In faithful mode AI fills in visuals only, and your narration keeps its original sentences.',
+    flow: ['Topic', 'Creative brief', 'Script', 'Scenes and voiceover', 'Local render'],
+    bullets: ['Faithful scripts keep your narration; AI never rewrites it', 'Reference footage supplies first frames matched to the voiceover', 'Shared character library reusable across projects', 'AI keys and final cuts stay on your machine'],
+    note: 'Four aspect ratios: 16:9, 9:16, 1:1, and 4:5. Image scenes get a slow push or pull, then clips are normalized and exported as MP4.',
+    cta: 'Explore the video workshop',
+  },
+};
+
+export function studioSection({ lang }) {
+  const isEn = lang === 'en';
+  const c = STUDIO[lang] || STUDIO.zh;
+  const steps = c.flow.map((label, i) => `<div class="flex items-center gap-3 rounded-xl bg-surface-dark/70 p-3">
+        <span class="w-6 h-6 shrink-0 rounded-full bg-gold-accent text-canvas-dark text-[12px] font-bold flex items-center justify-center">${i + 1}</span>
+        <span class="font-headline-sm text-[15px] text-text-light-primary">${esc(label)}</span>
+      </div>`).join('');
+  const bullets = c.bullets.map((item) => `<li class="flex items-start gap-2 font-body-sm text-body-sm text-on-surface">${icon('check_circle', 'text-[18px] text-status-success mt-px')}<span>${esc(item)}</span></li>`).join('');
+  return `<section class="w-full py-space-3xl" id="video-studio">
+  <div class="max-w-6xl mx-auto px-margin-mobile grid grid-cols-1 lg:grid-cols-2 gap-space-xl items-center">
+    <div>
+      <span class="section-eyebrow">${esc(c.eyebrow)}</span>
+      <h2 class="font-headline-lg text-headline-lg text-on-surface mt-2 mb-3">${esc(c.title)}</h2>
+      <p class="font-body-md text-body-md text-on-surface-variant mb-5">${esc(c.desc)}</p>
+      <ul class="grid sm:grid-cols-2 gap-3">${bullets}</ul>
+      <a class="mt-6 inline-flex items-center gap-1 font-label-capsule text-body-sm text-primary hover:gap-2 transition-all" href="${routeTo('/features/#studio', lang)}">${esc(c.cta)} ${icon('arrow_forward', 'text-[16px]')}</a>
+    </div>
+    <div class="relative overflow-hidden rounded-3xl bg-canvas-dark p-6 sm:p-8 text-text-light-secondary shadow-xl shadow-canvas-dark/10">
+      <div class="absolute -top-16 -right-10 w-52 h-52 bg-gold-accent/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="relative z-10">
+        <span class="rounded-full bg-surface-dark px-3 py-1 font-label-capsule text-[11px] uppercase tracking-wider text-text-light-secondary">${isEn ? 'Workflow' : '制作流程'}</span>
+        <div class="mt-5 space-y-3">${steps}</div>
+        <p class="mt-4 rounded-xl border border-border-dark p-4 font-body-sm text-body-sm text-text-light-secondary">${esc(c.note)}</p>
+      </div>
+    </div>
   </div>
 </section>`;
 }

@@ -96,12 +96,12 @@ const FEATURE_HERO = {
   zh: {
     eyebrow: '功能特性',
     title: '把八个平台的工作，压进一张工作台',
-    desc: '从选题到复盘，每一步都留在同一个本地应用里。没有云端账号，也没有重复填写的表单。',
+    desc: '从选题、写脚本到生成成片，再到排期、发布与复盘，每一步都留在同一个本地应用里。没有云端账号，也没有重复填写的表单。',
   },
   en: {
     eyebrow: 'Features',
     title: 'Eight platforms of work, one workbench',
-    desc: 'From the first idea to the final review, every step stays in one local app. No cloud account and no repeated forms.',
+    desc: 'From the first idea to a finished video, then scheduling, publishing, and review, every step stays in one local app. No cloud account and no repeated forms.',
   },
 };
 
@@ -121,6 +121,10 @@ const FEATURE_STATS = {
   publish: {
     zh: [['8', '个平台统一队列'], ['固定', '浏览器窗口尺寸'], ['核验', '发布结果自动确认']],
     en: [['8', 'platforms in one queue'], ['Fixed', 'browser window size'], ['Verify', 'results checked for you']],
+  },
+  studio: {
+    zh: [['4', '种画幅规格'], ['本机', '渲染与成片'], ['账号', '级角色库']],
+    en: [['4', 'aspect ratios'], ['Local', 'render and export'], ['Shared', 'character library']],
   },
   analytics: {
     zh: [['8', '个平台自动回流'], ['3', '种比率自动计算'], ['CSV', 'Excel 直接打开']],
@@ -207,10 +211,10 @@ function featuresPage(lang) {
   return page({
     lang,
     route: '/features/',
-    title: isEn ? 'Features — planning, scheduling, publishing, analytics' : '功能特性｜多账号、选题、排期、八平台发布与数据复盘',
+    title: isEn ? 'Features — video workshop, planning, publishing, analytics' : '功能特性｜视频工坊、多账号、选题、排期、八平台发布与复盘',
     description: isEn
-      ? 'Explore multi-account management, the viral idea radar, idea pool, content calendar, publish queue, 8-platform analytics, asset library, and one-click sign-in.'
-      : '了解媒管家的多运营账号与多渠道管理、爆款灵感雷达、选题池、内容日历、八平台发布队列、八平台自动数据复盘、素材库与一键登录能力。',
+      ? 'Explore the video workshop, multi-account management, viral idea radar, idea pool, content calendar, publish queue, 8-platform analytics, and one-click sign-in.'
+      : '了解媒管家的视频工坊、多运营账号与多渠道管理、爆款灵感雷达、选题池、内容日历、八平台发布队列、八平台自动数据复盘与一键登录能力。',
     body,
     priority: 0.9,
   });
@@ -1693,6 +1697,7 @@ export function renderLlms() {
 - Platforms: Douyin, WeChat Channels, Xiaohongshu, WeChat Official Accounts, Bilibili, Kuaishou, Weibo, Zhihu.
 - Automatic analytics: Douyin, WeChat Channels, Xiaohongshu, WeChat Official Accounts, Bilibili, Kuaishou, Weibo, Zhihu (Zhihu covers video works only).
 - Multiple operating accounts per machine, each with up to eight channels and fully isolated data; one license covers every account on the machine.
+- Video workshop: topic, script, storyboard, voiceover, and final cut; local ffmpeg rendering in 16:9, 9:16, 1:1, and 4:5. Bring your own AI key (Volcengine Ark, Alibaba Bailian, or MiniMax), stored locally.
 - Platforms require Chrome or Edge on the same machine; no API keys.
 - Data lives in a local SQLite database; the app is single-user and does not upload content.
 - Current version: ${VERSION}.
@@ -1721,7 +1726,7 @@ export function renderLlms() {
   const full = `${short}
 ## Detailed capabilities
 
-The app supports multiple operating accounts on one machine, each connecting up to eight channels with isolated databases, assets, topics, recordings, and sign-in sessions; a single license covers all accounts, and scheduled tasks run per account. It covers five stages: viral idea radar and idea pool, content calendar, publish center, analytics review, and asset archive. The radar searches Xiaohongshu, Douyin, and Bilibili at once and ranks results by cross-platform heat; searches and results are kept locally for 30 days. It publishes through the user's own browser session, verifies each result, retries failed tasks, and stores everything locally. Automatic analytics covers all eight platforms; for Zhihu it currently covers video works only, so answers and articles require manual entry.
+The app supports multiple operating accounts on one machine, each connecting up to eight channels with isolated databases, assets, topics, recordings, and sign-in sessions; a single license covers all accounts, and scheduled tasks run per account. The video workshop carries a topic through creative brief, script, storyboard, voiceover, and final cut, with faithful scripts that keep the user's narration, reference-footage frame extraction, an account-wide character library, and local ffmpeg rendering; AI calls use the user's own provider key, stored locally. It covers five stages: viral idea radar and idea pool, content calendar, publish center, analytics review, and asset archive. The radar searches Xiaohongshu, Douyin, and Bilibili at once and ranks results by cross-platform heat; searches and results are kept locally for 30 days. It publishes through the user's own browser session, verifies each result, retries failed tasks, and stores everything locally. Automatic analytics covers all eight platforms; for Zhihu it currently covers video works only, so answers and articles require manual entry.
 
 ## Pricing
 

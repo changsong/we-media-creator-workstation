@@ -1,17 +1,17 @@
 import { layout, absolute, assetAbsolute, routeTo, siteRoot } from './layout.mjs';
 import { PLANS, RELEASES, VERSION } from '../config.mjs';
-import { FAQ_PREVIEW, hero, aboutApp, platformBar, painOutcome, workflow, benefits, multiAccount, trustSection, desktopSection, pricingPreview, personasPreview, faqPreview, feedbackBand, finalCta } from './components.mjs';
+import { FAQ_PREVIEW, hero, aboutApp, platformBar, painOutcome, workflow, studioSection, benefits, multiAccount, trustSection, desktopSection, pricingPreview, personasPreview, faqPreview, feedbackBand, finalCta } from './components.mjs';
 
 const META = {
   zh: {
     title: '媒管家 WeMedia Creator｜自媒体多平台发布与数据复盘工具',
     description:
-      '自媒体多平台发布与数据复盘工具：爆款雷达找选题、8 平台自动发布、8 平台作品数据回流（知乎覆盖视频作品），本机多运营账号独立隔离、一份授权通用，账号与素材留在本机。',
+      '自媒体多平台发布与数据复盘工具：视频工坊做片、爆款雷达找选题、8 平台自动发布、8 平台作品数据回流（知乎覆盖视频作品），本机多运营账号独立隔离、一份授权通用。',
   },
   en: {
-    title: 'WeMedia Creator | Multi-platform publishing & analytics',
+    title: 'WeMedia Creator | Video workshop, publishing & analytics',
     description:
-      'Local-first desktop app: find ideas, auto-publish to 8 Chinese platforms, review analytics, and run isolated accounts on one machine, one license. Data stays local.',
+      'Local-first desktop app: make videos in the video workshop, auto-publish to 8 Chinese platforms, review analytics, and run isolated accounts on one machine, one license.',
   },
 };
 
@@ -67,6 +67,7 @@ export function renderHome({ lang = 'zh', checkout = '', hasVideo = false } = {}
     platformBar({ lang }),
     painOutcome({ lang }),
     workflow({ lang }),
+    studioSection({ lang }),
     benefits({ lang }),
     multiAccount({ lang }),
     trustSection({ lang }),

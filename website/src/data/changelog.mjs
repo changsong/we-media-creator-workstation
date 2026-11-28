@@ -1,8 +1,33 @@
 export const CHANGELOG = [
   {
+    version: '2.5.0',
+    date: '2026-11-28',
+    current: true,
+    titleZh: '视频工坊：从选题到成片，在本机完成',
+    titleEn: 'Video workshop: from idea to final cut, on your machine',
+    itemsZh: [
+      '新增「视频工坊」：一个项目从选题、创作简报、脚本、分镜、配音走到成片，按账号存在本地，可选 16:9、9:16、1:1、4:5 四种画幅。',
+      '保真脚本：旁白按你写的原句切镜，AI 只补画面提示，不改动文字；长脚本分批生成，避免一次调用超时。',
+      '原片取材：上传参考视频后，按旁白字数比例定位到各分镜对应画面并抽帧，直接作为首帧，画面与口播对得上。',
+      '角色设定改为账号级共享：所有视频项目共用同一个角色库，参考图、定妆图跨项目可用。',
+      '视频文案提取：粘贴链接或上传音视频，自动转写并做 AI 纠错，结果可带入创作简报或转成选题。',
+      'AI 服务按账号配置：支持火山方舟、阿里百炼与 MiniMax，密钥只保存在本机；配音默认用系统语音，选用复刻音色时走豆包语音。',
+      '成片由本机 ffmpeg 渲染：图片分镜自动加推拉运镜，统一规格拼接后导出 MP4。',
+    ],
+    itemsEn: [
+      'New Video Workshop: take one project from topic and creative brief through script, storyboard, voiceover, and final cut, stored locally per account, in 16:9, 9:16, 1:1, or 4:5.',
+      'Faithful scripts split the narration at your own sentences and let AI fill in only visual prompts, never rewriting your copy; long scripts generate in batches so a single call does not time out.',
+      'Reference footage: upload a reference video and scenes line up by narration length, with frames extracted at those points and used as first frames so visuals match the voiceover.',
+      'Characters are now shared at the account level: every video project draws from one character library, with reference and styled images reusable across projects.',
+      'Transcripts: paste a link or upload audio and video to get an automatic transcript with AI correction, then send it into the creative brief or turn it into a topic.',
+      'Configure AI per account: Volcengine Ark, Alibaba Bailian, and MiniMax are supported, with keys stored only on your machine. Voiceover uses the system voice by default, or Doubao speech for a cloned voice.',
+      'Rendering runs locally through ffmpeg: image scenes get a slow push or pull, clips are normalized and joined, and the project exports as MP4.',
+    ],
+  },
+  {
     version: '2.4.1',
     date: '2026-11-25',
-    current: true,
+    current: false,
     titleZh: '稳定性修复：新手指引与本地状态',
     titleEn: 'Stability fixes: onboarding and local state',
     itemsZh: [
